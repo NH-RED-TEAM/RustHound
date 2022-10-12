@@ -2,7 +2,7 @@
 authors = ["g0h4n <g0h4n_0@protonmail.com>"]
 name = "rusthound"
 description = "Active Directory data collector for Bloodhound written in rust."
-keywords = ["ldap", "bloodhound", "collector", "pentest", "client", "tokio", "async"]
+keywords = ["bloodhound", "pentest", "ldap", "tokio", "async"]
 repository = "https://github.com/OPENCYBER-FR/RustHound"
 homepage = "https://github.com/OPENCYBER-FR/RustHound"
 documentation = "https://docs.rs/rusthound/"
