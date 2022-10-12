@@ -1,0 +1,232 @@
+use std::collections::HashMap;
+use ldap3::SearchEntry;
+use regex::Regex;
+
+use crate::enums::ldaptype::*;
+use log::{info};
+
+pub mod bh_41;
+
+/// Function to get type for object by object
+pub fn parse_result_type(
+    domain: &String,
+    result: Vec<SearchEntry>,
+
+    vec_users: &mut Vec<serde_json::value::Value>,
+    vec_groups: &mut Vec<serde_json::value::Value>,
+    vec_computers: &mut Vec<serde_json::value::Value>,
+    vec_ous: &mut Vec<serde_json::value::Value>,
+    vec_domains: &mut Vec<serde_json::value::Value>,
+    vec_gpos: &mut Vec<serde_json::value::Value>,
+    vec_fsps: &mut Vec<serde_json::value::Value>,
+    vec_containers: &mut Vec<serde_json::value::Value>,
+    vec_trusts: &mut Vec<serde_json::value::Value>,
+
+    dn_sid: &mut HashMap<String, String>,
+    sid_type: &mut HashMap<String, String>,
+    fqdn_sid: &mut HashMap<String, String>,
+    fqdn_ip: &mut HashMap<String, String>,
+)   
+{
+    info!("Starting the LDAP objects parsing...");
+    for entry in result {
+        let cloneresult = entry.clone();
+        let atype = get_type(entry).unwrap_or(Type::Unknown);
+        match atype {
+            Type::User => {
+                let user = parse_user(
+                    cloneresult,
+                    domain,
+                    dn_sid,
+                    sid_type,
+                );
+                vec_users.push(user);
+            }
+            Type::Group => {
+                let group = parse_group(
+                    cloneresult,
+                    domain,
+                    dn_sid,
+                    sid_type,
+                );
+                vec_groups.push(group);
+            }
+            Type::Computer => {
+                let computer = parse_computer(
+                    cloneresult,
+                    domain,
+                    dn_sid,
+                    sid_type,
+                    fqdn_sid,
+                    fqdn_ip,
+                );
+                vec_computers.push(computer);
+            }
+            Type::Ou => {
+                let ou = parse_ou(
+                    cloneresult,
+                    domain,
+                    dn_sid,
+                    sid_type,
+                );
+                vec_ous.push(ou);
+            }
+            Type::Domain => {
+                let domain = parse_domain(
+                    cloneresult,
+                    domain,
+                    dn_sid,
+                    sid_type,
+                );
+                vec_domains.push(domain);
+            }
+            Type::Gpo => {
+                let gpo = parse_gpo(
+                    cloneresult,
+                    domain,
+                    dn_sid,
+                    sid_type,
+                );
+                vec_gpos.push(gpo);
+            }
+            Type::ForeignSecurityPrincipal => {
+                let security_principal = parse_fsp(
+                    cloneresult,
+                    domain,
+                    dn_sid,
+                    sid_type,
+                );
+                vec_fsps.push(security_principal);
+            }
+            Type::Container => {
+                let re = Regex::new(r"[0-9a-z-A-Z]{1,}-[0-9a-z-A-Z]{1,}-[0-9a-z-A-Z]{1,}-[0-9a-z-A-Z]{1,}").unwrap();
+                if re.is_match(&cloneresult.dn.to_uppercase()) 
+                {
+                    //trace!("Container not to add: {}",&cloneresult.dn.to_uppercase());
+                    continue
+                }
+                let re = Regex::new(r"CN=DOMAINUPDATES,CN=SYSTEM,").unwrap();
+                if re.is_match(&cloneresult.dn.to_uppercase()) 
+                {
+                    //trace!("Container not to add: {}",&cloneresult.dn.to_uppercase());
+                    continue
+                }
+                //trace!("Container: {}",&cloneresult.dn.to_uppercase());
+                let container = parse_container(
+                    cloneresult,
+                    domain,
+                    dn_sid,
+                    sid_type,
+                );
+                vec_containers.push(container);
+            }
+            Type::Trust => {
+                let trust = parse_trust(cloneresult, domain);
+                vec_trusts.push(trust);
+            }
+            Type::Unknown => {
+                let _unknown = parse_unknown(cloneresult, domain);
+            }
+        }
+    }
+    info!("Parsing LDAP objects finished!");
+}
+
+
+/// Parse user. Select parser based on BH version.
+pub fn parse_user(
+    result: SearchEntry,
+    domain: &String,
+    dn_sid: &mut HashMap<String, String>,
+    sid_type: &mut HashMap<String, String>,
+) -> serde_json::value::Value {
+    bh_41::parse_user(result, domain, dn_sid, sid_type)
+}
+
+/// Parse group. Select parser based on BH version.
+pub fn parse_group(
+    result: SearchEntry,
+    domain: &String,
+    dn_sid: &mut HashMap<String, String>,
+    sid_type: &mut HashMap<String, String>,
+) -> serde_json::value::Value {
+    bh_41::parse_group(result, domain, dn_sid, sid_type)
+}
+
+/// Parse computer. Select parser based on BH version.
+pub fn parse_computer(
+    result: SearchEntry,
+    domain: &String,
+    dn_sid: &mut HashMap<String, String>,
+    sid_type: &mut HashMap<String, String>,
+    fqdn_sid: &mut HashMap<String, String>,
+    fqdn_ip: &mut HashMap<String, String>,
+) -> serde_json::value::Value {
+    bh_41::parse_computer(result, domain, dn_sid, sid_type, fqdn_sid, fqdn_ip)
+}
+
+/// Parse ou. Select parser based on BH version.
+pub fn parse_ou(
+    result: SearchEntry,
+    domain: &String,
+    dn_sid: &mut HashMap<String, String>,
+    sid_type: &mut HashMap<String, String>,
+) -> serde_json::value::Value {
+    bh_41::parse_ou(result, domain, dn_sid, sid_type)
+}
+
+/// Parse gpo. Select parser based on BH version.
+pub fn parse_gpo(
+    result: SearchEntry,
+    domain: &String,
+    dn_sid: &mut HashMap<String, String>,
+    sid_type: &mut HashMap<String, String>,
+) -> serde_json::value::Value {
+    bh_41::parse_gpo(result, domain, dn_sid, sid_type)
+}
+
+/// Parse domain. Select parser based on BH version.
+pub fn parse_domain(
+    result: SearchEntry,
+    domain: &String,
+    dn_sid: &mut HashMap<String, String>,
+    sid_type: &mut HashMap<String, String>,
+) -> serde_json::value::Value {
+    bh_41::parse_domain(result, domain, dn_sid, sid_type)
+}
+
+/// Parse ForeignSecurityPrincipal object. Select parser based on BH version.
+pub fn parse_fsp(
+    result: SearchEntry,
+    domain: &String,
+    dn_sid: &mut HashMap<String, String>,
+    sid_type: &mut HashMap<String, String>,
+) -> serde_json::value::Value {
+    bh_41::parse_fsp(result, domain, dn_sid, sid_type)
+}
+
+/// Parse Containers object. Select parser based on BH version new in BH4.1+
+pub fn parse_container(
+    result: SearchEntry,
+    domain: &String,
+    dn_sid: &mut HashMap<String, String>,
+    sid_type: &mut HashMap<String, String>,
+) -> serde_json::value::Value {
+    bh_41::parse_container(result, domain, dn_sid, sid_type)
+}
+
+/// Parse Trust domain object. Select parser based on BH version.
+pub fn parse_trust(
+    result: SearchEntry, 
+    _domain: &String,
+) -> serde_json::value::Value {
+    bh_41::parse_trust(result, _domain)
+}
+
+/// Parse unknown object. Select parser based on BH version.
+pub fn parse_unknown(
+    result: SearchEntry, 
+    _domain: &String,
+) -> serde_json::value::Value {
+    bh_41::parse_unknown(result, _domain)
+}

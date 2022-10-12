@@ -1,0 +1,562 @@
+
+{
+   "_comment": "Custom queries v1.0",
+   "_comment2": "Certipy customqueries https://github.com/ly4k/Certipy/blob/main/customqueries.json",
+   "queries": [
+
+      {
+         "name": "[A1] Return all users: MATCH (u:User) return u",
+         "category": "Simple custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (u:User) return u"
+            }
+         ]
+      },
+      {
+         "name": "[A2] Return all computers: MATCH (c:Computer) return c",
+         "category": "Simple custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (c:Computer) return c"
+            }
+         ]
+      },
+      {
+         "name": "[A3] Return all groups: MATCH (g:Group) return g",
+         "category": "Simple custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (g:Group) return g"
+            }
+         ]
+      },
+      {
+         "name": "[A4] Return all ous: MATCH (o:OU) return o",
+         "category": "Simple custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (o:OU) return o"
+            }
+         ]
+      },
+      {
+         "name": "[A5] Return all gpos: MATCH (g:GPO) return g",
+         "category": "Simple custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (g:GPO) return g"
+            }
+         ]
+      },
+      {
+         "name": "[A6] Return all containers: MATCH (c:Container) return c",
+         "category": "Simple custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (c:Container) return c"
+            }
+         ]
+      },
+      {
+         "name": "[A7] Return all domains: MATCH (d:Domain) return d",
+         "category": "Simple custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (d:Domain) return d"
+            }
+         ]
+      },
+      {
+         "name": "[A8] Return users content specified word: MATCH (u:User) WHERE u.name CONTAINS 'g0h4n' return u",
+         "category": "Simple custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (u:User) WHERE u.name CONTAINS 'g0h4n' return u"
+            }
+         ]
+      },
+      {
+         "name": "[B1] List all owned users",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+             {
+                 "final": true,
+                 "query": "MATCH (m:User) WHERE m.owned=TRUE RETURN m"
+             }
+         ]
+      },
+      {
+         "name": "[B2] List all owned computers",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+             {
+                 "final": true,
+                 "query": "MATCH (m:Computer) WHERE m.owned=TRUE RETURN m"
+             }
+         ]
+      },
+      {
+         "name": "[B3] List all owned groups",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+             {
+                 "final": true,
+                 "query": "MATCH (m:Group) WHERE m.owned=TRUE RETURN m"
+             }
+         ]
+      },
+      {
+         "name": "[B4] List all owned computers",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+             {
+                 "final": true,
+                 "query": "MATCH (m:Computer) WHERE m.owned=TRUE RETURN m"
+             }
+         ]
+      },
+      {
+         "name": "[B5] List the groups of all owned users",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (m:User) WHERE m.owned=TRUE WITH m MATCH p=(m)-[:MemberOf*1..]->(n:Group) RETURN p"
+            }
+         ]
+      },
+      {
+         "name": "[B6] Find the Shortest path to a high value target from an owned object",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+             {
+                 "final": true,
+                 "query": "MATCH p=shortestPath((g {owned:true})-[*1..]->(n {highvalue:true})) WHERE  g<>n return p"
+             }
+         ]
+      },
+      {
+         "name": "[B7] Find the Shortest path to a unconstrained delegation system from an owned object",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+             {
+                 "final": true,
+                 "query": "MATCH (n) MATCH p=shortestPath((n)-[*1..]->(m:Computer {unconstraineddelegation: true})) WHERE NOT n=m AND n.owned = true RETURN p"
+             }
+         ]
+      },
+      {
+
+         "name": "[B8] Find all Kerberoastable Users where n.hasspn=true (Kerberosting attack)",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+             {
+                 "final": true,
+                 "query": "MATCH (n:User)WHERE n.hasspn=true RETURN n",
+                 "allowCollapse": false
+             }
+         ]
+      },
+		{
+         "name": "[B9] Find Kerberoastable Users with a path to DA",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+             {
+                 "final": true,
+                 "query": "MATCH (u:User {hasspn:true}) MATCH (g:Group) WHERE g.objectid ENDS WITH '-512' MATCH p = shortestPath( (u)-[*1..]->(g) ) RETURN p"
+             }
+         ]
+     },
+     {
+         "name": "[B10] Find users that can be AS-REP roasted (ASREPRoast)",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (u:User {dontreqpreauth: true}) RETURN u"
+            }
+         ]
+      },
+      {
+         "name": "[B11] Find groups that can reset passwords (Warning: Heavy)",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH p=(m:Group)-[r:ForceChangePassword]->(n:User) RETURN p"
+            }
+         ]
+      },
+      {
+         "name": "[B12] Find groups that have local admin rights (Warning: Heavy)",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+             {
+                 "final": true,
+                 "query": "MATCH p=(m:Group)-[r:AdminTo]->(n:Computer) RETURN p"
+             }
+         ]
+     },
+     {
+         "name": "[B13] Find all users that have local admin rights",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH p=(m:User)-[r:AdminTo]->(n:Computer) RETURN p"
+            }
+         ]
+      },
+      {
+         "name": "[B14] Find all active Domain Admin sessions",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+             {
+                 "final": true,
+                 "query": "MATCH (n:User)-[:MemberOf]->(g:Group) WHERE g.objectid ENDS WITH '-512' MATCH p = (c:Computer)-[:HasSession]->(n) return p"
+             }
+         ]
+     },
+     {
+         "name": "[B15] Find all computers with Unconstrained Delegation",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (c:Computer {unconstraineddelegation:true}) return c"
+            }
+         ]
+      },
+		{
+         "name": "[B16] Find all computers with unsupported operating systems",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+             {
+                 "final": true,
+                 "query": "MATCH (H:Computer) WHERE H.operatingsystem = '.*(2000|2003|2008|xp|vista|7|me).*' RETURN H"
+             }
+         ]
+     },
+     {
+         "name": "[B17.1] Return the name of every computer in the database where at least one SPN for the computer contains the string 'MSSQL'",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (c:Computer) WHERE ANY (x IN c.serviceprincipalnames WHERE toUpper(x) CONTAINS 'MSSQL') RETURN c"
+            }
+         ]
+      },
+      {
+         "name": "[B17.2] Return the name of every user in the database where at least one SPN for the computer contains the string 'MSSQL'",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (u:User) WHERE ANY (x IN u.serviceprincipalnames WHERE toUpper(x) CONTAINS 'MSSQL') RETURN u"
+            }
+         ]
+      },
+     {
+         "name": "[B18] View all groups that contain the word 'admin'",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "Match (n:Group) WHERE n.name CONTAINS 'ADMIN' RETURN n"
+            }
+         ]
+      },
+      {
+         "name": "[B19] Show all high value target's groups",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+             {
+                 "final": true,
+                 "query": "MATCH p=(n:User)-[r:MemberOf*1..]->(m:Group {highvalue:true}) RETURN p"
+             }
+         ]
+      },
+      {
+         "name": "[B20] Find groups that contain both users and computers",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+             {
+                 "final": true,
+                 "query": "MATCH (c:Computer)-[r:MemberOf*1..]->(groupsWithComps:Group) WITH groupsWithComps MATCH (u:User)-[r:MemberOf*1..]->(groupsWithComps) RETURN DISTINCT(groupsWithComps) as groupsWithCompsAndUsers"
+             }
+         ]
+      },
+      {
+         "name": "[B21] Find all users a part of the VPN group",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+             {
+                 "final": true,
+                 "query": "Match p=(u:User)-[:MemberOf]->(g:Group) WHERE toUPPER (g.name) CONTAINS 'VPN' return p"
+             }
+         ]
+     },
+      {
+         "name": "[B22] Find if any domain user has interesting permissions against a GPO (Warning: Heavy)",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+             {
+                 "final": true,
+                 "query": "MATCH p=(u:User)-[r:AllExtendedRights|GenericAll|GenericWrite|Owns|WriteDacl|WriteOwner|GpLink*1..]->(g:GPO) RETURN p"
+             }
+         ]
+     },
+     {
+         "name": "[B23] Find All edges any owned user has on a computer",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH p=shortestPath((m:User)-[r*]->(b:Computer)) WHERE m.owned RETURN p"
+            }
+         ]
+      },
+      {
+         "name": "[B24] Find all computer or objects who can read GMSA password (ReadGMSAPassword limit 25)",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH p=()-[r:ReadGMSAPassword]->() RETURN p LIMIT 25"
+            }
+         ]
+      },
+      {
+         "name": "[B25] Find all computer or objects who can DCSync (limit 25)",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH p=(n:Computer)-[r:DCSync]->() RETURN p LIMIT 25"
+            }
+         ]
+      },
+      {
+         "name": "Find all Certificate Templates",
+         "category": "Certificates",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH (n:GPO) WHERE n.type = 'Certificate Template' RETURN n"
+           }
+         ]
+       },
+       {
+         "name": "Find enabled Certificate Templates",
+         "category": "Certificates",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH (n:GPO) WHERE n.type = 'Certificate Template' and n.Enabled = true RETURN n"
+           }
+         ]
+       },
+       {
+         "name": "Find Certificate Authorities",
+         "category": "Certificates",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH (n:GPO) WHERE n.type = 'Enrollment Service' RETURN n"
+           }
+         ]
+       },
+       {
+         "name": "Show Enrollment Rights for Certificate Template",
+         "category": "Certificates",
+         "queryList": [
+           {
+             "final": false,
+             "title": "Select a Certificate Template...",
+             "query": "MATCH (n:GPO) WHERE n.type = 'Certificate Template' RETURN n.name"
+           },
+           {
+             "final": true,
+             "query": "MATCH p=(g)-[:Enroll|AutoEnroll]->(n:GPO {name:$result}) WHERE n.type = 'Certificate Template' return p",
+             "allowCollapse": false
+           }
+         ]
+       },
+       {
+         "name": "Show Rights for Certificate Authority",
+         "category": "Certificates",
+         "queryList": [
+           {
+             "final": false,
+             "title": "Select a Certificate Authority...",
+             "query": "MATCH (n:GPO) WHERE n.type = 'Enrollment Service' RETURN n.name"
+           },
+           {
+             "final": true,
+             "query": "MATCH p=(g)-[:ManageCa|ManageCertificates|Auditor|Operator|Read|Enroll]->(n:GPO {name:$result}) return p",
+             "allowCollapse": false
+           }
+         ]
+       },
+       {
+         "name": "Find Misconfigured Certificate Templates (ESC1)",
+         "category": "Domain Escalation",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH (n:GPO) WHERE n.type = 'Certificate Template' and n.`Enrollee Supplies Subject` = true and n.`Client Authentication` = true and n.`Enabled` = true  RETURN n"
+           }
+         ]
+       },
+       {
+         "name": "Shortest Paths to Misconfigured Certificate Templates from Owned Principals (ESC1)",
+         "category": "Domain Escalation",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH p=allShortestPaths((g {owned:true})-[*1..]->(n:GPO)) WHERE  g<>n and n.type = 'Certificate Template' and n.`Enrollee Supplies Subject` = true and n.`Client Authentication` = true and n.`Enabled` = true return p"
+           }
+         ]
+       },
+       {
+         "name": "Find Misconfigured Certificate Templates (ESC2)",
+         "category": "Domain Escalation",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH (n:GPO) WHERE n.type = 'Certificate Template' and n.`Enabled` = true and (n.`Extended Key Usage` = [] or 'Any Purpose' IN n.`Extended Key Usage`)  RETURN n"
+           }
+         ]
+       },
+       {
+         "name": "Shortest Paths to Misconfigured Certificate Templates from Owned Principals (ESC2)",
+         "category": "Domain Escalation",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH p=allShortestPaths((g {owned:true})-[*1..]->(n:GPO)) WHERE  g<>n and n.type = 'Certificate Template' and n.`Enabled` = true and (n.`Extended Key Usage` = [] or 'Any Purpose' IN n.`Extended Key Usage`) return p"
+           }
+         ]
+       },
+       {
+         "name": "Find Enrollment Agent Templates (ESC3)",
+         "category": "Domain Escalation",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH (n:GPO) WHERE n.type = 'Certificate Template' and n.`Enabled` = true and (n.`Extended Key Usage` = [] or 'Any Purpose' IN n.`Extended Key Usage` or 'Certificate Request Agent' IN n.`Extended Key Usage`)  RETURN n"
+           }
+         ]
+       },
+       {
+         "name": "Shortest Paths to Enrollment Agent Templates from Owned Principals (ESC3)",
+         "category": "Domain Escalation",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH p=allShortestPaths((g {owned:true})-[*1..]->(n:GPO)) WHERE  g<>n and n.type = 'Certificate Template' and n.`Enabled` = true and (n.`Extended Key Usage` = [] or 'Any Purpose' IN n.`Extended Key Usage` or 'Certificate Request Agent' IN n.`Extended Key Usage`) return p"
+           }
+         ]
+       },
+       {
+         "name": "Shortest Paths to Vulnerable Certificate Template Access Control (ESC4)",
+         "category": "Domain Escalation",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH p=shortestPath((g)-[:GenericAll|GenericWrite|Owns|WriteDacl|WriteOwner*1..]->(n:GPO)) WHERE  g<>n and n.type = 'Certificate Template' and n.`Enabled` = true RETURN p"
+           }
+         ]
+       },
+       {
+         "name": "Shortest Paths to Vulnerable Certificate Template Access Control from Owned Principals (ESC4)",
+         "category": "Domain Escalation",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH p=allShortestPaths((g {owned:true})-[r*1..]->(n:GPO)) WHERE g<>n and n.type = 'Certificate Template' and n.Enabled = true and NONE(x in relationships(p) WHERE type(x) = 'Enroll' or type(x) = 'AutoEnroll') return p"
+           }
+         ]
+       },
+       {
+         "name": "Find Certificate Authorities with User Specified SAN (ESC6)",
+         "category": "Domain Escalation",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH (n:GPO) WHERE n.type = 'Enrollment Service' and n.`User Specified SAN` = 'Enabled' RETURN n"
+           }
+         ]
+       },
+       {
+         "name": "Shortest Paths to Vulnerable Certificate Authority Access Control (ESC7)",
+         "category": "Domain Escalation",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH p=shortestPath((g)-[r:GenericAll|GenericWrite|Owns|WriteDacl|WriteOwner|ManageCa|ManageCertificates*1..]->(n:GPO)) WHERE  g<>n and n.type = 'Enrollment Service' RETURN p"
+           }
+         ]
+       },
+       {
+         "name": "Shortest Paths to Vulnerable Certificate Authority Access Control from Owned Principals (ESC7)",
+         "category": "Domain Escalation",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH p=allShortestPaths((g {owned:true})-[*1..]->(n:GPO)) WHERE  g<>n and n.type = 'Enrollment Service' and NONE(x in relationships(p) WHERE type(x) = 'Enroll' or type(x) = 'AutoEnroll') RETURN p"
+           }
+         ]
+       },
+       {
+         "name": "Find Certificate Authorities with HTTP Web Enrollment (ESC8)",
+         "category": "Domain Escalation",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH (n:GPO) WHERE n.type = 'Enrollment Service' and n.`Web Enrollment` = 'Enabled' RETURN n"
+           }
+         ]
+       },
+       {
+         "name": "Find Unsecured Certificate Templates (ESC9)",
+         "category": "Domain Escalation",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH (n:GPO) WHERE n.type = 'Certificate Template' and n.`Enrollee Supplies Subject` = true and n.`Client Authentication` = true and n.`Enabled` = true  RETURN n"
+           }
+         ]
+       },
+       {
+         "name": "Find Unsecured Certificate Templates (ESC9)",
+         "category": "PKI",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH (n:GPO) WHERE n.type = 'Certificate Template' and 'NoSecurityExtension' in n.`Enrollment Flag` and n.`Enabled` = true  RETURN n"
+           }
+         ]
+       },
+       {
+         "name": "Shortest Paths to Unsecured Certificate Templates from Owned Principals (ESC9)",
+         "category": "PKI",
+         "queryList": [
+           {
+             "final": true,
+             "query": "MATCH p=allShortestPaths((g {owned:true})-[r*1..]->(n:GPO)) WHERE n.type = 'Certificate Template' and g<>n and 'NoSecurityExtension' in n.`Enrollment Flag` and n.`Enabled` = true and NONE(rel in r WHERE type(rel) in ['EnabledBy','Read','ManageCa','ManageCertificates']) return p"
+           }
+         ]
+       }
+   ]
+}

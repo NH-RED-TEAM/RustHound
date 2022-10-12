@@ -1,0 +1,29 @@
+[package]
+authors = ["g0h4n <g0h4n_0@protonmail.com>"]
+name = "rusthound"
+description = "Active Directory data collector for Bloodhound written in rust."
+keywords = ["ldap", "bloodhound", "collector", "pentest", "client", "tokio", "async"]
+repository = "https://github.com/OPENCYBER-FR/RustHound"
+homepage = "https://github.com/OPENCYBER-FR/RustHound"
+documentation = "https://docs.rs/rusthound/"
+version = "1.0.0"
+edition = "2018"
+license = "MIT"
+readme = "README.md"
+
+[dependencies]
+tokio = "1.1"
+ldap3 = {version = "0.10.5", default-features = false, features = ["tls-rustls","gssapi"]}
+trust-dns-resolver = "0.22"
+serde_json = {version = "1.0.32", features = ["preserve_order"]}
+clap = "2.33"
+nom = "6.2.1"
+colored = "2"
+chrono = "0.4"
+bitflags = "1.0"
+regex = "1"
+env_logger = "0.9"
+log = "0.4"
+lazy_static = "1.4.0"
+zip="0.6.2"
+ascii = "1.0.0"
