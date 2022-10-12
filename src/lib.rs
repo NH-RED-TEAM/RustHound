@@ -51,7 +51,7 @@
 //!);
 //!```
 //! Here is an example of how to use rusthound:
-//! ![demo](../../../img/demo.gif)
+//! ![demo](https://raw.githubusercontent.com/OPENCYBER-FR/RustHound/main/img/demo.gif)
 //! 
 pub mod args;
 pub mod banner;
