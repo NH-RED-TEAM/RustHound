@@ -37,14 +37,15 @@ pub fn prepare_user_json_template() -> serde_json::value::Value
          "unicodepassword": null,
          "sfupassword": null,
          "admincount": false,
-         "sidhistory": []
+         "sidhistory": [],
+         "allowedtodelegate": []
       },
       "PrimaryGroupSID": null,
       "SPNTargets": [],
       "Aces": [],
+      "AllowedToDelegate": [],
       // Todo ! récupérer les valeurs suivantes:
       "HasSIDHistory": [],
-      "AllowedToDelegate": [],
    });
 }
 
@@ -97,8 +98,8 @@ pub fn prepare_computer_json_template() -> serde_json::value::Value
       },
       "PrimaryGroupSID": "PGSID",
       "Aces": [],
-      // Todo ! fonction pour récupérer les valeurs suivantes
       "AllowedToDelegate": [],
+      // Todo ! fonction pour récupérer les valeurs suivantes
       "AllowedToAct": [],
       "HasSIDHistory": [],
       "Sessions": {

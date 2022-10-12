@@ -218,14 +218,15 @@ cp resources/customqueries.json ~/.config/bloodhound/customqueries.json
   - [x] `Direct_Members`
   - [x] `GPlink`
   - [x] `haslaps`
+  - [x] `AllowedToDelegate`
+  - [ ] `AllowedToAct`
   - [ ] `Sessions`
     - [ ] List users with RPC
-  - [ ] `DcomUsers`
-  - [ ] `RemoteDesktopUsers`
-  - [ ] `LocalAdmins`
-  - [ ] `PSRemoteUsers`
-  - [ ] `AllowedToDelegate`
-  - [ ] `AllowedToAct`
+    - [ ] `DcomUsers`
+    - [ ] `RemoteDesktopUsers`
+    - [ ] `LocalAdmins`
+    - [ ] `PSRemoteUsers`
+
 
 - ACL
   - [x] Add `ReadGMSAPassword` support
@@ -234,8 +235,8 @@ cp resources/customqueries.json ~/.config/bloodhound/customqueries.json
   - [x] Change json header like "users" to "data"
   - [x] `Properties` : `domainsid`
   - [x] `Properties` : `whencreated`
-  - [ ] `IsDeleted`
   - [x] `IsACLProtected`
+  - [ ] `IsDeleted`
 - Users
   - [x] Add default `NT AUTHORITY` : `DOMAIN.LOCAL-S-1-5-20` user
   - [x] `Properties` : `unixpassword`

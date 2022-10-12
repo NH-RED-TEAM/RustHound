@@ -26,6 +26,7 @@ pub fn check_all_result(
     info!("Starting checker to replace some values...");
     debug!("Replace SID with checker.rs started");
     bh_41::replace_fqdn_by_sid(vec_users, &fqdn_sid);
+    bh_41::replace_fqdn_by_sid(vec_computers, &fqdn_sid);
     bh_41::replace_sid_members(vec_groups, &dn_sid, &sid_type, &vec_trusts);
     debug!("Replace SID finished!");
 

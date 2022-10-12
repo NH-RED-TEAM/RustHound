@@ -166,10 +166,32 @@ pub fn parse_user(
                     //if flag.contains("PasswordExpired") { let password_expired = true; user_json["Properties"]["pwdneverexpires"] = password_expired.into(); };
                     if flag.contains("TrustedToAuthForDelegation") {
                         let trusted_to_auth_for_delegation = true;
-                        user_json["Properties"]["unconstraineddelegation"] = trusted_to_auth_for_delegation.into();
-                        user_json["Properties"]["trustedtoauth"] = true.into();
+                        user_json["Properties"]["trustedtoauth"] = trusted_to_auth_for_delegation.into();
                     };
                 }
+            }
+            "msDS-AllowedToDelegateTo"  => {
+                //trace!(" AllowToDelegateTo: {:?}",&value);
+                user_json["Properties"]["allowedtodelegate"] = value.to_owned().into();
+                // AllowedToDelegate
+                let mut vec_members: Vec<serde_json::value::Value> = Vec::new();
+                let mut allowed_to_delegate = prepare_member_json_template();
+                for objet in value {
+                    let split = objet.split("/");
+                    let fqdn = split.collect::<Vec<&str>>()[1];
+                    let mut checker = false;
+                    for member in &vec_members {
+                        if member["ObjectIdentifier"].to_string().contains(fqdn.to_uppercase().as_str()) {
+                            checker = true;
+                        }
+                    }
+                    if !checker {
+                        allowed_to_delegate["ObjectIdentifier"] = fqdn.to_uppercase().to_owned().to_uppercase().into();
+                        allowed_to_delegate["ObjectType"] = "Computer".to_owned().into();
+                        vec_members.push(allowed_to_delegate.to_owned()); 
+                    }
+                }
+                user_json["AllowedToDelegate"] = vec_members.to_owned().into();
             }
             "lastLogon" => {
                 let lastlogon = &result_attrs["lastLogon"][0].parse::<i64>().unwrap();
@@ -518,7 +540,7 @@ pub fn parse_computer(
     let mut sid: String = "".to_owned();
     let mut group_id: String = "".to_owned();
     // With a check
-    for (key, _value) in &result_attrs {
+    for (key, value) in &result_attrs {
         match key.as_str() {
             "name" => {
                 let name = &result_attrs["name"][0];
@@ -625,6 +647,29 @@ pub fn parse_computer(
                         computer_json["Properties"]["trustedtoauth"] = true.into();
                     };
                 }
+            }
+            "msDS-AllowedToDelegateTo"  => {
+                //trace!(" AllowToDelegateTo: {:?}",&value);
+                computer_json["Properties"]["allowedtodelegate"] = value.to_owned().into();
+                // AllowedToDelegate
+                let mut vec_members: Vec<serde_json::value::Value> = Vec::new();
+                let mut allowed_to_delegate = prepare_member_json_template();
+                for objet in value {
+                    let split = objet.split("/");
+                    let fqdn = split.collect::<Vec<&str>>()[1];
+                    let mut checker = false;
+                    for member in &vec_members {
+                        if member["ObjectIdentifier"].to_string().contains(fqdn.to_uppercase().as_str()) {
+                            checker = true;
+                        }
+                    }
+                    if !checker {
+                        allowed_to_delegate["ObjectIdentifier"] = fqdn.to_uppercase().to_owned().to_uppercase().into();
+                        allowed_to_delegate["ObjectType"] = "Computer".to_owned().into();
+                        vec_members.push(allowed_to_delegate.to_owned()); 
+                    }
+                }
+                computer_json["AllowedToDelegate"] = vec_members.to_owned().into();
             }
             "ms-Mcs-AdmPwd" => {
                 //laps is set, random password for local adminsitrator

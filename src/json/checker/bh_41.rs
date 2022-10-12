@@ -365,17 +365,26 @@ pub fn add_affected_computers(vec_domains: &mut Vec<serde_json::value::Value>, s
 }
 
 /// This function is to replace fqdn by sid in users SPNTargets:ComputerSID
-pub fn replace_fqdn_by_sid(vec_users: &mut Vec<serde_json::value::Value>, fqdn_sid: &HashMap<String, String>) 
+pub fn replace_fqdn_by_sid(vec_src: &mut Vec<serde_json::value::Value>, fqdn_sid: &HashMap<String, String>) 
 {
-    for i in 0..vec_users.len()
+    for i in 0..vec_src.len()
     {
-        if vec_users[i]["SPNTargets"].as_array().unwrap().len() != 0 {
-            for j in 0..vec_users[i]["SPNTargets"].as_array().unwrap().len()
+        if vec_src[i]["SPNTargets"].as_array().unwrap_or(&Vec::new()).len() != 0 {
+            for j in 0..vec_src[i]["SPNTargets"].as_array().unwrap().len()
             {
-               let null: String = "NULL".to_string();
-               let sid = fqdn_sid.get(&vec_users[i]["SPNTargets"][j]["ComputerSID"].as_str().unwrap().to_string()).unwrap_or(&null);
-               //debug!("SPNTargets: {} = {}",&vec_users[i]["SPNTargets"][j]["ComputerSID"].to_string(),&sid);
-               vec_users[i]["SPNTargets"][j]["ComputerSID"] = sid.to_owned().into();
+               let default = &vec_src[i]["SPNTargets"][j]["ComputerSID"].as_str().unwrap().to_string();
+               let sid = fqdn_sid.get(&vec_src[i]["SPNTargets"][j]["ComputerSID"].as_str().unwrap().to_string()).unwrap_or(default);
+               //trace!("SPNTargets: {} = {}",&vec_users[i]["SPNTargets"][j]["ComputerSID"].to_string(),&sid);
+               vec_src[i]["SPNTargets"][j]["ComputerSID"] = sid.to_owned().into();
+            }
+        }
+        if vec_src[i]["AllowedToDelegate"].as_array().unwrap_or(&Vec::new()).len() != 0 {
+            for j in 0..vec_src[i]["AllowedToDelegate"].as_array().unwrap().len()
+            {
+               let default = &vec_src[i]["AllowedToDelegate"][j]["ObjectIdentifier"].as_str().unwrap().to_string();
+               let sid = fqdn_sid.get(&vec_src[i]["AllowedToDelegate"][j]["ObjectIdentifier"].as_str().unwrap().to_string()).unwrap_or(default);
+               //trace!("AllowedToDelegate: {} = {}",&vec_users[i]["AllowedToDelegate"][j]["ObjectIdentifier"].to_string(),&sid);
+               vec_src[i]["AllowedToDelegate"][j]["ObjectIdentifier"] = sid.to_owned().into();
             }
         }
     }
