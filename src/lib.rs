@@ -1,5 +1,5 @@
 //! <p align="center">
-//! <img width="30%" src="../../../img/rusthound_logo_v3.png">
+//! <img width="30%" src="https://raw.githubusercontent.com/OPENCYBER-FR/RustHound/main/img/rusthound_logo_v3.png">
 //! </p>
 //! 
 //! RustHound is a cross-platform and cross-compiled BloodHound collector tool, written in Rust.
@@ -12,7 +12,7 @@
 //!Powered by g0h4n from OpenCyber
 //!---------------------------------------------------
 //!
-//!RustHound 1.0.0
+//!RustHound
 //!g0h4n https://twitter.com/g0h4n_0
 //!Active Directory data collector for BloodHound.
 //!
