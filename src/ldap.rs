@@ -112,7 +112,8 @@ pub async fn ldap_search(
 	let mut count = 0;	
     while let Some(entry) = search.next().await? {
         let entry = SearchEntry::construct(entry);
-
+		//trace!("{:?}", &entry);
+		
 		//manage progress bar
 		count += 1;
 		progress_bar(pb.clone(),"LDAP objects retreived".to_string(),count).await;	
