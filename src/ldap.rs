@@ -16,6 +16,8 @@ use ldap3::{adapters::PagedResults, controls::RawControl, LdapConnAsync, LdapCon
 use ldap3::{Scope, SearchEntry};
 use log::{debug, error, info};
 use std::process;
+use indicatif::ProgressBar;
+use crate::banner::progress_bar;
 
 /// Function to request all AD values.
 pub async fn ldap_search(
@@ -93,6 +95,7 @@ pub async fn ldap_search(
         Box::new(EntriesOnly::new()),
         Box::new(PagedResults::new(999)),
     ];
+
     // streaming search with adaptaters and filters
     let mut search = ldap.streaming_search_with(
         adapters, // Adapter which fetches Search results with a Paged Results control.
@@ -105,12 +108,19 @@ pub async fn ldap_search(
     ).await?;
 
     // wait and get next values
+	let pb = ProgressBar::new(1);
+	let mut count = 0;	
     while let Some(entry) = search.next().await? {
         let entry = SearchEntry::construct(entry);
-        //trace!("{:?}", &entry);
+
+		//manage progress bar
+		count += 1;
+		progress_bar(pb.clone(),"LDAP objects retreived".to_string(),count).await;	
+	
         //push all result in rs vec()
         rs.push(entry);
     }
+	pb.finish_and_clear();
 
     let res = search.finish().await.success();
     match res {
