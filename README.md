@@ -22,6 +22,8 @@
 - [Usage](#usage)
 - [Demo](#demo)
 - [How to compile it?](#how-to-compile-it)
+  - [Using Makefile](#using-makefile)
+  - [Using Dockerfile](#using-dockerfile)
   - [Linux x86_64 static version](#linux-x86_64-static-version)
   - [Windows static version from Linux](#windows-static-version-from-linux)
 - [How to build documentation?](#how-to-build-documentation)
@@ -30,8 +32,7 @@
 
 # Limitations
 
-Not all SharpHound features are implemented yet.
-Please refer to the [roadmap](#-roadmap) for more information.
+Not all SharpHound features are implemented yet but some are existing in RustHound and do not in SharpHound or BloodHound-Python. Please refer to the [roadmap](#-roadmap) for more information.
 
 # Description
 
@@ -72,7 +73,36 @@ OPTIONS:
 
 # How to compile it?
 
-You need to install rust in your system (Windows/Linux/MacOS).
+## Using Makefile
+
+You can use **make** command to install Rusthound or to compile it for Linux or Windows.
+
+```bash
+make install
+rusthount -h
+```
+
+More command in the **Makefile**:
+
+```bash
+make help
+  usage: make install
+  usage: make uninstall
+  usage: make debug
+  usage: make release
+  usage: make windows
+```
+
+## Using Dockerfile
+
+Use RustHound with docker to make sure to have all dependencies.
+
+```bash
+docker build -t rusthound .
+docker run rusthound -h
+```
+
+You need to install rust on your system (Windows/Linux/MacOS).
 
 [https://www.rust-lang.org/fr/tools/install](https://www.rust-lang.org/fr/tools/install)
 
@@ -100,7 +130,7 @@ Below you can find the compilation methodology for each of the OS from Linux.
 If you need another compilation system, please consult the list in this link : [https://doc.rust-lang.org/nightly/rustc/platform-support.html](https://doc.rust-lang.org/nightly/rustc/platform-support.html)
 
 
-## Linux x86_64 static version
+## Manually for Linux x86_64 static version
 ```bash
 #Install rustup and cargo in Linux
 curl https://sh.rustup.rs -sSf | sh
@@ -118,7 +148,7 @@ CFLAGS="-lrt";LDFLAGS="-lrt";RUSTFLAGS='-C target-feature=+crt-static';cargo bui
 The result can be found in "target/x86_64-unknown-linux-gnu/release" folder.
 
 
-## Windows static version from Linux
+## Manually for Windows static version from Linux
 ```bash
 #Install rustup and cargo in Linux
 curl https://sh.rustup.rs -sSf | sh
@@ -135,8 +165,7 @@ RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-
 
 The result can be found in "target/x86_64-pc-windows-gnu/release" folder.
 
-
-# How to build documentation?
+# How to build the documentation?
 
 ```bash
 git clone https://github.com/OPENCYBER-FR/RustHound
@@ -146,7 +175,7 @@ cargo doc --open --no-deps
 
 # Demo
 
-Example are done on the [GOADv2](https://github.com/Orange-Cyberdefense/GOAD) implemented by [mayfly](https://twitter.com/M4yFly):
+Examples are done on the [GOADv2](https://github.com/Orange-Cyberdefense/GOAD) implemented by [mayfly](https://twitter.com/M4yFly):
 
 ```bash
 # Linux with username:password
@@ -227,7 +256,6 @@ cp resources/customqueries.json ~/.config/bloodhound/customqueries.json
     - [ ] `LocalAdmins`
     - [ ] `PSRemoteUsers`
 
-
 - ACL
   - [x] Add `ReadGMSAPassword` support
 
@@ -235,8 +263,8 @@ cp resources/customqueries.json ~/.config/bloodhound/customqueries.json
   - [x] Change json header like "users" to "data"
   - [x] `Properties` : `domainsid`
   - [x] `Properties` : `whencreated`
-  - [x] `IsACLProtected`
   - [ ] `IsDeleted`
+  - [x] `IsACLProtected`
 - Users
   - [x] Add default `NT AUTHORITY` : `DOMAIN.LOCAL-S-1-5-20` user
   - [x] `Properties` : `unixpassword`
