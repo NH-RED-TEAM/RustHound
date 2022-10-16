@@ -20,7 +20,7 @@ pub struct Options {
 
 pub fn extract_args() -> Options {
     let matches = App::new("RustHound")
-        .version("1.0.0")
+        .version("1.0.3")
         .author("g0h4n https://twitter.com/g0h4n_0")
         .about("Active Directory data collector for BloodHound.")
         .arg(

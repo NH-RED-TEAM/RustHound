@@ -89,7 +89,6 @@ pub fn add_type_for_ace(vec_replaced: &mut Vec<serde_json::value::Value>, sid_ty
     for i in 0..vec_replaced.len()
     {
         // Manage progress bar
-        // Pourcentage (%) = 100 x Valeur partielle/Valeur totale
 		count += 1;
         let pourcentage = 100 * count / total;
         progress_bar(pb.to_owned(),"Adding Type for ACE objects".to_string(),pourcentage.try_into().unwrap(),"%".to_string());

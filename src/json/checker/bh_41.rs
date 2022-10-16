@@ -230,7 +230,6 @@ pub fn add_childobjects_members(vec_replaced: &mut Vec<serde_json::value::Value>
     for object in vec_replaced
     {
         // Manage progress bar
-        // Pourcentage (%) = 100 x Valeur partielle/Valeur totale
 		count += 1;
         let pourcentage = 100 * count / total;
         progress_bar(pb.to_owned(),"Adding childobjects members".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
@@ -325,7 +324,6 @@ pub fn replace_guid_gplink(vec_replaced: &mut Vec<serde_json::value::Value>, dn_
     for i in 0..vec_replaced.len()
     {
         // Manage progress bar
-        // Pourcentage (%) = 100 x Valeur partielle/Valeur totale
 		count += 1;
         let pourcentage = 100 * count / total;
         progress_bar(pb.to_owned(),"Replacing GUID for gplink".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
@@ -360,7 +358,6 @@ pub fn add_domain_sid(vec_replaced: &mut Vec<serde_json::value::Value>, dn_sid: 
     for value in dn_sid 
     {
         // Manage progress bar
-        // Pourcentage (%) = 100 x Valeur partielle/Valeur totale
 		count += 1;
         let pourcentage = 100 * count / total;
         progress_bar(pb.to_owned(),"Getting domain SID".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
@@ -385,7 +382,6 @@ pub fn add_domain_sid(vec_replaced: &mut Vec<serde_json::value::Value>, dn_sid: 
     for i in 0..vec_replaced.len()
     {
         // Manage progress bar
-        // Pourcentage (%) = 100 x Valeur partielle/Valeur totale
 		count += 1;
         let pourcentage = 100 * count / total;
         progress_bar(pb.to_owned(),"Adding domain SID".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
@@ -427,7 +423,6 @@ pub fn replace_fqdn_by_sid(vec_src: &mut Vec<serde_json::value::Value>, fqdn_sid
     for i in 0..vec_src.len()
     {
         // Manage progress bar
-        // Pourcentage (%) = 100 x Valeur partielle/Valeur totale
 		count += 1;
         let pourcentage = 100 * count / total;
         progress_bar(pb.to_owned(),"Replacing FQDN by SID".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
@@ -466,7 +461,6 @@ pub fn replace_sid_members(vec_groups: &mut Vec<serde_json::value::Value>, dn_si
     for i in 0..vec_groups.len()
     {
         // Manage progress bar
-        // Pourcentage (%) = 100 x Valeur partielle/Valeur totale
 		count += 1;
         let pourcentage = 100 * count / total;
         progress_bar(pb.to_owned(),"Replacing SID for groups".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
