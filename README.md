@@ -24,6 +24,7 @@
 - [How to compile it?](#how-to-compile-it)
   - [Using Makefile](#using-makefile)
   - [Using Dockerfile](#using-dockerfile)
+  - [Using Cargo](#using-cargo)
   - [Linux x86_64 static version](#linux-x86_64-static-version)
   - [Windows static version from Linux](#windows-static-version-from-linux)
 - [How to build documentation?](#how-to-build-documentation)
@@ -101,6 +102,8 @@ Use RustHound with docker to make sure to have all dependencies.
 docker build -t rusthound .
 docker run rusthound -h
 ```
+
+## Using Cargo
 
 You need to install rust on your system (Windows/Linux/MacOS).
 
@@ -242,7 +245,7 @@ cp resources/customqueries.json ~/.config/bloodhound/customqueries.json
 
 - Parsing Features
   - [x] `Properties:sidhistory` not tested!
-      - [ ] `HasSIDHistory`
+    - [ ] `HasSIDHistory`
   - [x] `ChildOus`
   - [x] `Direct_Members`
   - [x] `GPlink`
@@ -263,16 +266,14 @@ cp resources/customqueries.json ~/.config/bloodhound/customqueries.json
   - [x] Change json header like "users" to "data"
   - [x] `Properties` : `domainsid`
   - [x] `Properties` : `whencreated`
-  - [ ] `IsDeleted`
   - [x] `IsACLProtected`
+  - [ ] `IsDeleted`
 - Users
   - [x] Add default `NT AUTHORITY` : `DOMAIN.LOCAL-S-1-5-20` user
   - [x] `Properties` : `unixpassword`
   - [x] `Properties` : `unicodepassword`
   - [ ] `Properties` : `sfupassword`
   - [x] `Properties` : `trustedtoauth`
-  - [x] `Properties:sidhistory` not tested!
-    - [ ] `HasSIDHistory`
   - [x] `Properties` : `samaccountname`
   - [x] `Properties` : `logonscript`
 - Domains
@@ -295,11 +296,11 @@ cp resources/customqueries.json ~/.config/bloodhound/customqueries.json
 - OUs
   - [x] `ChildObjects`
   - [x] `GPOChanges`
+    - [x] `AffectedComputers`
     - [ ] `LocalAdmins`
     - [ ] `RemoteDesktopUsers`
     - [ ] `DcomUsers`
     - [ ] `PSRemoteUsers`
-    - [x] `AffectedComputers`
 - Containers
   - [x] Make function to create containers.json
   - Values
@@ -320,8 +321,9 @@ cp resources/customqueries.json ~/.config/bloodhound/customqueries.json
 ## Optimization
 - [x] Log level (info,debug,trace)
 - [x] Error management (working on it)
-- [ ] **add_childobjects_members()** ChildObject function in checker/bh_41.rs:217
-- [ ] **replace_guid_gplink()** gplinks function in checker/bh_41.rs:302
+- [x] **add_childobjects_members()** ChildObject function in checker/bh_41.rs
+- [x] **replace_guid_gplink()** gplinks function in checker/bh_41.rs
+- [x] **add_domain_sid()** gplinks function in checker/bh_41.rs
 
 # :link: Links
 

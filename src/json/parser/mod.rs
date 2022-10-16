@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 use ldap3::SearchEntry;
 use regex::Regex;
+use indicatif::ProgressBar;
+use crate::banner::progress_bar;
+use std::convert::TryInto;
 
 use crate::enums::ldaptype::*;
 use log::{info};
@@ -28,8 +31,14 @@ pub fn parse_result_type(
     fqdn_ip: &mut HashMap<String, String>,
 )   
 {
+    // Needed for progress bar stats
+    let pb = ProgressBar::new(1);
+    let mut count = 0;
+    let total = result.len();
+
     info!("Starting the LDAP objects parsing...");
     for entry in result {
+        // Start parsing with Type matching
         let cloneresult = entry.clone();
         let atype = get_type(entry).unwrap_or(Type::Unknown);
         match atype {
@@ -128,7 +137,13 @@ pub fn parse_result_type(
                 let _unknown = parse_unknown(cloneresult, domain);
             }
         }
+        // Manage progress bar
+        // Pourcentage (%) = 100 x Valeur partielle/Valeur totale
+		count += 1;
+        let pourcentage = 100 * count / total;
+        progress_bar(pb.to_owned(),"Parsing LDAP objects".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
     }
+    pb.finish_and_clear();
     info!("Parsing LDAP objects finished!");
 }
 

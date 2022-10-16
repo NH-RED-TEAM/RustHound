@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 use log::{info,debug};
+use indicatif::ProgressBar;
+use crate::banner::progress_bar;
+use std::convert::TryInto;
 
 pub mod bh_41;
 
@@ -78,8 +81,19 @@ pub fn check_all_result(
 /// This function check PrincipalSID for all Ace and add the PrincipalType "Group","User","Computer"
 pub fn add_type_for_ace(vec_replaced: &mut Vec<serde_json::value::Value>, sid_type: &HashMap<String, String>)
 {
+    // Needed for progress bar stats
+    let pb = ProgressBar::new(1);
+    let mut count = 0;
+    let total = vec_replaced.len();
+
     for i in 0..vec_replaced.len()
     {
+        // Manage progress bar
+        // Pourcentage (%) = 100 x Valeur partielle/Valeur totale
+		count += 1;
+        let pourcentage = 100 * count / total;
+        progress_bar(pb.to_owned(),"Adding Type for ACE objects".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
+
         // ACE by ACE
         if vec_replaced[i]["Aces"].as_array().unwrap().len() != 0 {
             for j in 0..vec_replaced[i]["Aces"].as_array().unwrap().len()
@@ -90,4 +104,5 @@ pub fn add_type_for_ace(vec_replaced: &mut Vec<serde_json::value::Value>, sid_ty
             }
         }
     }
+    pb.finish_and_clear();
 }

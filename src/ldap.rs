@@ -96,7 +96,7 @@ pub async fn ldap_search(
         Box::new(PagedResults::new(999)),
     ];
 
-    // streaming search with adaptaters and filters
+    // Streaming search with adaptaters and filters
     let mut search = ldap.streaming_search_with(
         adapters, // Adapter which fetches Search results with a Paged Results control.
         &ldap_args.s_dc, 
@@ -107,18 +107,16 @@ pub async fn ldap_search(
         // https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-adts/932a7a8d-8c93-4448-8093-c79b7d9ba499
     ).await?;
 
-    // wait and get next values
+    // Wait and get next values
 	let pb = ProgressBar::new(1);
 	let mut count = 0;	
     while let Some(entry) = search.next().await? {
         let entry = SearchEntry::construct(entry);
 		//trace!("{:?}", &entry);
-		
-		//manage progress bar
+		// Manage progress bar
 		count += 1;
-		progress_bar(pb.clone(),"LDAP objects retreived".to_string(),count).await;	
-	
-        //push all result in rs vec()
+		progress_bar(pb.to_owned(),"LDAP objects retreived".to_string(),count,"#".to_string());	
+        // Push all result in rs vec()
         rs.push(entry);
     }
 	pb.finish_and_clear();

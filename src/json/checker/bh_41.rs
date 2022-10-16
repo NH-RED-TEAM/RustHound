@@ -3,6 +3,9 @@ use regex::Regex;
 //use log::{info,debug,trace};
 use crate::json::templates::*;
 use crate::ldap::prepare_ldap_dc;
+use indicatif::ProgressBar;
+use crate::banner::progress_bar;
+use std::convert::TryInto;
 
 /// Function to add default groups
 /// <https://github.com/fox-it/BloodHound.py/blob/645082e3462c93f31b571db945cde1fd7b837fb9/bloodhound/enumeration/memberships.py#L411>
@@ -217,9 +220,20 @@ pub fn add_default_users(vec_users: &mut Vec<serde_json::value::Value>, domain: 
 /// This function is to push user SID in ChildObjects bh4.1+
 pub fn add_childobjects_members(vec_replaced: &mut Vec<serde_json::value::Value>, dn_sid: &HashMap<String, String>,  sid_type: &HashMap<String, String>)
 {
+    // Needed for progress bar stats
+    let pb = ProgressBar::new(1);
+    let mut count = 0;
+    let total = vec_replaced.len();
+        
     //trace!("add_childobjects_members");
 
-    for object in vec_replaced{
+    for object in vec_replaced
+    {
+        // Manage progress bar
+        // Pourcentage (%) = 100 x Valeur partielle/Valeur totale
+		count += 1;
+        let pourcentage = 100 * count / total;
+        progress_bar(pb.to_owned(),"Adding childobjects members".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
 
         let mut direct_members: Vec<serde_json::value::Value> = Vec::new();
         let mut affected_computers: Vec<serde_json::value::Value> = Vec::new();
@@ -297,13 +311,25 @@ pub fn add_childobjects_members(vec_replaced: &mut Vec<serde_json::value::Value>
             object["GPOChanges"]["AffectedComputers"] = affected_computers.into();
         }
     }
+    pb.finish_and_clear();
 }
 
 /// This function check Guid for all Gplink to replace with correct guid
 pub fn replace_guid_gplink(vec_replaced: &mut Vec<serde_json::value::Value>, dn_sid: &HashMap<String, String>)
 {
+    // Needed for progress bar stats
+    let pb = ProgressBar::new(1);
+    let mut count = 0;
+    let total = vec_replaced.len();
+
     for i in 0..vec_replaced.len()
     {
+        // Manage progress bar
+        // Pourcentage (%) = 100 x Valeur partielle/Valeur totale
+		count += 1;
+        let pourcentage = 100 * count / total;
+        progress_bar(pb.to_owned(),"Replacing GUID for gplink".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
+
         // ACE by ACE
         if vec_replaced[i]["Links"].as_array().unwrap().len() != 0 {
             for j in 0..vec_replaced[i]["Links"].as_array().unwrap().len()
@@ -319,30 +345,56 @@ pub fn replace_guid_gplink(vec_replaced: &mut Vec<serde_json::value::Value>, dn_
             }
         }   
     }
+    pb.finish_and_clear();
 }
 
 /// This function will ad domainsid for gpos and for ous
 pub fn add_domain_sid(vec_replaced: &mut Vec<serde_json::value::Value>, dn_sid: &HashMap<String, String>)
 {
+    // Needed for progress bar stats
+    let pb = ProgressBar::new(1);
+    let mut count = 0;
+    let total = vec_replaced.len();
+
     let mut domain_sid = "".to_owned();
     for value in dn_sid 
     {
+        // Manage progress bar
+        // Pourcentage (%) = 100 x Valeur partielle/Valeur totale
+		count += 1;
+        let pourcentage = 100 * count / total;
+        progress_bar(pb.to_owned(),"Getting domain SID".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
+
         let sid = value.1.to_owned();
         let re = Regex::new(r"^S-[0-9]{1}-[0-9]{1}-[0-9]{1,}-[0-9]{1,}-[0-9]{1,}-[0-9]{1,}").unwrap();
         for value in re.captures_iter(&sid) 
         {
             domain_sid = value[0].to_owned().to_string();
+            break
         }
-        continue
+        break
     }
+    pb.finish_and_clear();
     //trace!("domain_sid: {:?}",&domain_sid);
 
+    // Needed for progress bar stats
+    let pb = ProgressBar::new(1);
+    let mut count = 0;
+    let total = vec_replaced.len();
+    
     for i in 0..vec_replaced.len()
     {
+        // Manage progress bar
+        // Pourcentage (%) = 100 x Valeur partielle/Valeur totale
+		count += 1;
+        let pourcentage = 100 * count / total;
+        progress_bar(pb.to_owned(),"Adding domain SID".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
+
         //let name = vec_replaced[i]["Properties"]["name"].as_str().unwrap().to_string();
         //trace!("name: {:?}",&name);
         vec_replaced[i]["Properties"]["domainsid"] = domain_sid.to_owned().into();
     }
+    pb.finish_and_clear();
 }
 
 /// This function push computer sid in domain GpoChanges
@@ -367,8 +419,19 @@ pub fn add_affected_computers(vec_domains: &mut Vec<serde_json::value::Value>, s
 /// This function is to replace fqdn by sid in users SPNTargets:ComputerSID
 pub fn replace_fqdn_by_sid(vec_src: &mut Vec<serde_json::value::Value>, fqdn_sid: &HashMap<String, String>) 
 {
+    // Needed for progress bar stats
+    let pb = ProgressBar::new(1);
+    let mut count = 0;
+    let total = vec_src.len();
+
     for i in 0..vec_src.len()
     {
+        // Manage progress bar
+        // Pourcentage (%) = 100 x Valeur partielle/Valeur totale
+		count += 1;
+        let pourcentage = 100 * count / total;
+        progress_bar(pb.to_owned(),"Replacing FQDN by SID".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
+
         if vec_src[i]["SPNTargets"].as_array().unwrap_or(&Vec::new()).len() != 0 {
             for j in 0..vec_src[i]["SPNTargets"].as_array().unwrap().len()
             {
@@ -388,14 +451,26 @@ pub fn replace_fqdn_by_sid(vec_src: &mut Vec<serde_json::value::Value>, fqdn_sid
             }
         }
     }
+    pb.finish_and_clear();
 }
 
 /// This function is to check and replace object name by SID in group members.
 pub fn replace_sid_members(vec_groups: &mut Vec<serde_json::value::Value>, dn_sid: &HashMap<String, String>, sid_type: &HashMap<String, String>, vec_trusts: &Vec<serde_json::value::Value>)
 {
+    // Needed for progress bar stats
+    let pb = ProgressBar::new(1);
+    let mut count = 0;
+    let total = vec_groups.len();
+
     // GROUP by GROUP
     for i in 0..vec_groups.len()
     {
+        // Manage progress bar
+        // Pourcentage (%) = 100 x Valeur partielle/Valeur totale
+		count += 1;
+        let pourcentage = 100 * count / total;
+        progress_bar(pb.to_owned(),"Replacing SID for groups".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
+
         // MEMBER by MEMBER
         if vec_groups[i]["Members"].as_array().unwrap().len() != 0 {
             for j in 0..vec_groups[i]["Members"].as_array().unwrap().len()
@@ -420,6 +495,7 @@ pub fn replace_sid_members(vec_groups: &mut Vec<serde_json::value::Value>, dn_si
             }
         }
     }
+    pb.finish_and_clear();
 }
 // Make the SID from domain present in trust
 fn sid_maker_from_another_domain(vec_trusts: &Vec<serde_json::value::Value>, object_identifier: &String) -> String
