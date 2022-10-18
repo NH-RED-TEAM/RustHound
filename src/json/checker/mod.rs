@@ -46,6 +46,7 @@ pub fn check_all_result(
     add_type_for_ace(vec_ous, &sid_type);
     add_type_for_ace(vec_domains, &sid_type);
     add_type_for_ace(vec_containers, &sid_type);
+    add_type_for_allowtedtoact(vec_computers, &sid_type);
     debug!("PrincipalType for ACEs added!");
 
     debug!("Adding ChildObject members started");
@@ -100,6 +101,33 @@ pub fn add_type_for_ace(vec_replaced: &mut Vec<serde_json::value::Value>, sid_ty
                 let group: String = "Group".to_string();
                 let type_object = sid_type.get(&vec_replaced[i]["Aces"][j]["PrincipalSID"].as_str().unwrap().to_string()).unwrap_or(&group);
                 vec_replaced[i]["Aces"][j]["PrincipalType"] = type_object.to_owned().into();
+            }
+        }
+    }
+    pb.finish_and_clear();
+}
+
+/// This function check PrincipalSID for all AllowedToAct object and add the PrincipalType "Group","User","Computer"
+pub fn add_type_for_allowtedtoact(vec_replaced: &mut Vec<serde_json::value::Value>, sid_type: &HashMap<String, String>)
+{
+    // Needed for progress bar stats
+    let pb = ProgressBar::new(1);
+    let mut count = 0;
+    let total = vec_replaced.len();
+
+    for i in 0..vec_replaced.len()
+    {
+        // Manage progress bar
+		count += 1;
+        let pourcentage = 100 * count / total;
+        progress_bar(pb.to_owned(),"Adding Type for AllowedToAct objects".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
+
+        if vec_replaced[i]["AllowedToAct"].as_array().unwrap().len() != 0 {
+            for j in 0..vec_replaced[i]["AllowedToAct"].as_array().unwrap().len()
+            {
+                let default: String = "Computer".to_string();
+                let type_object = sid_type.get(&vec_replaced[i]["AllowedToAct"][j]["ObjectIdentifier"].as_str().unwrap().to_string()).unwrap_or(&default);
+                vec_replaced[i]["AllowedToAct"][j]["ObjectType"] = type_object.to_owned().into();
             }
         }
     }

@@ -723,6 +723,31 @@ pub fn parse_computer(
                 );
                 computer_json["Aces"] = relations_ace.into();
             }
+            "msDS-AllowedToActOnBehalfOfOtherIdentity" => {
+                // Needed with acl
+                let entry_type = "computer".to_string();
+                // msDS-AllowedToActOnBehalfOfOtherIdentity parsing ACEs
+                let relations_ace = parse_ntsecuritydescriptor(
+                    &mut computer_json,
+                    &value[0],
+                    entry_type,
+                    &result_attrs,
+                    &result_bin,
+                    &domain,
+                );
+                let mut vec_members: Vec<serde_json::value::Value> = Vec::new();
+                let mut allowed_to_act = prepare_member_json_template();
+                for delegated in relations_ace {
+                    //trace!("msDS-AllowedToActOnBehalfOfOtherIdentity => ACE: {:?}",delegated);
+                    // delegated["RightName"] == "Owner" => continue
+                    if delegated["RightName"] == "GenericAll" {
+                        allowed_to_act["ObjectIdentifier"] = delegated["PrincipalSID"].as_str().unwrap().to_string().into();
+                        vec_members.push(allowed_to_act.to_owned()); 
+                        continue
+                    }
+                }
+                computer_json["AllowedToAct"] = vec_members.into();
+            }
             _ => {}
         }
     }

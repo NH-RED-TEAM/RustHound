@@ -347,6 +347,16 @@
          ]
       },
       {
+         "name": "[B26] Find all computer who can AllowedToAct or AllowToDelegate (limit 25)",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (m:Computer),(n {highvalue:true}),p=shortestPath((m)-[r*1..]->(n)) WHERE NONE (r IN relationships(p) WHERE type(r)= "GetChanges") AND NONE (r in relationships(p) WHERE type(r)="GetChangesAll") AND NOT m=n RETURN p LIMIT 25"
+            }
+         ]
+      },
+      {
          "name": "Find all Certificate Templates",
          "category": "Certificates",
          "queryList": [

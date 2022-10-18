@@ -244,79 +244,25 @@ cp resources/customqueries.json ~/.config/bloodhound/customqueries.json
 ## Bloodhound v4.2
 
 - Parsing Features
+  - [x] `AllowedToDelegate`
+  - [x] `AllowedToAct`
   - [x] `Properties:sidhistory` not tested!
     - [ ] `HasSIDHistory`
-  - [x] `ChildOus`
-  - [x] `Direct_Members`
-  - [x] `GPlink`
-  - [x] `haslaps`
-  - [x] `AllowedToDelegate`
-  - [ ] `AllowedToAct`
   - [ ] `Sessions`
     - [ ] List users with RPC
-    - [ ] `DcomUsers`
-    - [ ] `RemoteDesktopUsers`
-    - [ ] `LocalAdmins`
-    - [ ] `PSRemoteUsers`
-
-- ACL
-  - [x] Add `ReadGMSAPassword` support
-
+- Computers & Users
+  - [x] `Properties` : `samaccountname`
 - All
-  - [x] Change json header like "users" to "data"
-  - [x] `Properties` : `domainsid`
-  - [x] `Properties` : `whencreated`
-  - [x] `IsACLProtected`
   - [ ] `IsDeleted`
 - Users
-  - [x] Add default `NT AUTHORITY` : `DOMAIN.LOCAL-S-1-5-20` user
-  - [x] `Properties` : `unixpassword`
-  - [x] `Properties` : `unicodepassword`
   - [ ] `Properties` : `sfupassword`
-  - [x] `Properties` : `trustedtoauth`
-  - [x] `Properties` : `samaccountname`
-  - [x] `Properties` : `logonscript`
-- Domains
-  - [x] Change `ChildOus` to `ChildObjects`
-    - [x] Add the `ObjectIdentifier` and `ObjectType` for all `ChildObjects`
-  - [x] `Properties` : `highvalue`
-  - [x] `GPOChanges`
-    - [ ] `LocalAdmins`
-    - [ ] `RemoteDesktopUsers`
-    - [ ] `DcomUsers`
-    - [ ] `PSRemoteUsers`
-    - [x] `AffectedComputers`
-  - [x] `Trusts`
-    - [x] `TargetDomainSid`
-    - [x] `TargetDomainName`
-    - [x] `IsTransitive`
-    - [x] `SidFilteringEnabled`
-    - [x] `TrustDirection`
-    - [x] `TrustType`
-- OUs
-  - [x] `ChildObjects`
+- OUs & DOmains
   - [x] `GPOChanges`
     - [x] `AffectedComputers`
     - [ ] `LocalAdmins`
     - [ ] `RemoteDesktopUsers`
     - [ ] `DcomUsers`
     - [ ] `PSRemoteUsers`
-- Containers
-  - [x] Make function to create containers.json
-  - Values
-    - [x] `ChildObjects`
-      - [x] Add the `ObjectIdentifier` and `ObjectType` for all `ChildObjects`
-    - [x] `ObjectIdentifier`
-    - [x] `IsDeleted`
-    - [x] `IsACLProtected`
-    - [x] `Aces`
-    - [x] `Properties` : `domain`
-    - [x] `Properties` : `domainsid`
-    - [x] `Properties` : `name`
-    - [x] `Properties` : `distinguishedname`
-- Computers
-  - [x] `Properties` : `samaccountname`
-
 
 ## Optimization
 - [x] Log level (info,debug,trace)
