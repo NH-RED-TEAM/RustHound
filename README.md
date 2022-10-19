@@ -185,17 +185,17 @@ Examples are done on the [GOADv2](https://github.com/Orange-Cyberdefense/GOAD) i
 ./rusthound -d north.sevenkingdoms.local -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo/rusthound_north -z
 
 # Linux with username:password and ldaps
-./rusthound -d north.sevenkingdoms.local -ldaps -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo/rusthound_north -z 
+./rusthound -d north.sevenkingdoms.local --ldaps -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo/rusthound_north -z 
 # Linux with username:password and ldaps and custom port
-./rusthound -d north.sevenkingdoms.local -ldaps -P 3636 -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo/rusthound_north -z 
+./rusthound -d north.sevenkingdoms.local --ldaps -P 3636 -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo/rusthound_north -z 
 
 # Linux with username:password and ldaps and fqdn resolver module
-./rusthound -d north.sevenkingdoms.local -ldaps -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo/rusthound_north --fqdn-resolver 
+./rusthound -d north.sevenkingdoms.local --ldaps -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo/rusthound_north --fqdn-resolver 
 # Linux with username:password and ldaps and fqdn resolver module and tcp dns request and custom name server
-./rusthound -d north.sevenkingdoms.local -ldaps -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo/rusthound_north --fqdn-resolver --tcp-dns --name-server 192.168.56.10 -z
+./rusthound -d north.sevenkingdoms.local --ldaps -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo/rusthound_north --fqdn-resolver --tcp-dns --name-server 192.168.56.10 -z
 
 # Tips to redirect and append both standard output and standard error to a file > /tmp/rh_output 2>&1
-./rusthound -d north.sevenkingdoms.local -ldaps -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo/rusthound_north --fqdn-resolver > /tmp/rh_output 2>&1
+./rusthound -d north.sevenkingdoms.local --ldaps -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo/rusthound_north --fqdn-resolver > /tmp/rh_output 2>&1
 
 
 # Windows with GSSAPI session
