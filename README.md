@@ -19,8 +19,6 @@
 
 - [Limitation](#limitations)
 - [Description](#description)
-- [Usage](#usage)
-- [Demo](#demo)
 - [How to compile it?](#how-to-compile-it)
   - [Using Makefile](#using-makefile)
   - [Using Dockerfile](#using-dockerfile)
@@ -28,6 +26,9 @@
   - [Linux x86_64 static version](#manually-for-linux-x86_64-static-version)
   - [Windows static version from Linux](#manually-for-windows-static-version-from-linux)
 - [How to build documentation?](#how-to-build-documentation)
+- [Usage](#usage)
+- [Demo](#demo)
+- [Statistics](#rocket-statistics)
 - [Roadmap](#-roadmap)
 - [Links](#link-links)
 
@@ -46,31 +47,6 @@ RustHound generate users,groups,computers,ous,gpos,containers,domains json files
 > 💡 If you can use SharpHound.exe, use it.
 > Rusthound is a backup solution if SharpHound.exe is detected by AV or if SharpHound.exe isn't executable from the system where you have access to.
 
-# Usage
-
-```bash
-USAGE:
-    rusthound [FLAGS] [OPTIONS] --domain <domain>
-
-FLAGS:
-        --dns-tcp          Use TCP instead of UDP for DNS queries
-        --fqdn-resolver    [MODULE] Use fqdn-resolver module to get computers IP address
-    -h, --help             Prints help information
-        --ldaps            Prepare ldaps request. Like ldaps://G0H4N.LAB/
-    -v                     Sets the level of verbosity
-    -V, --version          Prints version information
-    -z, --zip              RustHound will compress the JSON files into a zip archive (doesn't work with Windows)
-
-OPTIONS:
-    -d, --domain <domain>                Domain name like: G0H4N.LAB
-    -f, --ldapfqdn <ldapfqdn>            Domain Controler FQDN like: DC01.G0H4N.LAB
-    -i, --ldapip <ldapip>                Domain Controller IP address
-    -p, --ldappassword <ldappassword>    Ldap password to use
-    -P, --ldapport <ldapport>            Ldap port, default is 389
-    -u, --ldapusername <ldapusername>    Ldap username to use
-    -n, --name-server <name-server>      Alternative IP address name server to use for queries
-    -o, --dirpath <path>                 Path where you would like to save json files
-```
 
 # How to compile it?
 
@@ -176,6 +152,32 @@ cd RustHound
 cargo doc --open --no-deps
 ```
 
+# Usage
+
+```bash
+USAGE:
+    rusthound [FLAGS] [OPTIONS] --domain <domain>
+
+FLAGS:
+        --dns-tcp          Use TCP instead of UDP for DNS queries
+        --fqdn-resolver    [MODULE] Use fqdn-resolver module to get computers IP address
+    -h, --help             Prints help information
+        --ldaps            Prepare ldaps request. Like ldaps://G0H4N.LAB/
+    -v                     Sets the level of verbosity
+    -V, --version          Prints version information
+    -z, --zip              RustHound will compress the JSON files into a zip archive (doesn't work with Windows)
+
+OPTIONS:
+    -d, --domain <domain>                Domain name like: G0H4N.LAB
+    -f, --ldapfqdn <ldapfqdn>            Domain Controler FQDN like: DC01.G0H4N.LAB
+    -i, --ldapip <ldapip>                Domain Controller IP address
+    -p, --ldappassword <ldappassword>    Ldap password to use
+    -P, --ldapport <ldapport>            Ldap port, default is 389
+    -u, --ldapusername <ldapusername>    Ldap username to use
+    -n, --name-server <name-server>      Alternative IP address name server to use for queries
+    -o, --dirpath <path>                 Path where you would like to save json files
+```
+
 # Demo
 
 Examples are done on the [GOADv2](https://github.com/Orange-Cyberdefense/GOAD) implemented by [mayfly](https://twitter.com/M4yFly):
@@ -212,6 +214,17 @@ Use the following command to install it:
 ```bash
 cp resources/customqueries.json ~/.config/bloodhound/customqueries.json
 ```
+
+# :rocket: Statistics
+
+In order to make statistics on a DC with more LDAP objects, we run the [BadBlood](https://github.com/davidprowe/BadBlood) project on the domain controller ESSOS.local from [GOAD](https://github.com/Orange-Cyberdefense/GOAD). The DC has now around 3500 objects. An execution average time has been done and here are the output:
+
+| Tool              | Plateform         | Objects | Time     | Command line     |
+| -------------------------- | ----------------- | ---------- | -------  | -------  |
+| SharpHound.exe        | Windows<img width="18px"  src="https://github.com/OPENCYBER-FR/RustHound/blob/main/img/windows.png"/> | ~3500   | ~51.605s | Measure-Command { sharphound.exe -d essos.local --ldapusername 'khal.drogo' --ldappassword 'horse' --domaincontroller '192.168.56.12' -c All } |
+| BloodHound.py | Linux<img width="18px" src="https://github.com/OPENCYBER-FR/RustHound/blob/main/img/linux.png"/>    | ~3500   | ~9.657s  | time python3 bloodhound.py -u khal.drogo -p horse -d essos.local -ns 192.168.56.12 --zip -c all |
+| RustHound.exe         | Windows<img width="18px"  src="https://github.com/OPENCYBER-FR/RustHound/blob/main/img/windows.png"/> | ~3500   | **~5.315s**  | Measure-Command { rusthound.exe -d essos.local -u khal.drogo@essos.local -p horse -z } | 
+| RustHound         | Linux<img width="18px"  src="https://github.com/OPENCYBER-FR/RustHound/blob/main/img/linux.png"/>    | ~3500   | **~3.166s**  | time rusthound -d essos.local -u khal.drogo@essos.local -p horse -z  |
 
 #  🚥 Roadmap
 
