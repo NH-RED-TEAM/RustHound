@@ -219,7 +219,7 @@ cp resources/customqueries.json ~/.config/bloodhound/customqueries.json
 
 In order to make statistics on a DC with more LDAP objects, we run the [BadBlood](https://github.com/davidprowe/BadBlood) project on the domain controller ESSOS.local from [GOAD](https://github.com/Orange-Cyberdefense/GOAD). The DC has now around 3500 objects. An execution average time has been done and here are the output:
 
-| Tool              | Plateform         | Objects | Time     | Command line     |
+| Tool              | Environment         | Objects | Time     | Command line     |
 | -------------------------- | ----------------- | ---------- | -------  | -------  |
 | SharpHound.exe        | Windows<img width="18px"  src="https://github.com/OPENCYBER-FR/RustHound/blob/main/img/windows.png"/> | ~3500   | ~51.605s | Measure-Command { sharphound.exe -d essos.local --ldapusername 'khal.drogo' --ldappassword 'horse' --domaincontroller '192.168.56.12' -c All } |
 | BloodHound.py | Linux<img width="18px" src="https://github.com/OPENCYBER-FR/RustHound/blob/main/img/linux.png"/>    | ~3500   | ~9.657s  | time python3 bloodhound.py -u khal.drogo -p horse -d essos.local -ns 192.168.56.12 --zip -c all |
