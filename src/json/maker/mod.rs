@@ -114,8 +114,8 @@ fn make_a_zip(
 }
 
 
-fn create_zip_archive<T: Seek + Write>(buf: &mut T,json_result: &HashMap<String, String>) -> ZipResult<()> {
-   let mut writer = ZipWriter::new(buf);
+fn create_zip_archive<T: Seek + Write>(zip_filename: &mut T,json_result: &HashMap<String, String>) -> ZipResult<()> {
+   let mut writer = ZipWriter::new(zip_filename);
    // json file by json file
    trace!("Making the ZIP file");
 
@@ -125,7 +125,7 @@ fn create_zip_archive<T: Seek + Write>(buf: &mut T,json_result: &HashMap<String,
       let content = file.1;
       trace!("Adding file {}",filename.bold());
       writer.start_file(filename, FileOptions::default())?;
-      writer.write(content.as_bytes())?;
+      writer.write_all(content.as_bytes())?;
    }
 
    writer.finish()?;
