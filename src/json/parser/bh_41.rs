@@ -251,7 +251,7 @@ pub fn parse_user(
                 // OID to use: 1.2.840.113556.1.4.417
                 // https://ldapwiki.com/wiki/IsDeleted
                 let is_deleted = true;
-                debug!("isDeleted: {:?}",&result_attrs["IsDeleted"][0]);
+                //trace!("isDeleted: {:?}",&result_attrs["IsDeleted"][0]);
                 user_json["IsDeleted"] = is_deleted.to_owned().into();
             }
             _ => {}
@@ -414,11 +414,13 @@ pub fn parse_group(
                 group_json["Properties"]["admincount"] = admincount.into();
             }
             "member" => {
-                for member in &result_attrs["member"] {
-                    member_json["ObjectIdentifier"] = member.to_owned().to_uppercase().into();
-                    vec_members.push(member_json.to_owned());
+                if result_attrs["member"].len() > 0 {
+                    for member in &result_attrs["member"] {
+                        member_json["ObjectIdentifier"] = member.to_owned().to_uppercase().into();
+                        vec_members.push(member_json.to_owned());
+                    }
+                    group_json["Members"] = vec_members.to_owned().into();
                 }
-                group_json["Members"] = vec_members.to_owned().into();
             }
             "objectSid" => {
                 // objectSid to vec and raw to string
@@ -438,6 +440,10 @@ pub fn parse_group(
                 if epoch.is_positive() {
                     group_json["Properties"]["whencreated"] = epoch.into();
                 }
+            }
+            "IsDeleted" => {
+                let is_deleted = true;
+                group_json["IsDeleted"] = is_deleted.to_owned().into();
             }
             _ => {}
         }
@@ -672,7 +678,7 @@ pub fn parse_computer(
                 computer_json["AllowedToDelegate"] = vec_members.to_owned().into();
             }
             "ms-Mcs-AdmPwd" => {
-                //laps is set, random password for local adminsitrator
+                // Laps is set, random password for local adminsitrator
                 // https://github.com/BloodHoundAD/SharpHound3/blob/7615860d963ba70751e1e5a00e02bb3fbca154c6/SharpHound3/Tasks/ACLTasks.cs#L313
                 let laps = true;
                 info!(
@@ -690,6 +696,10 @@ pub fn parse_computer(
             "primaryGroupID" => {
                 // primaryGroupID
                 group_id = result_attrs["primaryGroupID"][0].to_owned();
+            }
+            "IsDeleted" => {
+                let is_deleted = true;
+                computer_json["IsDeleted"] = is_deleted.to_owned().into();
             }
             _ => {}
         }
@@ -866,6 +876,10 @@ pub fn parse_ou(
             "gPLink" => {
                 ou_json["Links"] = parse_gplink(result_attrs["gPLink"][0].to_string()).into();
             }
+            "IsDeleted" => {
+                let is_deleted = true;
+                ou_json["IsDeleted"] = is_deleted.to_owned().into();
+            }
             _ => {}
         }
     }
@@ -1000,6 +1014,10 @@ pub fn parse_domain(
                     info!("MachineAccountQuota: {}",machine_account_quota.to_string().yellow().bold());
                 }
             }
+            "IsDeleted" => {
+                let is_deleted = true;
+                domain_json["IsDeleted"] = is_deleted.to_owned().into();
+            }
             _ => {}
         }
     }
@@ -1119,6 +1137,10 @@ pub fn parse_gpo(
             "gPCFileSysPath" => {
                 let gpcpath = &result_attrs["gPCFileSysPath"][0];
                 gpo_json["Properties"]["gpcpath"] = gpcpath.to_owned().into();
+            }
+            "IsDeleted" => {
+                let is_deleted = true;
+                gpo_json["IsDeleted"] = is_deleted.to_owned().into();
             }
             _ => {}
         }
@@ -1245,6 +1267,10 @@ pub fn parse_fsp(
                     fsp_json["Properties"]["domainsid"] = domain_sid[0].to_owned().to_string().into();
                 }
             }
+            "IsDeleted" => {
+                let is_deleted = true;
+                fsp_json["IsDeleted"] = is_deleted.to_owned().into();
+            }
             _ => {}
         }
     }
@@ -1337,6 +1363,10 @@ pub fn parse_container(
                     &domain,
                 );
                 container_json["Aces"] = relations_ace.into();
+            }
+            "IsDeleted" => {
+                let is_deleted = true;
+                container_json["IsDeleted"] = is_deleted.to_owned().into();
             }
             _ => {}
         }

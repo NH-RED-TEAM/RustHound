@@ -1,13 +1,13 @@
 # RustHound
 
 <p align="center">
-  <a href="https://crates.io/crates/rusthound"><img alt="Crates.io" src="https://img.shields.io/crates/v/rusthound"></a>
-  <img alt="GitHub" src="https://img.shields.io/github/license/OPENCYBER-FR/RustHound">
-  <img alt="Windows supported" src="https://img.shields.io/badge/Supported%20OS-Windows-green">
-  <img alt="Linux supported" src="https://img.shields.io/badge/Supported%20OS-Linux-orange">
-  <img alt="MacOS supported" src="https://img.shields.io/badge/Supported%20OS-MacOS-blue">
-  <a href="https://twitter.com/intent/follow?screen_name=OPENCYBER_FR" title="Follow"><img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/OPENCYBER_FR?label=OPENCYBER_FR&style=social"></a>
-  <a href="https://twitter.com/intent/follow?screen_name=g0h4n_0" title="Follow"><img src="https://img.shields.io/twitter/follow/g0h4n_0?label=g0h4n&style=social"></a>
+  <a href="https://crates.io/crates/rusthound"><img alt="Crates.io" src="https://img.shields.io/crates/v/rusthound?style=for-the-badge"></a>
+  <img alt="GitHub" src="https://img.shields.io/github/license/OPENCYBER-FR/RustHound?style=for-the-badge">
+  <img alt="Linux supported" src="https://img.shields.io/badge/Supported%20OS-Linux-orange?style=for-the-badge">
+  <img alt="Windows supported" src="https://img.shields.io/badge/Supported%20OS-Windows-green?style=for-the-badge">
+  <!--<img alt="MacOS supported" src="https://img.shields.io/badge/Supported%20OS-MacOS-blue?style=for-the-badge">-->
+  <a href="https://twitter.com/intent/follow?screen_name=OPENCYBER_FR" title="Follow"><img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/OPENCYBER_FR?label=OPENCYBER_FR&style=for-the-badge"></a>
+  <a href="https://twitter.com/intent/follow?screen_name=g0h4n_0" title="Follow"><img src="https://img.shields.io/twitter/follow/g0h4n_0?label=g0h4n&style=for-the-badge"></a>
   <br>
 </p>
 
@@ -250,15 +250,10 @@ cp resources/customqueries.json ~/.config/bloodhound/customqueries.json
     - [ ] `HasSIDHistory`
   - [ ] `Sessions`
     - [ ] List users with RPC
-- Computers & Users
-  - [x] `Properties` : `samaccountname`
-- All
-  - [ ] `IsDeleted`
 - Users
   - [ ] `Properties` : `sfupassword`
-- OUs & DOmains
-  - [x] `GPOChanges`
-    - [x] `AffectedComputers`
+- OUs & Domains
+  - [ ] `GPOChanges`
     - [ ] `LocalAdmins`
     - [ ] `RemoteDesktopUsers`
     - [ ] `DcomUsers`

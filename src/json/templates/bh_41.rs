@@ -44,7 +44,7 @@ pub fn prepare_user_json_template() -> serde_json::value::Value
       "SPNTargets": [],
       "Aces": [],
       "AllowedToDelegate": [],
-      // Todo ! récupérer les valeurs suivantes:
+      // Todo
       "HasSIDHistory": [],
    });
 }
@@ -99,7 +99,6 @@ pub fn prepare_computer_json_template() -> serde_json::value::Value
       "PrimaryGroupSID": "PGSID",
       "Aces": [],
       "AllowedToDelegate": [],
-      // Todo ! fonction pour récupérer les valeurs suivantes
       "AllowedToAct": [],
       "HasSIDHistory": [],
       "Sessions": {
@@ -161,12 +160,13 @@ pub fn prepare_ou_json_template() -> serde_json::value::Value
       "Links": [],
       "ChildObjects": [],
       "Aces": [],
-      //todo
+      // Todo
       "GPOChanges": {
          "LocalAdmins" :  [],
          "RemoteDesktopUsers" :  [],
          "DcomUsers" :  [],
          "PSRemoteUsers" :  [],
+         // Ok for affected computers
          "AffectedComputers" :  []
       },
    });
@@ -201,6 +201,7 @@ pub fn prepare_domain_json_template() -> serde_json::value::Value
       "Aces": [],
       "ObjectIdentifier": "SID",
       "IsACLProtected": false,
+      "IsDeleted": false,
       "Properties": {
          "domain": "domain.com",
          "name": "domain.com",
@@ -211,17 +212,17 @@ pub fn prepare_domain_json_template() -> serde_json::value::Value
          "whencreated": -1,
          "functionallevel": "Unknown",
       },
-      // Todo ! fonction permettant de récupérer les valeurs suivantes:
+      // Todo
       "GPOChanges": {
          "LocalAdmins" :  [],
          "RemoteDesktopUsers" :  [],
          "DcomUsers" :  [],
          "PSRemoteUsers" :  [],
+         // Ok for affected computers
          "AffectedComputers" :  []
       },
-      // Todo ! fonction permettant de récupérer les valeurs suivantes:
+      // Todo
       "Links": [],
-      "IsDeleted": false,
    });
 }
 
