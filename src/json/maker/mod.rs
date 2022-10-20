@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use colored::Colorize;
-use log::{info,trace,error};
+use log::{info,trace};
 
 extern crate zip;
 use std::fs::File;
@@ -30,63 +30,57 @@ pub fn make_result(
    // Hashmap for json files
    let mut json_result = HashMap::new();
 
-   // zip not really work on Windows / macOS yet
-   let mut ziped = zip;
-    if !cfg!(unix) && zip == true  {
-      error!("Sorry but zip function doesn't really work for Windows/macOS yet.");
-      ziped = false;
-   }
    // Add all in json files
    bh_41::add_user(
 		&domain_format,
       vec_users,
       path,&mut json_result,
-      ziped,
+      zip,
    )?;
    bh_41::add_group(
 		&domain_format,
       vec_groups,
       path,
       &mut json_result,
-      ziped,
+      zip,
    )?;
    bh_41::add_computer(
 		&domain_format,
       vec_computers,
       path,
       &mut json_result,
-      ziped,
+      zip,
    )?;
    bh_41::add_ou(
 		&domain_format,
       vec_ous,
       path,
       &mut json_result,
-      ziped,
+      zip,
    )?;
    bh_41::add_domain(
 		&domain_format,
       vec_domains,
       path,
       &mut json_result,
-      ziped,
+      zip,
    )?;
    bh_41::add_gpo(
 		&domain_format,
       vec_gpos,
       path,
       &mut json_result,
-      ziped,
+      zip,
    )?;
    bh_41::add_container(
 		&domain_format,
       vec_containers,
       path,
       &mut json_result,
-      ziped,
+      zip,
    )?;
    // All in zip file
-   if ziped {
+   if zip {
       make_a_zip(
          &domain_format,
          path,
