@@ -113,7 +113,7 @@ pub fn extract_args() -> Options {
                 .long("zip")
                 .short("z")
                 .takes_value(false)
-                .help("RustHound will compress the JSON files into a zip archive (doesn't work with Windows)")
+                .help("RustHound will compress the JSON files into a zip archive")
                 .required(false),
         )
         .arg(

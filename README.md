@@ -165,7 +165,7 @@ FLAGS:
         --ldaps            Prepare ldaps request. Like ldaps://G0H4N.LAB/
     -v                     Sets the level of verbosity
     -V, --version          Prints version information
-    -z, --zip              RustHound will compress the JSON files into a zip archive (doesn't work with Windows)
+    -z, --zip              RustHound will compress the JSON files into a zip archive
 
 OPTIONS:
     -d, --domain <domain>                Domain name like: G0H4N.LAB
