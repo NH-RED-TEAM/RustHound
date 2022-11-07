@@ -44,9 +44,21 @@ build_windows:
 
 windows: check_rustup install_windows_deps build_windows
 
+install_linux_musl_deps:
+	#@rustup install x86_64-unknown-linux-musl --force-non-host
+	@rustup target add x86_64-unknown-linux-musl
+
+build_linux_musl:
+	cargo build --release --target x86_64-unknown-linux-musl
+	@echo "[+] You can find rusthound in target/x86_64-unknown-linux-musl/release folder."
+
+linux_musl:	check_rustup install_linux_musl_deps build_linux_musl
+
 help:
 	@echo "usage: make install"
 	@echo "usage: make uninstall"
 	@echo "usage: make debug"
 	@echo "usage: make release"
+	@echo "Static:"
 	@echo "usage: make windows"
+	@echo "usage: make linux_musl"

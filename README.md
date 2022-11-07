@@ -68,6 +68,7 @@ make help
   usage: make debug
   usage: make release
   usage: make windows
+  usage: make linux_musl
 ```
 
 ## Using Dockerfile
