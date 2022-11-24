@@ -273,13 +273,6 @@ In order to make statistics on a DC with more LDAP objects, we run the [BadBlood
     - [ ] `DcomUsers`
     - [ ] `PSRemoteUsers`
 
-## Optimization
-- [x] Log level (info,debug,trace)
-- [x] Error management
-- [x] **add_childobjects_members()** ChildObject function in checker/bh_41.rs
-- [x] **replace_guid_gplink()** gplinks function in checker/bh_41.rs
-- [x] **add_domain_sid()** gplinks function in checker/bh_41.rs
-
 # :link: Links
 
 - Blog post: [https://www.opencyber.com/rusthound-data-collector-for-bloodhound-written-in-rust/](https://www.opencyber.com/rusthound-data-collector-for-bloodhound-written-in-rust/)

@@ -1,79 +1,90 @@
 use std::collections::HashMap;
 use colored::Colorize;
-use log::{info,trace};
+use log::{info,debug,trace};
 
-extern crate zip;
+use std::fs;
 use std::fs::File;
 use std::io::{Seek, Write};
 use zip::result::ZipResult;
 use zip::write::{FileOptions, ZipWriter};
 
-pub mod bh_41;
+extern crate zip;
+use crate::json::templates::*;
+
+/// Current Bloodhound version 4.2+
+pub const BLOODHOUND_VERSION_4: i8 = 5;
 
 /// This function will create json output and zip output
 pub fn make_result(
-    zip: bool,
-    path: &String,
-    domain: &String,
-    vec_users: Vec<serde_json::value::Value>,
-    vec_groups: Vec<serde_json::value::Value>,
-    vec_computers: Vec<serde_json::value::Value>,
-    vec_ous: Vec<serde_json::value::Value>,
-    vec_domains: Vec<serde_json::value::Value>,
-    vec_gpos: Vec<serde_json::value::Value>,
-    vec_containers: Vec<serde_json::value::Value>,
+   zip: bool,
+   path: &String,
+   domain: &String,
+   vec_users: Vec<serde_json::value::Value>,
+   vec_groups: Vec<serde_json::value::Value>,
+   vec_computers: Vec<serde_json::value::Value>,
+   vec_ous: Vec<serde_json::value::Value>,
+   vec_domains: Vec<serde_json::value::Value>,
+   vec_gpos: Vec<serde_json::value::Value>,
+   vec_containers: Vec<serde_json::value::Value>,
 ) -> std::io::Result<()>
 {
    // Format domain name
-   let domain_format = domain.replace(".", "-").to_lowercase();
+   let filename = domain.replace(".", "-").to_lowercase();
 
    // Hashmap for json files
    let mut json_result = HashMap::new();
 
    // Add all in json files
-   bh_41::add_user(
-		&domain_format,
+   add_file(
+      "users".to_string(),
+		&filename,
       vec_users,
       path,&mut json_result,
       zip,
    )?;
-   bh_41::add_group(
-		&domain_format,
+   add_file(
+      "groups".to_string(),
+		&filename,
       vec_groups,
       path,
       &mut json_result,
       zip,
    )?;
-   bh_41::add_computer(
-		&domain_format,
+   add_file(
+      "computers".to_string(),
+		&filename,
       vec_computers,
       path,
       &mut json_result,
       zip,
    )?;
-   bh_41::add_ou(
-		&domain_format,
+   add_file(
+      "ous".to_string(),
+		&filename,
       vec_ous,
       path,
       &mut json_result,
       zip,
    )?;
-   bh_41::add_domain(
-		&domain_format,
+   add_file(
+      "domains".to_string(),
+		&filename,
       vec_domains,
       path,
       &mut json_result,
       zip,
    )?;
-   bh_41::add_gpo(
-		&domain_format,
+   add_file(
+      "gpos".to_string(),
+		&filename,
       vec_gpos,
       path,
       &mut json_result,
       zip,
    )?;
-   bh_41::add_container(
-		&domain_format,
+   add_file(
+      "containers".to_string(),
+		&filename,
       vec_containers,
       path,
       &mut json_result,
@@ -82,13 +93,57 @@ pub fn make_result(
    // All in zip file
    if zip {
       make_a_zip(
-         &domain_format,
+         &filename,
          path,
          &json_result);
    }
    Ok(())
 }
 
+/// Function to create the .json file.
+fn add_file(
+   name: String,
+	domain_format: &String,
+   vec_json: Vec<serde_json::value::Value>,
+   path: &String,
+   json_result: &mut HashMap<String, String>,
+   zip: bool
+) -> std::io::Result<()>
+{
+   debug!("Making {}.json",&name);
+
+   // Prepare template and get result in const var
+   let mut final_json = bh_41::prepare_final_json_file_template(BLOODHOUND_VERSION_4, name.to_owned());
+    
+   // Add all object found
+   final_json["data"] = vec_json.into();
+   // change count number
+   let stream = final_json["data"].as_array().unwrap();
+   let count = stream.len();
+
+   final_json["meta"]["count"] = count.into();
+   info!("{} {} parsed!", count.to_string().bold(),&name);
+
+   // result
+   fs::create_dir_all(path)?;
+
+   // Create json file if isn't zip
+   if ! zip 
+   {
+      let mut final_path = path.to_owned();
+      final_path.push_str("/");
+      final_path.push_str(domain_format);
+      final_path.push_str(format!("_{}.json",&name).as_str());    
+      fs::write(&final_path, &final_json.to_string())?;
+      info!("{} created!",final_path.bold());
+   }
+   else
+   {
+      json_result.insert(format!("{}.json",name).to_string(),final_json.to_owned().to_string());
+   }
+
+   Ok(())
+}
 
 /// Function to compress the JSON files into a zip archive
 fn make_a_zip(
