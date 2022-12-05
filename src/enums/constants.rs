@@ -22,3 +22,6 @@ pub const WRITE_MEMBER: &str = "bf9679c0-0de6-11d0-a285-00aa003049e2";
 pub const USER_FORCE_CHANGE_PASSWORD: &str = "00299570-246d-11d0-a768-00aa006e0529";
 pub const ALLOWED_TO_ACT: &str = "3f78c3e5-f79a-46bd-a0b8-9d18116ddc79";
 pub const USER_ACCOUNT_RESTRICTIONS_SET: &str = "4c164200-20c0-11d0-a768-00aa006e0529";
+// ADCS
+pub const ENROLL: &str = "0e10c968-78fb-11d2-90d4-00c04f79dc55";
+pub const AUTO_ENROLL: &str = "a05b8cc2-17bc-4802-a710-e7c15ab866a2";

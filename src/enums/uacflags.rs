@@ -27,7 +27,6 @@ bitflags! {
     }
 }
 
-
 /// Get the UAC flags from "userAccountControl" LDAP attribut.
 pub fn get_flag(uac: u32) -> Vec<String>
 {

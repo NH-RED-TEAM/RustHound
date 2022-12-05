@@ -48,6 +48,7 @@ async fn main() -> Result<()> {
         &common_args.ldapfqdn,
         &common_args.username,
         &common_args.password,
+        common_args.adcs,
     ).await?;
 
     // Vector for content all
@@ -60,6 +61,9 @@ async fn main() -> Result<()> {
     let mut vec_fsps: Vec<serde_json::value::Value> = Vec::new();
     let mut vec_containers: Vec<serde_json::value::Value> = Vec::new();
     let mut vec_trusts: Vec<serde_json::value::Value> = Vec::new();
+    let mut vec_cas: Vec<serde_json::value::Value> = Vec::new();
+    let mut vec_templates: Vec<serde_json::value::Value> = Vec::new();
+
     // Hashmap to link DN to SID
     let mut dn_sid = HashMap::new();
     // Hashmap to link DN to Type
@@ -68,10 +72,13 @@ async fn main() -> Result<()> {
     let mut fqdn_sid = HashMap::new();
     // Hashmap to link fqdn to an ip address
     let mut fqdn_ip = HashMap::new();
+    // Hashmap to link CA to enabled Templates
+    let mut adcs_templates = HashMap::new();
 
-    // Analyze object by object //Get type and parse it to get values
+    // Analyze object by object 
+    // Get type and parse it to get values
     parse_result_type(
-        &common_args.domain,
+        &common_args,
         result,
         &mut vec_users,
         &mut vec_groups,
@@ -82,12 +89,15 @@ async fn main() -> Result<()> {
         &mut vec_fsps,
         &mut vec_containers,
         &mut vec_trusts,
+        &mut vec_cas,
+        &mut vec_templates,
         &mut dn_sid,
         &mut sid_type,
         &mut fqdn_sid,
         &mut fqdn_ip,
+        &mut adcs_templates,
     );
-
+    
     // Functions to replace and add missing values
     check_all_result(
         &common_args.domain,
@@ -110,14 +120,16 @@ async fn main() -> Result<()> {
     run_modules(
         &common_args,
         &mut fqdn_ip,
-        &mut vec_computers
+        &mut vec_computers,
+        &mut vec_cas,
+        &mut vec_templates,
+        &mut adcs_templates,
+        &mut sid_type,
     ).await;
 
     // Add all in json files
     let res = make_result(
-        common_args.zip,
-        &common_args.path,
-        &common_args.domain,
+        &common_args,
         vec_users,
         vec_groups,
         vec_computers,
@@ -125,6 +137,8 @@ async fn main() -> Result<()> {
         vec_domains,
         vec_gpos,
         vec_containers,
+        &mut vec_cas,
+        &mut vec_templates,
     );
     match res {
         Ok(_res) => trace!("Making json/zip files finished!"),

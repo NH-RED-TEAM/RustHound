@@ -44,7 +44,7 @@ pub fn prepare_user_json_template() -> serde_json::value::Value
       "SPNTargets": [],
       "Aces": [],
       "AllowedToDelegate": [],
-      // Todo
+      // TODO
       "HasSIDHistory": [],
    });
 }
@@ -100,6 +100,8 @@ pub fn prepare_computer_json_template() -> serde_json::value::Value
       "Aces": [],
       "AllowedToDelegate": [],
       "AllowedToAct": [],
+      "Status": null,
+      //TODO
       "HasSIDHistory": [],
       "Sessions": {
          "Results": [],
@@ -136,7 +138,6 @@ pub fn prepare_computer_json_template() -> serde_json::value::Value
          "Collected": false,
          "FailureReason": null
       },
-      "Status": null,
    });
 }
 
@@ -160,13 +161,13 @@ pub fn prepare_ou_json_template() -> serde_json::value::Value
       "Links": [],
       "ChildObjects": [],
       "Aces": [],
-      // Todo
+      // TODO
       "GPOChanges": {
          "LocalAdmins" :  [],
          "RemoteDesktopUsers" :  [],
          "DcomUsers" :  [],
          "PSRemoteUsers" :  [],
-         // Ok for affected computers
+         // OK for affected computers
          "AffectedComputers" :  []
       },
    });
@@ -265,8 +266,8 @@ pub fn prepare_container_json_template() -> serde_json::value::Value
 pub fn prepare_member_json_template() -> serde_json::value::Value
 {
    return json!({
-      "ObjectIdentifier": "SID",
-      "ObjectType": "Type"
+      "ObjectIdentifier": "",
+      "ObjectType": ""
    });
 }
 
@@ -336,8 +337,9 @@ pub fn prepare_default_user_json_template() -> serde_json::value::Value
           "name": "name@domain.com",
       },
       "SPNTargets": [],
+      "Aces": [],
+      // TODO
       "HasSIDHistory": [],
-      "Aces": []
    });
 }
 
@@ -361,5 +363,62 @@ pub fn prepare_trust_json_template() -> serde_json::value::Value
       "SidFilteringEnabled": null,
       "TrustDirection": 0,
       "TrustType": 0
+   });
+}
+
+/// ADCS needed template for BloodHound ly4k version
+/// Return the json template for one Certificate Authority (CA)
+pub fn prepare_adcs_ca_json_template() -> serde_json::value::Value
+{
+   return json!({
+      "Properties": {
+         "name": "CANAME@DOMAIN.LOCAL",
+         "highvalue": false, // <https://github.com/ly4k/Certipy/blob/main/certipy/commands/find.py#L588>
+         "CA Name": "CANAME",
+         "DNS Name": "fqdn.domain.local",
+         "Certificate Subject": "DN",
+         "Certificate Serial Number": "0000000000000000000000000000",
+         "Certificate Validity Start": "0000-00-00 00:00:00+00:00",
+         "Certificate Validity End": "0000-00-00 00:00:00+00:00",
+         "Web Enrollment": "Enabled", 
+         "User Specified SAN": "Enabled", //TODO Need DCERPC
+         "Request Disposition": "Issue", //TODO Need DCERPC
+         "domain": "DOMAIN.LOCAL"
+       },
+       "ObjectIdentifier": "GUID",
+       "Aces": []
+   });
+}
+
+/// ADCS needed template for BloodHound ly4k version
+/// Return the json template for one Certificate Template
+pub fn prepare_adcs_template_json_template() -> serde_json::value::Value
+{
+   return json!({
+      "Properties": {
+         "name": "NAME@DOMAIN.LOCAL",
+         "highvalue": false,
+         "Template Name": "NAME",
+         "Display Name": "NAME",
+         "Certificate Authorities": [],
+         "Enabled": false,
+         "Client Authentication": false,
+         "Enrollment Agent": false,
+         "Any Purpose": false,
+         "Enrollee Supplies Subject": false,
+         "Certificate Name Flag": [],
+         "Enrollment Flag": [],
+         "Private Key Flag": [],
+         "Extended Key Usage": [],
+         "Requires Manager Approval": false,
+         "Requires Key Archival": false,
+         "Authorized Signatures Required": 0,
+         "Validity Period": "x",
+         "Renewal Period": "x",
+         "domain": "DOMAIN.LOCAL"
+       },
+       "ObjectIdentifier": "GUID",
+       "Aces": [],
+       //"cas_ids": [] //automatically add if is ly4k BloodHound version
    });
 }

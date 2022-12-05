@@ -2,19 +2,20 @@ use std::collections::HashMap;
 use ldap3::SearchEntry;
 use regex::Regex;
 use indicatif::ProgressBar;
-use crate::banner::progress_bar;
 use std::convert::TryInto;
 
+use log::info;
+use crate::args::Options;
+use crate::banner::progress_bar;
 use crate::enums::ldaptype::*;
-use log::{info};
+use crate::modules::adcs::parser::{parse_adcs_ca,parse_adcs_template};
 
 pub mod bh_41;
 
 /// Function to get type for object by object
 pub fn parse_result_type(
-    domain: &String,
+    common_args: &Options, 
     result: Vec<SearchEntry>,
-
     vec_users: &mut Vec<serde_json::value::Value>,
     vec_groups: &mut Vec<serde_json::value::Value>,
     vec_computers: &mut Vec<serde_json::value::Value>,
@@ -24,13 +25,19 @@ pub fn parse_result_type(
     vec_fsps: &mut Vec<serde_json::value::Value>,
     vec_containers: &mut Vec<serde_json::value::Value>,
     vec_trusts: &mut Vec<serde_json::value::Value>,
+    vec_cas: &mut Vec<serde_json::value::Value>,
+    vec_templates: &mut Vec<serde_json::value::Value>,
 
     dn_sid: &mut HashMap<String, String>,
     sid_type: &mut HashMap<String, String>,
     fqdn_sid: &mut HashMap<String, String>,
     fqdn_ip: &mut HashMap<String, String>,
-)   
+    adcs_templates: &mut HashMap<String, Vec<String>>,
+)
 {
+    // Domain name
+    let domain = &common_args.domain;
+
     // Needed for progress bar stats
     let pb = ProgressBar::new(1);
     let mut count = 0;
@@ -40,6 +47,7 @@ pub fn parse_result_type(
     for entry in result {
         // Start parsing with Type matching
         let cloneresult = entry.clone();
+        //println!("{:?}",&entry);
         let atype = get_type(entry).unwrap_or(Type::Unknown);
         match atype {
             Type::User => {
@@ -48,6 +56,7 @@ pub fn parse_result_type(
                     domain,
                     dn_sid,
                     sid_type,
+                    common_args.adcs,
                 );
                 vec_users.push(user);
             }
@@ -130,8 +139,28 @@ pub fn parse_result_type(
                 vec_containers.push(container);
             }
             Type::Trust => {
-                let trust = parse_trust(cloneresult, domain);
+                let trust = parse_trust(
+                    cloneresult,
+                    domain
+                );
                 vec_trusts.push(trust);
+            }
+            Type::AdcsAuthority => {
+                let adcs_ca = parse_adcs_ca(
+                    cloneresult.to_owned(),
+                    domain,
+                    adcs_templates,
+                    common_args.old_bloodhound,
+                );
+                vec_cas.push(adcs_ca); 
+            }
+            Type::AdcsTemplate => {
+                let adcs_template = parse_adcs_template(
+                    cloneresult.to_owned(),
+                    domain,
+                    common_args.old_bloodhound,
+                );
+                vec_templates.push(adcs_template);
             }
             Type::Unknown => {
                 let _unknown = parse_unknown(cloneresult, domain);
@@ -154,8 +183,9 @@ pub fn parse_user(
     domain: &String,
     dn_sid: &mut HashMap<String, String>,
     sid_type: &mut HashMap<String, String>,
+    adcs: bool,
 ) -> serde_json::value::Value {
-    bh_41::parse_user(result, domain, dn_sid, sid_type)
+    bh_41::parse_user(result, domain, dn_sid, sid_type, adcs)
 }
 
 /// Parse group. Select parser based on BH version.

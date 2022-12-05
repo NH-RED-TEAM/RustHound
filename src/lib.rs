@@ -20,13 +20,19 @@
 //!    rusthound [FLAGS] [OPTIONS] --domain <domain>
 //!
 //!FLAGS:
-//!        --dns-tcp          Use TCP instead of UDP for DNS queries
-//!        --fqdn-resolver    [MODULE] Use fqdn-resolver module to get computers IP address
-//!    -h, --help             Prints help information
-//!        --ldaps            Prepare ldaps request. Like ldaps://G0H4N.LAB/
-//!    -v                     Sets the level of verbosity
-//!    -V, --version          Prints version information
-//!    -z, --zip              RustHound will compress the JSON files into a zip archive
+//!        --adcs              [MODULE] Use ADCS module to enumerate Certificate Templates, Certificate Authorities and
+//!                            other configurations. (For the custom-built BloodHound version from @ly4k with PKI support)
+//!        --dc-only           Collects data only from the domain controller. Will not try to retrieve CA
+//!                            security/configuration or check for Web Enrollment.
+//!        --dns-tcp           Use TCP instead of UDP for DNS queries
+//!        --fqdn-resolver     [MODULE] Use fqdn-resolver module to get computers IP address
+//!    -h, --help              Prints help information
+//!        --ldaps             Prepare ldaps request. Like ldaps://G0H4N.LAB/
+//!        --old-bloodhound    For ADCS only. Output result as BloodHound data for the original BloodHound version from
+//!                            @BloodHoundAD without PKI support.
+//!    -v                      Sets the level of verbosity
+//!    -V, --version           Prints version information
+//!    -z, --zip               RustHound will compress the JSON files into a zip archive
 //!
 //!OPTIONS:
 //!    -d, --domain <domain>                Domain name like: G0H4N.LAB

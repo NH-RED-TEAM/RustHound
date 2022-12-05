@@ -1,4 +1,4 @@
-use ldap3::{SearchEntry};
+use ldap3::SearchEntry;
 use std::collections::HashMap;
 //use log::trace;
 
@@ -13,6 +13,8 @@ pub enum Type {
     ForeignSecurityPrincipal,
     Container,
     Trust,
+    AdcsAuthority,
+    AdcsTemplate,
     Unknown
 }
 
@@ -76,6 +78,16 @@ pub fn get_type(result: SearchEntry) -> std::result::Result<Type, Type>
         if key == "objectClass" && value.contains(&String::from("trustedDomain"))
         {
             return Ok(Type::Trust)
+        }
+        // Type is ADCS Certificate Authority
+        if key == "objectClass" && value.contains(&String::from("pKIEnrollmentService"))
+        {
+            return Ok(Type::AdcsAuthority)
+        }
+        // Type is ADCS Certificate Template
+        if key == "objectClass" && value.contains(&String::from("pKICertificateTemplate"))
+        {
+            return Ok(Type::AdcsTemplate)
         }
     }
     return Err(Type::Unknown)

@@ -1,12 +1,12 @@
 use serde_json::json;
-use crate::json::templates::*;
+use crate::json::templates::bh_41::prepare_mssqlsvc_spn_json_template;
 //use log::trace;
 
 /// Function to check if spns start with mssqlsvc to make SPNTargets
 /// <https://github.com/BloodHoundAD/SharpHound3/blob/master/SharpHound3/Tasks/SPNTasks.cs#L22>
 pub fn check_spn(serviceprincipalname: &String) -> serde_json::value::Value
 {
-   let mut mssqlsvc_spn = bh_41::prepare_mssqlsvc_spn_json_template();
+   let mut mssqlsvc_spn = prepare_mssqlsvc_spn_json_template();
    if serviceprincipalname.to_lowercase().contains("mssqlsvc")
    {
       //trace!("{:?}",serviceprincipalname);

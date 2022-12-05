@@ -28,6 +28,9 @@
 - [How to build documentation?](#how-to-build-documentation)
 - [Usage](#usage)
 - [Demo](#demo)
+  - [Simple usage](#simple-usage)
+  - [Module FQDN resolver](#module-fqdn-resolver)
+  - [Module ADCS collector](#module-adcs-collector)
 - [Statistics](#rocket-statistics)
 - [Roadmap](#-roadmap)
 - [Links](#link-links)
@@ -160,13 +163,19 @@ USAGE:
     rusthound [FLAGS] [OPTIONS] --domain <domain>
 
 FLAGS:
-        --dns-tcp          Use TCP instead of UDP for DNS queries
-        --fqdn-resolver    [MODULE] Use fqdn-resolver module to get computers IP address
-    -h, --help             Prints help information
-        --ldaps            Prepare ldaps request. Like ldaps://G0H4N.LAB/
-    -v                     Sets the level of verbosity
-    -V, --version          Prints version information
-    -z, --zip              RustHound will compress the JSON files into a zip archive
+        --adcs              [MODULE] Use ADCS module to enumerate Certificate Templates, Certificate Authorities and
+                            other configurations. (For the custom-built BloodHound version from @ly4k with PKI support)
+        --dc-only           Collects data only from the domain controller. Will not try to retrieve CA
+                            security/configuration or check for Web Enrollment.
+        --dns-tcp           Use TCP instead of UDP for DNS queries
+        --fqdn-resolver     [MODULE] Use fqdn-resolver module to get computers IP address
+    -h, --help              Prints help information
+        --ldaps             Prepare ldaps request. Like ldaps://G0H4N.LAB/
+        --old-bloodhound    For ADCS only. Output result as BloodHound data for the original BloodHound version from
+                            @BloodHoundAD without PKI support.
+    -v                      Sets the level of verbosity
+    -V, --version           Prints version information
+    -z, --zip               RustHound will compress the JSON files into a zip archive
 
 OPTIONS:
     -d, --domain <domain>                Domain name like: G0H4N.LAB
@@ -183,30 +192,74 @@ OPTIONS:
 
 Examples are done on the [GOADv2](https://github.com/Orange-Cyberdefense/GOAD) implemented by [mayfly](https://twitter.com/M4yFly):
 
+## Simple usage
+
 ```bash
 # Linux with username:password
-./rusthound -d north.sevenkingdoms.local -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo/rusthound_north -z
+rusthound -d north.sevenkingdoms.local -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo -z
+
+# Linux with username:password and ldapip
+rusthound -d north.sevenkingdoms.local -i 192.168.56.11 -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo -z
 
 # Linux with username:password and ldaps
-./rusthound -d north.sevenkingdoms.local --ldaps -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo/rusthound_north -z 
+rusthound -d north.sevenkingdoms.local --ldaps -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo -z 
 # Linux with username:password and ldaps and custom port
-./rusthound -d north.sevenkingdoms.local --ldaps -P 3636 -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo/rusthound_north -z 
-
-# Linux with username:password and ldaps and fqdn resolver module
-./rusthound -d north.sevenkingdoms.local --ldaps -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo/rusthound_north --fqdn-resolver 
-# Linux with username:password and ldaps and fqdn resolver module and tcp dns request and custom name server
-./rusthound -d north.sevenkingdoms.local --ldaps -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo/rusthound_north --fqdn-resolver --tcp-dns --name-server 192.168.56.10 -z
+rusthound -d north.sevenkingdoms.local --ldaps -P 3636 -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo -z 
 
 # Tips to redirect and append both standard output and standard error to a file > /tmp/rh_output 2>&1
-./rusthound -d north.sevenkingdoms.local --ldaps -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo/rusthound_north --fqdn-resolver > /tmp/rh_output 2>&1
-
+rusthound -d north.sevenkingdoms.local --ldaps -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo --fqdn-resolver > /tmp/rh_output 2>&1
 
 # Windows with GSSAPI session
 rusthound.exe -d sevenkingdoms.local --ldapfqdn kingslanding
+# Windows simple bind connection username:password (don't use simple quote or double quote with cmd.exe)
+rusthound.exe -d sevenkingdoms.local -u jeor.mormont@north.sevenkingdoms.local -p _L0ngCl@w_ -o output -z
 ```
 <p align="center">
 <img width="100%" src="img/demo.gif">
 </p>
+
+## Module FQDN resolver
+
+```bash
+# Linux with username:password and FQDN resolver module
+rusthound -d essos.local -u 'daenerys.targaryen@essos.local' -p 'BurnThemAll!' -o /tmp/demo --fqdn-resolver -z
+# Linux with username:password and ldaps and FQDN resolver module and TCP DNS request and custom name server
+rusthound -d essos.local --ldaps -u 'daenerys.targaryen@essos.local' -p 'BurnThemAll!' -o /tmp/demo --fqdn-resolver --tcp-dns --name-server 192.168.56.12 -z
+
+# Windows with GSSAPI session and FQDN resolver module
+rusthound.exe -d essos.local -f meereen -o output --fqdn-resolver -z
+# Windows simple bind connection username:password and FQDN resolver module and TCP DNS request and custom name server (don't use simple quote or double quote with cmd.exe)
+rusthound.exe -d essos.local -u daenerys.targaryen@essos.local -p BurnThemAll! -o output -z --fqdn-resolver --tcp-dns --name-server 192.168.56.12 
+```
+<p align="center">
+<img width="100%" src="img/demo_windows_fqdn_resolver.gif">
+</p>
+
+
+## Module ADCS collector
+
+Example is done with the [@ly4k BloodHound version](https://github.com/ly4k/BloodHound).
+
+```bash
+# Linux with username:password and ADCS module for @ly4k BloodHound version
+rusthound -d essos.local -u 'daenerys.targaryen@essos.local' -p 'BurnThemAll!' -o /tmp/adcs --adcs -z
+# Linux with username:password and ADCS module and dconly flag (will don't check webenrollment)
+rusthound -d essos.local -u 'daenerys.targaryen@essos.local' -p 'BurnThemAll!' -o /tmp/adcs --adcs --dc-only -z
+
+# Linux with username:password and ADCS module using "--old-bloodhound" argument for official @BloodHoundAd version
+rusthound -d essos.local -u 'daenerys.targaryen@essos.local' -p 'BurnThemAll!' -o /tmp/adcs --adcs --old-bloodhound -z
+
+# Windows with GSSAPI session and ADCS module
+rusthound.exe -d essos.local -f meereen -o output -z --adcs
+# Windows with GSSAPI session and ADCS module and TCP DNS request and custom name server
+rusthound.exe -d essos.local --ldapfqdn meereen -o output -z --adcs --tcp-dns --name-server 192.168.56.12
+# Windows simple bind connection username:password (don't use simple quote or double quote with cmd.exe)
+rusthound.exe -d essos.local -u daenerys.targaryen@essos.local -p BurnThemAll! -o output -z --adcs --dc-only
+```
+<p align="center">
+<img width="100%" src="img/demo_windows_adcs_collector.gif">
+</p>
+
 
 You can find the custom queries used in the demo, in the resource folder.
 
@@ -244,13 +297,15 @@ In order to make statistics on a DC with more LDAP objects, we run the [BadBlood
   - [x] gpos.json
   - [x] containers.json
   - [x] domains.json
+  - [x] cas.json
+  - [x] templates.json
   - [x] args and function to zip json files **--zip**
 
 ## Modules
 
 - [x] Retreive LAPS password if your user can read them **automatic**
 - [x] Resolve FQDN computers found to IP address **--fqdn-resolver**
-- [ ] Retrieve certificates for ESC exploitation with [Certipy](https://github.com/ly4k/Certipy) **--enum-certificates**
+- [x] Retrieve certificates for ESC exploitation with [Certipy](https://github.com/ly4k/Certipy) **--adcs**
 - [ ] Kerberos attack module (ASREPROASTING,KERBEROASTING) **--attack-kerberos**
 - [ ] Retrieve datas from trusted domains  **--follow-trust** (Currently working on it, got beta version of this module)
 
@@ -258,20 +313,22 @@ In order to make statistics on a DC with more LDAP objects, we run the [BadBlood
 ## Bloodhound v4.2
 
 - Parsing Features
-  - [x] `AllowedToDelegate`
-  - [x] `AllowedToAct`
-  - [x] `Properties:sidhistory` not tested!
+  - Users & Computers
     - [ ] `HasSIDHistory`
-  - [ ] `Sessions`
-    - [ ] List users with RPC
-- Users
-  - [ ] `Properties` : `sfupassword`
-- OUs & Domains
-  - [ ] `GPOChanges`
+  - Users
+    - [ ] `Properties` : `sfupassword`
+
+- **DCERPC (dependencies)**
+  - Computers
+    - [ ] `Sessions`
+  - OUs & Domains
     - [ ] `LocalAdmins`
     - [ ] `RemoteDesktopUsers`
     - [ ] `DcomUsers`
     - [ ] `PSRemoteUsers`
+  - CAs
+    - [ ] `User Specified SAN`
+    - [ ] `Request Disposition`
 
 # :link: Links
 
@@ -280,4 +337,6 @@ In order to make statistics on a DC with more LDAP objects, we run the [BadBlood
 - SharpHound:  [https://github.com/BloodHoundAD/SharpHound](https://github.com/BloodHoundAD/SharpHound)
 - BloodHound: [https://github.com/BloodHoundAD/BloodHound](https://github.com/BloodHoundAD/BloodHound)
 - BloodHound docs: [https://bloodhound.readthedocs.io/en/latest/index.html](https://bloodhound.readthedocs.io/en/latest/index.html)
-- GOADv2: [https://github.com/Orange-Cyberdefense/GOAD](https://github.com/Orange-Cyberdefense/GOAD)
+- GOAD: [https://github.com/Orange-Cyberdefense/GOAD](https://github.com/Orange-Cyberdefense/GOAD)
+- ly4k BloodHound version: [https://github.com/ly4k/BloodHound](https://github.com/ly4k/BloodHound)
+- Certipy: [https://github.com/ly4k/Certipy](https://github.com/ly4k/Certipy)

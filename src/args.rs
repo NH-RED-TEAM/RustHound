@@ -14,13 +14,16 @@ pub struct Options {
     pub name_server: String,
     pub dns_tcp: bool,
     pub fqdn_resolver: bool,
+    pub adcs: bool,
+    pub old_bloodhound: bool,
+    pub dc_only: bool,
     pub zip: bool,
     pub verbose: log::LevelFilter,
 }
 
 pub fn extract_args() -> Options {
     let matches = App::new("RustHound")
-        .version("1.0.7")
+        .version("1.1.0")
         .author("g0h4n https://twitter.com/g0h4n_0")
         .about("Active Directory data collector for BloodHound.")
         .arg(
@@ -109,6 +112,27 @@ pub fn extract_args() -> Options {
                 .required(false),
         )
         .arg(
+            Arg::with_name("adcs")
+                .long("adcs")
+                .takes_value(false)
+                .help("[MODULE] Use ADCS module to enumerate Certificate Templates, Certificate Authorities and other configurations. (For the custom-built BloodHound version from @ly4k with PKI support)")
+                .required(false),
+        )
+        .arg(
+            Arg::with_name("old-bloodhound")
+                .long("old-bloodhound")
+                .takes_value(false)
+                .help("For ADCS only. Output result as BloodHound data for the original BloodHound version from @BloodHoundAD without PKI support.")
+                .required(false),
+        )
+        .arg(
+            Arg::with_name("dc-only")
+                .long("dc-only")
+                .takes_value(false)
+                .help("Collects data only from the domain controller. Will not try to retrieve CA security/configuration or check for Web Enrollment.")
+                .required(false),
+        )
+        .arg(
             Arg::with_name("zip")
                 .long("zip")
                 .short("z")
@@ -135,6 +159,9 @@ pub fn extract_args() -> Options {
     let ns = matches.value_of("name-server").unwrap_or("127.0.0.1");
     let tcp = matches.is_present("dns-tcp");
     let fqdn_resolver = matches.is_present("fqdn-resolver");
+    let adcs = matches.is_present("adcs");
+    let old_bloodhound = matches.is_present("old-bloodhound");
+    let dc_only = matches.is_present("dc-only");
     let zip = matches.is_present("zip");
 
     // Set log level
@@ -156,6 +183,9 @@ pub fn extract_args() -> Options {
         name_server: ns.to_string(),
         dns_tcp: tcp,
         fqdn_resolver: fqdn_resolver,
+        adcs: adcs,
+        old_bloodhound: old_bloodhound,
+        dc_only: dc_only,
         zip: zip,
         verbose: v,
     }
