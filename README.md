@@ -5,7 +5,7 @@
   <img alt="GitHub" src="https://img.shields.io/github/license/OPENCYBER-FR/RustHound?style=for-the-badge">
   <img alt="Linux supported" src="https://img.shields.io/badge/Supported%20OS-Linux-orange?style=for-the-badge">
   <img alt="Windows supported" src="https://img.shields.io/badge/Supported%20OS-Windows-green?style=for-the-badge">
-  <!--<img alt="MacOS supported" src="https://img.shields.io/badge/Supported%20OS-MacOS-blue?style=for-the-badge">-->
+  <img alt="MacOS supported" src="https://img.shields.io/badge/Supported%20OS-MacOS-blue?style=for-the-badge">
   <a href="https://twitter.com/intent/follow?screen_name=OPENCYBER_FR" title="Follow"><img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/OPENCYBER_FR?label=OPENCYBER_FR&style=for-the-badge"></a>
   <a href="https://twitter.com/intent/follow?screen_name=g0h4n_0" title="Follow"><img src="https://img.shields.io/twitter/follow/g0h4n_0?label=g0h4n&style=for-the-badge"></a>
   <br>
@@ -25,6 +25,7 @@
   - [Using Cargo](#using-cargo)
   - [Linux x86_64 static version](#manually-for-linux-x86_64-static-version)
   - [Windows static version from Linux](#manually-for-windows-static-version-from-linux)
+  - [MacOS static version from Linux](#manually-for-macos-static-version-from-linux)
 - [How to build documentation?](#how-to-build-documentation)
 - [Usage](#usage)
 - [Demo](#demo)
@@ -148,6 +149,39 @@ RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-
 
 The result can be found in "target/x86_64-pc-windows-gnu/release" folder.
 
+## Manually for MacOS static version from Linux
+
+Amazing documentation: [https://wapl.es/rust/2019/02/17/rust-cross-compile-linux-to-macos.html](https://wapl.es/rust/2019/02/17/rust-cross-compile-linux-to-macos.html)
+
+```bash
+#Install rustup and cargo in Linux
+curl https://sh.rustup.rs -sSf | sh
+
+#Add MacOS tool chain
+cd /usr/local/bin
+sudo git clone https://github.com/tpoechtrager/osxcross
+cd osxcross
+sudo wget -nc https://s3.dockerproject.org/darwin/v2/MacOSX10.10.sdk.tar.xz
+sudo mv MacOSX10.10.sdk.tar.xz tarballs/
+sudo UNATTENDED=yes OSX_VERSION_MIN=10.7 ./build.sh
+sudo chmod 770 /usr/local/bin/osxcross/ -R
+export PATH="/usr/local/bin/osxcross/target/bin:$PATH" \
+
+#Cargo needs to be told to use the correct linker for the x86_64-apple-darwin target, so add the following to your project’s .cargo/config file:
+vim ~/.cargo/config
+  [target.x86_64-apple-darwin]
+  linker = "x86_64-apple-darwin14-clang"
+  ar = "x86_64-apple-darwin14-ar"
+
+#Static compilation for MacOS
+git clone https://github.com/OPENCYBER-FR/RustHound
+cd RustHound
+#Uncomment line 32 and comment line 34 in Cargo.toml
+RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-apple-darwin
+```
+
+The result can be found in "target/x86_64-apple-darwin/release" folder.
+
 # How to build the documentation?
 
 ```bash
@@ -159,33 +193,36 @@ cargo doc --open --no-deps
 # Usage
 
 ```bash
-USAGE:
-    rusthound [FLAGS] [OPTIONS] --domain <domain>
+Usage: rusthound [OPTIONS] --domain <domain>
 
-FLAGS:
-        --adcs              [MODULE] Use ADCS module to enumerate Certificate Templates, Certificate Authorities and
-                            other configurations. (For the custom-built BloodHound version from @ly4k with PKI support)
-        --dc-only           Collects data only from the domain controller. Will not try to retrieve CA
-                            security/configuration or check for Web Enrollment.
-        --dns-tcp           Use TCP instead of UDP for DNS queries
-        --fqdn-resolver     [MODULE] Use fqdn-resolver module to get computers IP address
-    -h, --help              Prints help information
-        --ldaps             Prepare ldaps request. Like ldaps://G0H4N.LAB/
-        --old-bloodhound    For ADCS only. Output result as BloodHound data for the original BloodHound version from
-                            @BloodHoundAD without PKI support.
-    -v                      Sets the level of verbosity
-    -V, --version           Prints version information
-    -z, --zip               RustHound will compress the JSON files into a zip archive
+Options:
+  -v...          Set the level of verbosity
+  -h, --help     Print help information
+  -V, --version  Print version information
 
-OPTIONS:
-    -d, --domain <domain>                Domain name like: G0H4N.LAB
-    -f, --ldapfqdn <ldapfqdn>            Domain Controler FQDN like: DC01.G0H4N.LAB
-    -i, --ldapip <ldapip>                Domain Controller IP address
-    -p, --ldappassword <ldappassword>    Ldap password to use
-    -P, --ldapport <ldapport>            Ldap port, default is 389
-    -u, --ldapusername <ldapusername>    Ldap username to use
-    -n, --name-server <name-server>      Alternative IP address name server to use for queries
-    -o, --dirpath <path>                 Path where you would like to save json files
+REQUIRED VALUES:
+  -d, --domain <domain>  Domain name like: DOMAIN.LOCAL
+
+OPTIONAL VALUES:
+  -u, --ldapusername <ldapusername>  LDAP username, like: user@domain.local
+  -p, --ldappassword <ldappassword>  LDAP password
+  -f, --ldapfqdn <ldapfqdn>          Domain Controler FQDN like: DC01.DOMAIN.LOCAL or just DC01
+  -i, --ldapip <ldapip>              Domain Controller IP address like: 192.168.1.10
+  -P, --ldapport <ldapport>          LDAP port [default: 389]
+  -n, --name-server <name-server>    Alternative IP address name server to use for DNS queries
+  -o, --output <output>              Output directory where you would like to save JSON files [default: ./]
+
+OPTIONAL FLAGS:
+      --ldaps           Force LDAPS using for request like: ldaps://DOMAIN.LOCAL/
+      --dns-tcp         Use TCP instead of UDP for DNS queries
+      --dc-only         Collects data only from the domain controller. Will not try to retrieve CA security/configuration or check for Web Enrollment
+      --old-bloodhound  For ADCS only. Output result as BloodHound data for the original BloodHound version from @BloodHoundAD without PKI support
+  -z, --zip             Compress the JSON files into a zip archive
+
+OPTIONAL MODULES:
+      --fqdn-resolver  Use fqdn-resolver module to get computers IP address
+      --adcs           Use ADCS module to enumerate Certificate Templates, Certificate Authorities and other configurations.
+                       (For the custom-built BloodHound version from @ly4k with PKI support)
 ```
 
 # Demo

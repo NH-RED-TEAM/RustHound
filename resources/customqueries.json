@@ -161,7 +161,7 @@
          "queryList": [
              {
                  "final": true,
-                 "query": "MATCH (n:User)WHERE n.hasspn=true RETURN n",
+                 "query": "MATCH (n:User) WHERE n.hasspn=true RETURN n",
                  "allowCollapse": false
              }
          ]
@@ -353,6 +353,36 @@
             {
                "final": true,
                "query": "MATCH (m:Computer),(n {highvalue:true}),p=shortestPath((m)-[r*1..]->(n)) WHERE NONE (r IN relationships(p) WHERE type(r)= 'GetChanges') AND NONE (r in relationships(p) WHERE type(r)='GetChangesAll') AND NOT m=n RETURN p LIMIT 25"
+            }
+         ]
+      },
+      {
+         "name": "[B27.1] Find all users who description contains 'pass'",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (n:User WHERE n.description CONTAINS 'pass') RETURN n"
+            }
+         ]
+      },
+      {
+         "name": "[B27.2] Find all computers who description contains 'pass'",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (n:Computer WHERE n.description CONTAINS 'pass') RETURN n"
+            }
+         ]
+      },
+      {
+         "name": "[B27.3] Find all groups who description contains 'pass'",
+         "category": "Other RustHound custom queries",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (n:Group WHERE n.description CONTAINS 'pass') RETURN n"
             }
          ]
       },

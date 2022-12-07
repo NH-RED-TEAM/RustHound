@@ -16,33 +16,36 @@
 //!g0h4n https://twitter.com/g0h4n_0
 //!Active Directory data collector for BloodHound.
 //!
-//!USAGE:
-//!    rusthound [FLAGS] [OPTIONS] --domain <domain>
+//!Usage: rusthound [OPTIONS] --domain <domain>
 //!
-//!FLAGS:
-//!        --adcs              [MODULE] Use ADCS module to enumerate Certificate Templates, Certificate Authorities and
-//!                            other configurations. (For the custom-built BloodHound version from @ly4k with PKI support)
-//!        --dc-only           Collects data only from the domain controller. Will not try to retrieve CA
-//!                            security/configuration or check for Web Enrollment.
-//!        --dns-tcp           Use TCP instead of UDP for DNS queries
-//!        --fqdn-resolver     [MODULE] Use fqdn-resolver module to get computers IP address
-//!    -h, --help              Prints help information
-//!        --ldaps             Prepare ldaps request. Like ldaps://G0H4N.LAB/
-//!        --old-bloodhound    For ADCS only. Output result as BloodHound data for the original BloodHound version from
-//!                            @BloodHoundAD without PKI support.
-//!    -v                      Sets the level of verbosity
-//!    -V, --version           Prints version information
-//!    -z, --zip               RustHound will compress the JSON files into a zip archive
+//!Options:
+//!  -v...          Set the level of verbosity
+//!  -h, --help     Print help information
+//!  -V, --version  Print version information
 //!
-//!OPTIONS:
-//!    -d, --domain <domain>                Domain name like: G0H4N.LAB
-//!    -f, --ldapfqdn <ldapfqdn>            Domain Controler FQDN like: DC01.G0H4N.LAB
-//!    -i, --ldapip <ldapip>                Domain Controller IP address
-//!    -p, --ldappassword <ldappassword>    Ldap password to use
-//!    -P, --ldapport <ldapport>            Ldap port, default is 389
-//!    -u, --ldapusername <ldapusername>    Ldap username to use
-//!    -n, --name-server <name-server>      Alternative IP address name server to use for queries
-//!    -o, --dirpath <path>                 Path where you would like to save json files
+//!REQUIRED VALUES:
+//!  -d, --domain <domain>  Domain name like: DOMAIN.LOCAL
+//!
+//!OPTIONAL VALUES:
+//!  -u, --ldapusername <ldapusername>  LDAP username, like: user@domain.local
+//!  -p, --ldappassword <ldappassword>  LDAP password
+//!  -f, --ldapfqdn <ldapfqdn>          Domain Controler FQDN like: DC01.DOMAIN.LOCAL or just DC01
+//!  -i, --ldapip <ldapip>              Domain Controller IP address like: 192.168.1.10
+//!  -P, --ldapport <ldapport>          LDAP port [default: 389]
+//!  -n, --name-server <name-server>    Alternative IP address name server to use for DNS queries
+//!  -o, --output <output>              Output directory where you would like to save JSON files [default: ./]
+//!
+//!OPTIONAL FLAGS:
+//!      --ldaps           Force LDAPS using for request like: ldaps://DOMAIN.LOCAL/
+//!      --dns-tcp         Use TCP instead of UDP for DNS queries
+//!      --dc-only         Collects data only from the domain controller. Will not try to retrieve CA security/configuration or check for Web Enrollment
+//!      --old-bloodhound  For ADCS only. Output result as BloodHound data for the original BloodHound version from @BloodHoundAD without PKI support
+//!  -z, --zip             Compress the JSON files into a zip archive
+//!
+//!OPTIONAL MODULES:
+//!      --fqdn-resolver  Use fqdn-resolver module to get computers IP address
+//!      --adcs           Use ADCS module to enumerate Certificate Templates, Certificate Authorities and other configurations.
+//!                       (For the custom-built BloodHound version from @ly4k with PKI support)
 //!```
 //! Or build your own using the ldap_search() function:
 //! ```

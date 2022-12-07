@@ -39,7 +39,7 @@ async fn main() -> Result<()> {
     // Get verbose level
     info!("Verbosity level: {:?}", common_args.verbose);
 
-    // Ldap request to get all informations in result
+    // LDAP request to get all informations in result
     let result = ldap_search(
         common_args.ldaps,
         &common_args.ip,

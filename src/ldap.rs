@@ -56,17 +56,10 @@ pub async fn ldap_search(
     {
         debug!("Trying to connect with sasl_gssapi_bind() function (kerberos session)");
         if !&ldapfqdn.contains("not set") {
-            let res = ldap.sasl_gssapi_bind(ldapfqdn).await?.success();
-            match res {
-                Ok(_res) => {
-                    info!("Connected to {} Active Directory!", domain.to_uppercase().bold().green());
-                    info!("Starting data collection...");
-                },
-                Err(err) => {
-                    error!("Failed to authenticate to {} Active Directory. Reason: {err}\n", domain.to_uppercase().bold().red());
-                    process::exit(0x0100);
-                }
-            }
+            #[cfg(not(target_os = "macos"))]
+            gssapi_connection(&mut ldap,&ldapfqdn,&domain).await?;
+            #[cfg(target_os = "macos")]
+            process::exit(0x0100);
         } else {
             error!("Need Domain Controler FQDN to bind GSSAPI connection. Please use '{}'\n", "-f DC01.DOMAIN.LAB".bold());
             process::exit(0x0100);
@@ -282,4 +275,25 @@ pub fn prepare_ldap_dc(domain: &String, adcs: bool) -> Vec<String> {
     }
 
     return naming_context
+}
+
+/// Function to make GSSAPI ldap connection.
+#[cfg(not(target_os = "macos"))]
+async fn gssapi_connection(
+    ldap: &mut ldap3::Ldap,
+    ldapfqdn: &String,
+    domain: &String,
+) -> Result<()> {
+    let res = ldap.sasl_gssapi_bind(ldapfqdn).await?.success();
+    match res {
+        Ok(_res) => {
+            info!("Connected to {} Active Directory!", domain.to_uppercase().bold().green());
+            info!("Starting data collection...");
+        },
+        Err(err) => {
+            error!("Failed to authenticate to {} Active Directory. Reason: {err}\n", domain.to_uppercase().bold().red());
+            process::exit(0x0100);
+        }
+    }
+    Ok(())
 }
