@@ -74,9 +74,11 @@ pub fn make_result(
    // Not @ly4k BloodHound version?
    if common_args.old_bloodhound {
       let mut _vec_gpos_cas_templates = vec_gpos.to_owned();
-      info!("{} {} parsed!", &vec_cas.len().to_string().bold(),&"cas");
-      _vec_gpos_cas_templates.append(vec_cas);
-      info!("{} {} parsed!", &vec_templates.len().to_string().bold(),&"templates");
+      if common_args.adcs {
+         info!("{} {} parsed!", &vec_cas.len().to_string().bold(),&"cas");
+         _vec_gpos_cas_templates.append(vec_cas);
+         info!("{} {} parsed!", &vec_templates.len().to_string().bold(),&"templates");
+      }
       _vec_gpos_cas_templates.append(vec_templates);
       info!("{} {} parsed!", &vec_gpos.len().to_string().bold(),&"gpos");
       add_file(

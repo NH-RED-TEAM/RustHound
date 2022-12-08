@@ -207,9 +207,8 @@ fn ace_maker(
                     if entry_type == "computer" && (&flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
                     && valjson["Properties"]["haslaps"].as_bool().unwrap() 
                     {
-                        if &ace_guid == OBJECTTYPE_GUID_HASHMAP.get("ms-mcs-admpwd").unwrap_or(&"NULL".to_string()) 
+                        if &ace_guid == OBJECTTYPE_GUID_HASHMAP.get("ms-mcs-admpwd").unwrap_or(&String::from("GUID-NOT-FOUND")) 
                         {
-                            trace!("object_type ace_guid == OBJECTTYPE_GUID_HASHMAP.get('ms-mcs-admpwd')");
                             relations.push(build_relation(&sid,"ReadLAPSPassword".to_string(),"".to_string(),is_inherited));
                         }
                     } else {
@@ -257,29 +256,24 @@ fn ace_maker(
 
                 // Since BloodHound 4.1
                 // AddKeyCredentialLink write access
-                let null: String = "NULL".to_string();
                 if ((entry_type == "user") || (entry_type == "computer"))
                 && (&flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
-                && (&ace_guid == OBJECTTYPE_GUID_HASHMAP.get("ms-ds-key-credential-link").unwrap_or(&null))
+                && (&ace_guid == OBJECTTYPE_GUID_HASHMAP.get("ms-ds-key-credential-link").unwrap_or(&String::from("GUID-NOT-FOUND")))
                 {
                     relations.push(build_relation(&sid,"AddKeyCredentialLink".to_string(),"".to_string(),is_inherited));
                 }
                 if (entry_type == "user")
                 && (&flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT) 
-                && (&ace_guid == OBJECTTYPE_GUID_HASHMAP.get("mservice-principal-name").unwrap_or(&null))
+                && (&ace_guid == OBJECTTYPE_GUID_HASHMAP.get("service-principal-name").unwrap_or(&String::from("GUID-NOT-FOUND")))
                 {
                     relations.push(build_relation(&sid,"WriteSPN".to_string(),"".to_string(),is_inherited));
                 }
-            }
-            else
+            } 
+            else if (MaskFlags::ADS_RIGHT_DS_SELF.bits() | mask) == mask 
             {
-                if (MaskFlags::ADS_RIGHT_DS_SELF.bits() | mask) == mask 
+                if (entry_type == "group") && (&ace_guid == WRITE_MEMBER)
                 {
-                    let null: String = "NULL".to_string();
-                    if (entry_type == "group") && (&ace_guid == OBJECTTYPE_GUID_HASHMAP.get("WriteMember").unwrap_or(&null))
-                    {
-                        relations.push(build_relation(&sid,"AddSelf".to_string(),"".to_string(),is_inherited));
-                    }
+                    relations.push(build_relation(&sid,"AddSelf".to_string(),"".to_string(),is_inherited));
                 }
             }
 
@@ -291,8 +285,7 @@ fn ace_maker(
                 && (&flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
                 && valjson["Properties"]["haslaps"].as_bool().unwrap() == true
                 {
-                    let null: String = "NULL".to_string();
-                    if &ace_guid == OBJECTTYPE_GUID_HASHMAP.get("ms-mcs-admpwd").unwrap_or(&null)
+                    if &ace_guid == OBJECTTYPE_GUID_HASHMAP.get("ms-mcs-admpwd").unwrap_or(&String::from("GUID-NOT-FOUND"))
                     {
                         relations.push(build_relation(&sid,"ReadLAPSPassword".to_string(),"".to_string(),is_inherited));
                     }
@@ -446,9 +439,7 @@ fn can_write_property(ace: &Ace, bin_property: &str) -> bool {
         None => 0,
     };
 
-    trace!("AceFormat::get_object_type {}",
-        bin_to_string(&typea.to_be_bytes().to_vec())
-    );
+    trace!("AceFormat::get_object_type {}",bin_to_string(&typea.to_be_bytes().to_vec()));
     trace!("bin_property_guid_string {}", bin_property.to_uppercase());
 
     if bin_to_string(&typea.to_be_bytes().to_vec()) == bin_property.to_uppercase()
@@ -510,15 +501,9 @@ fn ace_applies(ace_guid: &String, entry_type: &String) -> bool {
     // Checks if an ACE applies to this object (based on object classes).
     // Note that this function assumes you already verified that InheritedObjectType is set (via the flag).
     // If this is not set, the ACE applies to all object types.
-
     trace!("ACE GUID: {}", &ace_guid);
-
-    let null: String = "NULL".to_string();
-    trace!("OBJECTTYPE_GUID_HASHMAP: {}",
-        OBJECTTYPE_GUID_HASHMAP.get(entry_type).unwrap_or(&null)
-    );
-
-    if &ace_guid == &OBJECTTYPE_GUID_HASHMAP.get(entry_type).unwrap_or(&null) {
+    trace!("OBJECTTYPE_GUID_HASHMAP: {}",OBJECTTYPE_GUID_HASHMAP.get(entry_type).unwrap_or(&String::from("GUID-NOT-FOUND")));
+    if &ace_guid == &OBJECTTYPE_GUID_HASHMAP.get(entry_type).unwrap_or(&String::from("GUID-NOT-FOUND")) {
         return true;
     }
     return false;
@@ -532,7 +517,6 @@ pub fn parse_gmsa(
     for i in 0..processed_aces.len()
     {
         if processed_aces[i]["RightName"] == "Owns" || processed_aces[i]["RightName"] == "Owner"{
-            trace!("   {}: {:?}",i,processed_aces[i]);
             continue
         }
         processed_aces[i]["RightName"] = "ReadGMSAPassword".to_string().into();
@@ -612,6 +596,22 @@ fn has_control(secdesc_control: u16, flag: SecurityDescriptorFlags) -> bool {
 lazy_static! {
     static ref OBJECTTYPE_GUID_HASHMAP: HashMap<String, String> = {
         let mut map = HashMap::new();
+        map.insert(
+            "ms-mcs-admpwdexpirationtime".to_string(),
+            "2bb09a7b-9acd-4082-9b51-104bb7f6a01e".to_string(),
+        );
+        map.insert(
+            "ms-mcs-admpwd".to_string(),
+            "a740f691-b206-4baa-9ab1-559f8985523f".to_string(),
+        );
+        map.insert(
+            "ms-ds-key-credential-link".to_string(),
+            "5b47d60f-6090-40b2-9f37-2a4de88f3063".to_string(),
+        );
+        map.insert(
+            "service-principal-name".to_string(),
+            "f3a64788-5306-11d1-a9c5-0000f80367c1".to_string(),
+        );
         map.insert(
             "ms-ds-sitename".to_string(),
             "98a7f36d-3595-448a-9e6f-6b8965baed9c".to_string(),
@@ -2603,10 +2603,6 @@ lazy_static! {
         map.insert(
             "instance-type".to_string(),
             "bf96798c-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "service-principal-name".to_string(),
-            "f3a64788-5306-11d1-a9c5-0000f80367c1".to_string(),
         );
         map.insert(
             "must-contain".to_string(),
@@ -5177,10 +5173,6 @@ lazy_static! {
             "bf967951-0de6-11d0-a285-00aa003049e2".to_string(),
         );
         map.insert(
-            "ms-mcs-admpwdexpirationtime".to_string(),
-            "2bb09a7b-9acd-4082-9b51-104bb7f6a01e".to_string(),
-        );
-        map.insert(
             "ms-ds-registered-users".to_string(),
             "0449160c-5a8e-4fc8-b052-01c0f6e48f02".to_string(),
         );
@@ -5203,10 +5195,6 @@ lazy_static! {
         map.insert(
             "desktop-profile".to_string(),
             "eea65906-8ac6-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-mcs-admpwd".to_string(),
-            "a740f691-b206-4baa-9ab1-559f8985523f".to_string(),
         );
         map.insert(
             "ms-net-ieee-8023-grouppolicy".to_string(),
@@ -6803,10 +6791,6 @@ lazy_static! {
         map.insert(
             "ms-ds-cloud-extensions".to_string(),
             "641e87a4-8326-4771-ba2d-c706df35e35a".to_string(),
-        );
-        map.insert(
-            "ms-ds-key-credential-link".to_string(),
-            "5b47d60f-6090-40b2-9f37-2a4de88f3063".to_string(),
         );
         map.insert(
             "bootfile".to_string(),
