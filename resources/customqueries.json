@@ -347,17 +347,7 @@
          ]
       },
       {
-         "name": "[B26] Find all computer who can AllowedToAct or AllowToDelegate (limit 25)",
-         "category": "Other RustHound custom queries",
-         "queryList": [
-            {
-               "final": true,
-               "query": "MATCH (m:Computer),(n {highvalue:true}),p=shortestPath((m)-[r*1..]->(n)) WHERE NONE (r IN relationships(p) WHERE type(r)= 'GetChanges') AND NONE (r in relationships(p) WHERE type(r)='GetChangesAll') AND NOT m=n RETURN p LIMIT 25"
-            }
-         ]
-      },
-      {
-         "name": "[B27.1] Find all users who description contains 'pass'",
+         "name": "[B26.1] Find all users who description contains 'pass'",
          "category": "Other RustHound custom queries",
          "queryList": [
             {
@@ -367,7 +357,7 @@
          ]
       },
       {
-         "name": "[B27.2] Find all computers who description contains 'pass'",
+         "name": "[B26.2] Find all computers who description contains 'pass'",
          "category": "Other RustHound custom queries",
          "queryList": [
             {
@@ -377,12 +367,93 @@
          ]
       },
       {
-         "name": "[B27.3] Find all groups who description contains 'pass'",
+         "name": "[B26.3] Find all groups who description contains 'pass'",
          "category": "Other RustHound custom queries",
          "queryList": [
             {
                "final": true,
                "query": "MATCH (n:Group WHERE n.description CONTAINS 'pass') RETURN n"
+            }
+         ]
+      },
+      {
+         "name": "[C1] KUD (Kerberos Unconstrained Delegation): Find unconstrained delegation",
+         "category": "Kerberos",
+         "_comment": "https://mayfly277.github.io/posts/GOADv2-pwning-part10/",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (c {unconstraineddelegation:true}) return c"
+            }
+         ]
+      },
+      {
+         "name": "[C2] KUD: search for unconstrained delegation system (out of domain controller)",
+         "category": "Kerberos",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (c1:Computer)-[:MemberOf*1..]->(g:Group) WHERE g.objectid ENDS WITH '-516' WITH COLLECT(c1.name) AS domainControllers MATCH (c2 {unconstraineddelegation:true}) WHERE NOT c2.name IN domainControllers RETURN c2"
+            }
+         ]
+      },
+      {
+         "name": "[C3] KUD: Find the Shortest path to a unconstrained delegation system from an owned object",
+         "category": "Kerberos",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (n) MATCH p=shortestPath((n)-[*1..]->(m:Computer {unconstraineddelegation: true})) WHERE NOT n=m AND n.owned = true RETURN p"
+            }
+         ]
+      },
+      {
+         "name": "[C4] KCD (Kerberos Constrained Delegation): Find constrained delegation (User to Computer)",
+         "category": "Kerberos",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH p=(u:User)-[:AllowedToDelegate]->(c) RETURN p"
+            }
+         ]
+      },
+      {
+         "name": "[C5] KCD: Find constrained delegation (Computer to Computer)",
+         "category": "Kerberos",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH p=(u:Computer)-[:AllowedToDelegate]->(c) RETURN p"
+            }
+         ]
+      },
+      {
+         "name": "[C6] RBCD (Resource Based Constrained Delegation): Computer with msDS-AllowedToActOnBehalfOfOtherIdentity value",
+         "category": "Kerberos",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH p=(c)-[:AllowedToAct]->(c) RETURN p"
+            }
+         ]
+      },
+      {
+         "name": "[C7] RBCD: User with GenericAll or GenericWrite or WriteDACL on Computer",
+         "category": "Kerberos",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (n) MATCH p=shortestPath((n:User)-[:AllExtendedRights|GenericAll|GenericWrite|Owns|WriteDacl*1..]->(m:Computer)) RETURN p"
+            }
+         ]
+      },
+      {
+         "name": "[C8] KDC:RBCD: Find all computer who can AllowedToAct or AllowToDelegate (limit 25)",
+         "category": "Kerberos",
+         "queryList": [
+            {
+               "final": true,
+               "query": "MATCH (m:Computer),(n {highvalue:true}),p=shortestPath((m)-[r*1..]->(n)) WHERE NONE (r IN relationships(p) WHERE type(r)= 'GetChanges') AND NONE (r in relationships(p) WHERE type(r)='GetChangesAll') AND NOT m=n RETURN p LIMIT 25"
             }
          ]
       },
