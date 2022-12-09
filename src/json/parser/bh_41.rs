@@ -136,14 +136,15 @@ pub fn parse_user(
                     if flag.contains("DontExpirePassword") {
                         user_json["Properties"]["pwdneverexpires"] = true.into();
                     };
+                    if flag.contains("DontReqPreauth") {
+                        user_json["Properties"]["dontreqpreauth"] = true.into();
+                    };
+                    // KUD (Kerberos Unconstrained Delegation)
                     if flag.contains("TrustedForDelegation") {
                         user_json["Properties"]["unconstraineddelegation"] = true.into();
                     };
                     if flag.contains("NotDelegated") {
-                        user_json["Properties"]["unconstraineddelegation"] = true.into();
-                    };
-                    if flag.contains("DontReqPreauth") {
-                        user_json["Properties"]["dontreqpreauth"] = true.into();
+                        user_json["Properties"]["sensitive"] = true.into();
                     };
                     //if flag.contains("PasswordExpired") { let password_expired = true; user_json["Properties"]["pwdneverexpires"] = password_expired.into(); };
                     if flag.contains("TrustedToAuthForDelegation") {
@@ -152,6 +153,7 @@ pub fn parse_user(
                 }
             }
             "msDS-AllowedToDelegateTo"  => {
+                // KCD (Kerberos Constrained Delegation)
                 //trace!(" AllowToDelegateTo: {:?}",&value);
                 user_json["Properties"]["allowedtodelegate"] = value.to_owned().into();
                 // AllowedToDelegate
@@ -607,22 +609,18 @@ pub fn parse_computer(
                         computer_json["Properties"]["enabled"] = false.into();
                     };
                     //if flag.contains("Lockout") { let enabled = true; computer_json["Properties"]["enabled"] = enabled.into(); };
-                    // https://beta.hackndo.com/constrained-unconstrained-delegation/#constrained--unconstrained-delegation
-                    // https://beta.hackndo.com/unconstrained-delegation-attack/
+                    // KUD (Kerberos Unconstrained Delegation)
                     if flag.contains("TrustedForDelegation") {
-                        computer_json["Properties"]["unconstraineddelegation"] = true.into();
-                    };
-                    if flag.contains("NotDelegated") {
                         computer_json["Properties"]["unconstraineddelegation"] = true.into();
                     };
                     //if flag.contains("PasswordExpired") { let password_expired = true; computer_json["Properties"]["pwdneverexpires"] = password_expired.into(); };
                     if flag.contains("TrustedToAuthForDelegation") {
-                        computer_json["Properties"]["unconstraineddelegation"] = true.into();
                         computer_json["Properties"]["trustedtoauth"] = true.into();
                     };
                 }
             }
             "msDS-AllowedToDelegateTo"  => {
+                // KCD (Kerberos Constrained Delegation)
                 //trace!(" AllowToDelegateTo: {:?}",&value);
                 computer_json["Properties"]["allowedtodelegate"] = value.to_owned().into();
                 // AllowedToDelegate
@@ -698,6 +696,7 @@ pub fn parse_computer(
                 computer_json["Aces"] = relations_ace.into();
             }
             "msDS-AllowedToActOnBehalfOfOtherIdentity" => {
+                // RBCD (Resource-based constrained)
                 // Needed with acl
                 let entry_type = "computer".to_string();
                 // msDS-AllowedToActOnBehalfOfOtherIdentity parsing ACEs

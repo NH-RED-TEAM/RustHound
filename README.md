@@ -95,7 +95,7 @@ RustHound support Kerberos/GSSAPI but this means that it needs Clang and its dev
 For example:
 ```bash
 #Debian/Ubuntu
-apt-get -y install gcc libgssapi-krb5-2 libkrb5-dev libsasl2-modules-gssapi-mit
+sudo apt-get -y update && sudo apt-get -y install gcc libclang-dev clang libclang-dev libgssapi-krb5-2 libkrb5-dev libsasl2-modules-gssapi-mit musl-tools gcc-mingw-w64-x86-64
 ```
 
 Here is how to compile the "release" and "debug" versions from "cargo" command.
