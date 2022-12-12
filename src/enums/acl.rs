@@ -8,7 +8,7 @@ use crate::enums::secdesc::*;
 use crate::enums::sid::{bin_to_string, sid_maker};
 use crate::json::templates::*;
 use bitflags::bitflags;
-use log::trace;
+use log::{trace,error};
 
 /// This function allows to parse the attribut nTSecurityDescriptor from secdesc.rs
 /// <http://www.selfadsi.org/deep-inside/ad-security-descriptors.htm#SecurityDescriptorStructure>
@@ -24,9 +24,6 @@ pub fn parse_ntsecuritydescriptor(
     let relations_sacl: Vec<serde_json::value::Value> = Vec::new();
     let secdesc: SecurityDescriptor;
     let mut owner_sid: String = "".to_string();
-    #[warn(unused_assignments)]
-    let sacl: Acl;
-    let dacl: Acl;
 
     secdesc = SecurityDescriptor::parse(&nt).unwrap().1;
     trace!("SECURITY-DESCRIPTOR: {:?}", secdesc);
@@ -55,40 +52,51 @@ pub fn parse_ntsecuritydescriptor(
 
     if secdesc.offset_sacl as usize != 0 
     {
-        sacl = Acl::parse(&nt[secdesc.offset_sacl as usize..]).unwrap().1;
-        trace!("SACL: {:?}", sacl);
-        let aces = sacl.data;
-        trace!("ACES in SACL.DATA: {:?}", aces);
-        /*ace_maker(
-            valjson,
-            domain,
-            &mut relations_sacl,
-            &owner_sid,
-            aces,
-            &entry_type,
-            result_attrs,
-            result_bin,
-        );*/
-        trace!("RESULT: {:?}", relations_sacl);
+        let res = Acl::parse(&nt[secdesc.offset_sacl as usize..]);
+        match res {
+            Ok(_res) => {
+                let sacl = _res.1;
+                trace!("SACL: {:?}", sacl);
+                //let aces = sacl.data;
+                /*ace_maker(
+                    valjson,
+                    domain,
+                    &mut relations_sacl,
+                    &owner_sid,
+                    aces,
+                    &entry_type,
+                    result_attrs,
+                    result_bin,
+                );*/
+                trace!("RESULT: {:?}", relations_sacl);
+            },
+            Err(err) => error!("Error. Reason: {err}")
+        }
         return relations_sacl;
     }
 
     if secdesc.offset_dacl as usize != 0 
     {
-        dacl = Acl::parse(&nt[secdesc.offset_dacl as usize..]).unwrap().1;
-        trace!("DACL: {:?}", dacl);
-        let aces = dacl.data;
-        ace_maker(
-            valjson,
-            domain,
-            &mut relations_dacl,
-            &owner_sid,
-            aces,
-            &entry_type,
-            result_attrs,
-            result_bin,
-        );
-        trace!("RESULT: {:?}", relations_dacl);
+        let res = Acl::parse(&nt[secdesc.offset_dacl as usize..]);    
+        match res {
+            Ok(_res) => {
+                let dacl = _res.1;
+                trace!("DACL: {:?}", dacl);
+                let aces = dacl.data;
+                ace_maker(
+                    valjson,
+                    domain,
+                    &mut relations_dacl,
+                    &owner_sid,
+                    aces,
+                    &entry_type,
+                    result_attrs,
+                    result_bin,
+                );
+                trace!("RESULT: {:?}", relations_dacl);
+            },
+            Err(err) => error!("Error. Reason: {err}")
+        }
         return relations_dacl;
     }
     return relations_dacl;
@@ -205,7 +213,7 @@ fn ace_maker(
                 if (MaskFlags::GENERIC_ALL.bits() | mask) == mask 
                 {
                     if entry_type == "computer" && (&flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
-                    && valjson["Properties"]["haslaps"].as_bool().unwrap() 
+                    && valjson["Properties"]["haslaps"].as_bool().unwrap_or(false) 
                     {
                         if &ace_guid == OBJECTTYPE_GUID_HASHMAP.get("ms-mcs-admpwd").unwrap_or(&String::from("GUID-NOT-FOUND")) 
                         {
@@ -283,7 +291,7 @@ fn ace_maker(
             {
                 if (entry_type == "computer")
                 && (&flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
-                && valjson["Properties"]["haslaps"].as_bool().unwrap() == true
+                && valjson["Properties"]["haslaps"].as_bool().unwrap_or(false) == true
                 {
                     if &ace_guid == OBJECTTYPE_GUID_HASHMAP.get("ms-mcs-admpwd").unwrap_or(&String::from("GUID-NOT-FOUND"))
                     {
@@ -303,7 +311,7 @@ fn ace_maker(
                 }
                 if (entry_type == "computer")
                 && !(&flags & ACE_OBJECT_TYPE_PRESENT == ACE_OBJECT_TYPE_PRESENT)
-                && valjson["Properties"]["haslaps"].as_bool().unwrap() == true
+                && valjson["Properties"]["haslaps"].as_bool().unwrap_or(false) == true
                 {
                     relations.push(build_relation(&sid,"AllExtendedRights".to_string(),"".to_string(),is_inherited));
                 }
@@ -368,7 +376,7 @@ fn ace_maker(
             // For computer
             if (entry_type == "computer")
                 && ((MaskFlags::ADS_RIGHT_DS_CONTROL_ACCESS.bits() | mask) == mask)
-                && valjson["Properties"]["haslaps"].as_bool().unwrap() == true
+                && valjson["Properties"]["haslaps"].as_bool().unwrap_or(false) == true
             {
                 relations.push(build_relation(&sid,"AllExtendedRights".to_string(),"".to_string(),is_inherited));
             }
