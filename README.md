@@ -60,7 +60,7 @@ You can use **make** command to install Rusthound or to compile it for Linux or 
 
 ```bash
 make install
-rusthount -h
+rusthound -h
 ```
 
 More command in the **Makefile**:
