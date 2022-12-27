@@ -509,6 +509,13 @@ fn sid_maker_from_another_domain(vec_trusts: &Vec<serde_json::value::Value>, obj
             return sid
         }
     }
+    if object_identifier.contains("CN=S-") {
+        let re = Regex::new(r"S-[0-9]{1}-[0-9]{1}-[0-9]{1,}-[0-9]{1,}-[0-9]{1,}-[0-9]{1,}-[0-9]{1,}").unwrap();
+        for sid in re.captures_iter(&object_identifier) 
+        {
+            return sid[0].to_owned().to_string();
+        }
+    }
     return object_identifier.to_string()
 }
 
