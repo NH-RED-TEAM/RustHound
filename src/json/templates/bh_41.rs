@@ -12,6 +12,7 @@ pub fn prepare_user_json_template() -> serde_json::value::Value
          "name": "name@domain.com",
          "domainsid": "SID",
          "distinguishedname": "CN=name,DN=domain,DN=com",
+         "highvalue": false,
          "description": null,
          "whencreated": -1,
          "sensitive": false,
@@ -61,6 +62,8 @@ pub fn prepare_group_json_template() -> serde_json::value::Value
          "domainsid": "SID",
          "name": "name@domain.com",
          "distinguishedname": "DN",
+         "samaccountname": null,
+         "highvalue": false,
          "admincount": false,
          "description": null,
          "whencreated": -1
@@ -81,6 +84,7 @@ pub fn prepare_computer_json_template() -> serde_json::value::Value
          "domain": "domain.com",
          "name": "name.domain.com",
          "distinguishedname": "DN",
+         "highvalue": false,
          "samaccountname": null,
          "domainsid": "SID",
          "haslaps": false,
@@ -153,6 +157,7 @@ pub fn prepare_ou_json_template() -> serde_json::value::Value
          "domain": "domain.com",
          "domainsid": "SID",
          "distinguishedname": "DN",
+         "highvalue": false,
          "description": null,
          "blocksinheritance": false,
          "whencreated": -1
@@ -184,6 +189,7 @@ pub fn prepare_gpo_json_template() -> serde_json::value::Value
          "domain": "domain.com",
          "domainsid": "SID",
          "distinguishedname": "DN",
+         "highvalue": false,
          "description": null,
          "gpcpath": "GPO_PATH",
          "whencreated": -1
@@ -256,6 +262,7 @@ pub fn prepare_container_json_template() -> serde_json::value::Value
          "domain": "domain.local",
          "domainsid": "SID",
          "distinguishedname": "DN",
+         "highvalue": false,
       },
       "ChildObjects": [],
       "Aces": [],
