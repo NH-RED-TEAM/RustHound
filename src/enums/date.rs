@@ -36,5 +36,5 @@ pub fn return_current_date() -> String
 pub fn return_current_fulldate() -> String
 {
     let now = Local::now();
-    return now.to_string()
+    return now.format("%Y%m%d%H%M%S").to_string()
 }

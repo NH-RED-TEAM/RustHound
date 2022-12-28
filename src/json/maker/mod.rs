@@ -11,6 +11,7 @@ use zip::write::{FileOptions, ZipWriter};
 extern crate zip;
 use crate::json::templates::*;
 use crate::args::Options;
+use crate::enums::date::return_current_fulldate;
 
 /// Current Bloodhound version 4.2+
 pub const BLOODHOUND_VERSION_4: i8 = 5;
@@ -35,8 +36,12 @@ pub fn make_result(
    // Hashmap for json files
    let mut json_result = HashMap::new();
 
+   // Datetime for output file
+   let datetime = return_current_fulldate();
+
    // Add all in json files
    add_file(
+      &datetime,
       "users".to_string(),
 		&filename,
       vec_users,
@@ -44,6 +49,7 @@ pub fn make_result(
       common_args,
    )?;
    add_file(
+      &datetime,
       "groups".to_string(),
 		&filename,
       vec_groups,
@@ -51,6 +57,7 @@ pub fn make_result(
       common_args,
    )?;
    add_file(
+      &datetime,
       "computers".to_string(),
 		&filename,
       vec_computers,
@@ -58,6 +65,7 @@ pub fn make_result(
       common_args,
    )?;
    add_file(
+      &datetime,
       "ous".to_string(),
 		&filename,
       vec_ous,
@@ -65,6 +73,7 @@ pub fn make_result(
       common_args,
    )?;
    add_file(
+      &datetime,
       "domains".to_string(),
 		&filename,
       vec_domains,
@@ -82,6 +91,7 @@ pub fn make_result(
       _vec_gpos_cas_templates.append(vec_templates);
       info!("{} {} parsed!", &vec_gpos.len().to_string().bold(),&"gpos");
       add_file(
+         &datetime,
          "gpos".to_string(),
          &filename,
          _vec_gpos_cas_templates.to_vec(),
@@ -91,6 +101,7 @@ pub fn make_result(
    } else {
       // Is @ly4k BloodHound version?
       add_file(
+         &datetime,
          "gpos".to_string(),
          &filename,
          vec_gpos,
@@ -99,6 +110,7 @@ pub fn make_result(
       )?;
    }
    add_file(
+      &datetime,
       "containers".to_string(),
 		&filename,
       vec_containers,
@@ -108,6 +120,7 @@ pub fn make_result(
    // ADCS and is @ly4k BloodHound version?
    if common_args.adcs && !common_args.old_bloodhound {
       add_file(
+         &datetime,
          "cas".to_string(),
          &filename,
          vec_cas.to_vec(),
@@ -115,6 +128,7 @@ pub fn make_result(
          common_args,
       )?;
       add_file(
+         &datetime,
          "templates".to_string(),
          &filename,
          vec_templates.to_vec(),
@@ -125,6 +139,7 @@ pub fn make_result(
    // All in zip file
    if common_args.zip {
       make_a_zip(
+         &datetime,
          &filename,
          &common_args.path,
          &json_result);
@@ -134,6 +149,7 @@ pub fn make_result(
 
 /// Function to create the .json file.
 fn add_file(
+   datetime: &String,
    name: String,
 	domain_format: &String,
    vec_json: Vec<serde_json::value::Value>,
@@ -165,16 +181,13 @@ fn add_file(
    // Create json file if isn't zip
    if ! zip 
    {
-      let mut final_path = path.to_owned();
-      final_path.push_str("/");
-      final_path.push_str(domain_format);
-      final_path.push_str(format!("_{}.json",&name).as_str());    
+      let final_path = format!("{}/{}_{}_{}.json",path,datetime,domain_format,name);
       fs::write(&final_path, &final_json.to_string())?;
       info!("{} created!",final_path.bold());
    }
    else
    {
-      json_result.insert(format!("{}.json",name).to_string(),final_json.to_owned().to_string());
+      json_result.insert(format!("{}_{}.json",datetime,name).to_string(),final_json.to_owned().to_string());
    }
 
    Ok(())
@@ -182,15 +195,12 @@ fn add_file(
 
 /// Function to compress the JSON files into a zip archive
 fn make_a_zip(
+   datetime: &String,
    domain: &String,
    path: &String,
    json_result: &HashMap<String, String>
 ){
-   let mut final_path = path.to_owned();
-   final_path.push_str("/");
-   final_path.push_str(domain);
-   final_path.push_str("_rusthound_result.zip");
-
+   let final_path = format!("{}/{}_{}_rusthound.zip",path,datetime,domain);
    let mut file = File::create(&final_path).expect("Couldn't create file");
    create_zip_archive(&mut file, json_result).expect("Couldn't create archive");
 
