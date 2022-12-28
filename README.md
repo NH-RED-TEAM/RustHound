@@ -66,13 +66,21 @@ rusthound -h
 More command in the **Makefile**:
 
 ```bash
-make help
-  usage: make install
-  usage: make uninstall
-  usage: make debug
-  usage: make release
-  usage: make windows
-  usage: make linux_musl
+Default:
+usage: make install
+usage: make uninstall
+usage: make debug
+usage: make release
+
+Static:
+usage: make windows
+usage: make linux_musl
+usage: make macos
+
+Dependencies:
+usage: make install_windows_deps
+usage: make install_linux_musl_deps
+usage: make install_macos_deps
 ```
 
 ## Using Dockerfile
@@ -158,20 +166,16 @@ Amazing documentation: [https://wapl.es/rust/2019/02/17/rust-cross-compile-linux
 curl https://sh.rustup.rs -sSf | sh
 
 #Add MacOS tool chain
-cd /usr/local/bin
-sudo git clone https://github.com/tpoechtrager/osxcross
-cd osxcross
-sudo wget -nc https://s3.dockerproject.org/darwin/v2/MacOSX10.10.sdk.tar.xz
-sudo mv MacOSX10.10.sdk.tar.xz tarballs/
-sudo UNATTENDED=yes OSX_VERSION_MIN=10.7 ./build.sh
-sudo chmod 770 /usr/local/bin/osxcross/ -R
-export PATH="/usr/local/bin/osxcross/target/bin:$PATH" \
+sudo git clone https://github.com/tpoechtrager/osxcross /usr/local/bin/osxcross
+sudo wget -P /usr/local/bin/osxcross/ -nc https://s3.dockerproject.org/darwin/v2/MacOSX10.10.sdk.tar.xz && sudo mv /usr/local/bin/osxcross/MacOSX10.10.sdk.tar.xz /usr/local/bin/osxcross/tarballs/
+sudo UNATTENDED=yes OSX_VERSION_MIN=10.7 /usr/local/bin/osxcross/build.sh
+sudo chmod 775 /usr/local/bin/osxcross/ -R
+export PATH="/usr/local/bin/osxcross/target/bin:$PATH"
 
 #Cargo needs to be told to use the correct linker for the x86_64-apple-darwin target, so add the following to your project’s .cargo/config file:
-vim ~/.cargo/config
-  [target.x86_64-apple-darwin]
-  linker = "x86_64-apple-darwin14-clang"
-  ar = "x86_64-apple-darwin14-ar"
+grep 'target.x86_64-apple-darwin' ~/.cargo/config || echo "[target.x86_64-apple-darwin]" >> ~/.cargo/config
+grep 'linker = "x86_64-apple-darwin14-clang"' ~/.cargo/config || echo 'linker = "x86_64-apple-darwin14-clang"' >> ~/.cargo/config
+grep 'ar = "x86_64-apple-darwin14-clang"' ~/.cargo/config || echo 'ar = "x86_64-apple-darwin14-clang"' >> ~/.cargo/config
 
 #Static compilation for MacOS
 git clone https://github.com/OPENCYBER-FR/RustHound
