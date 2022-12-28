@@ -421,12 +421,32 @@ pub fn parse_group(
                 let vec_sid = objectsid_to_vec8(&value[0]);
                 sid = sid_maker(LdapSid::parse(&vec_sid).unwrap().1, domain);
                 group_json["ObjectIdentifier"] = sid.to_owned().into();
-            
+
                 /*let re = Regex::new(r"^S-[0-9]{1}-[0-9]{1}-[0-9]{1,}-[0-9]{1,}-[0-9]{1,}-[0-9]{1,}").unwrap();
                 for domain_sid in re.captures_iter(&sid) 
                 {
                     group_json["Properties"]["domainsid"] = domain_sid[0].to_owned().to_string().into();
                 }*/
+
+                // highvalue
+                if sid.ends_with("-512") 
+                || sid.ends_with("-516") 
+                || sid.ends_with("-519") 
+                || sid.ends_with("-520") 
+                {
+                    group_json["Properties"]["highvalue"] = true.into();
+                }
+                else if sid.ends_with("S-1-5-32-544") 
+                || sid.ends_with("S-1-5-32-548") 
+                || sid.ends_with("S-1-5-32-549")
+                || sid.ends_with("S-1-5-32-550") 
+                || sid.ends_with("S-1-5-32-551") 
+                {
+                    group_json["Properties"]["highvalue"] = true.into();
+                }
+                else {
+                    group_json["Properties"]["highvalue"] = false.into();
+                }
             }
             "whenCreated" => {
                 let epoch = string_to_epoch(&value[0]);
@@ -454,13 +474,21 @@ pub fn parse_group(
                 {
                     group_json["Properties"]["domainsid"] = domain_sid[0].to_owned().to_string().into();
                 }
-
+                
                 // highvalue
-                let highvalue = vec!["S-1-5-32-544", "S-1-5-32-550", "S-1-5-32-549", "S-1-5-32-551", "S-1-5-32-548"];
-                if sid.ends_with("-512") || sid.ends_with("-516") || sid.ends_with("-519") || sid.ends_with("-520") {
+                if sid.ends_with("-512") 
+                || sid.ends_with("-516") 
+                || sid.ends_with("-519") 
+                || sid.ends_with("-520") 
+                {
                     group_json["Properties"]["highvalue"] = true.into();
                 }
-                else if highvalue.contains(&&sid.as_str()) {
+                else if sid.ends_with("S-1-5-32-544") 
+                || sid.ends_with("S-1-5-32-548") 
+                || sid.ends_with("S-1-5-32-549")
+                || sid.ends_with("S-1-5-32-550") 
+                || sid.ends_with("S-1-5-32-551") 
+                {
                     group_json["Properties"]["highvalue"] = true.into();
                 }
                 else {

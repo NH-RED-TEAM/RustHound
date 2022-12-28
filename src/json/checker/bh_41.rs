@@ -55,6 +55,7 @@ pub fn add_default_groups(vec_groups: &mut Vec<serde_json::value::Value>, vec_co
     
     account_operators_group["ObjectIdentifier"] = sid.into();
     account_operators_group["Properties"]["name"] = name.into();
+    account_operators_group["Properties"]["highvalue"] = true.into();
     vec_groups.push(account_operators_group);
 
     // WINDOWS AUTHORIZATION ACCESS GROUP
@@ -127,6 +128,7 @@ pub fn add_default_groups(vec_groups: &mut Vec<serde_json::value::Value>, vec_co
 
     administrators_group["ObjectIdentifier"] = sid.into();
     administrators_group["Properties"]["name"] = name.into();
+    administrators_group["Properties"]["highvalue"] = true.into();
     vec_groups.push(administrators_group);
 
     // PRE-WINDOWS 2000 COMPATIBLE ACCESS
@@ -160,6 +162,7 @@ pub fn add_default_groups(vec_groups: &mut Vec<serde_json::value::Value>, vec_co
             
     print_operators_group["ObjectIdentifier"] = sid.into();
     print_operators_group["Properties"]["name"] = name.into();
+    print_operators_group["Properties"]["highvalue"] = true.into();
     vec_groups.push(print_operators_group); 
 
     // TERMINAL SERVER LICENSE SERVERS

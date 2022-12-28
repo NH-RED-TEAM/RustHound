@@ -325,6 +325,7 @@ pub fn prepare_default_group_json_template() -> serde_json::value::Value
           "name": "name@domain.com",
           "domainsid": "SID",
           "domain": "domain.com",
+          "highvalue": false,
       },
    });
 }
