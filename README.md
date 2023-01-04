@@ -106,7 +106,7 @@ For example:
 sudo apt-get -y update && sudo apt-get -y install gcc libclang-dev clang libclang-dev libgssapi-krb5-2 libkrb5-dev libsasl2-modules-gssapi-mit musl-tools gcc-mingw-w64-x86-64
 ```
 
-Here is how to compile the "release" and "debug" versions using the "cargo" command.
+Here is how to compile the "release" and "debug" versions using the **cargo** command.
 
 ```bash
 git clone https://github.com/OPENCYBER-FR/RustHound
@@ -116,7 +116,7 @@ cargo build --release
 cargo b
 ```
 
-The result can be found in the "target/release" or "target/debug" folder.
+The result can be found in the target/release or target/debug folder.
 
 Below you can find the compilation methodology for each of the OS from Linux.
 If you need another compilation system, please consult the list in this link: [https://doc.rust-lang.org/nightly/rustc/platform-support.html](https://doc.rust-lang.org/nightly/rustc/platform-support.html)
@@ -138,7 +138,7 @@ cd RustHound
 CFLAGS="-lrt";LDFLAGS="-lrt";RUSTFLAGS='-C target-feature=+crt-static';cargo build --release --target x86_64-unknown-linux-gnu
 ```
 
-The result can be found in the "target/x86_64-unknown-linux-gnu/release" folder.
+The result can be found in the target/x86_64-unknown-linux-gnu/release folder.
 
 
 ## Manually for Windows static version from Linux
@@ -156,7 +156,7 @@ cd RustHound
 RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-pc-windows-gnu
 ```
 
-The result can be found in the "target/x86_64-pc-windows-gnu/release" folder.
+The result can be found in the target/x86_64-pc-windows-gnu/release folder.
 
 ## Manually for macOS static version from Linux
 
@@ -185,7 +185,7 @@ cd RustHound
 RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-apple-darwin
 ```
 
-The result can be found in the "target/x86_64-apple-darwin/release" folder.
+The result can be found in the target/x86_64-apple-darwin/release folder.
 
 # How to build the documentation?
 
@@ -313,9 +313,9 @@ cp resources/customqueries.json ~/.config/bloodhound/customqueries.json
 
 # :rocket: Statistics
 
-In order to make statistics on a DC with more LDAP objects, run the [BadBlood](https://github.com/davidprowe/BadBlood) on the domain controller ESSOS.local from [GOAD](https://github.com/Orange-Cyberdefense/GOAD). The DC should now have around 3500 objects. An average execution time has been calculated and here are the results:
+In order to make statistics on a DC with more LDAP objects, run the [BadBlood](https://github.com/davidprowe/BadBlood) on the domain controller ESSOS.local from [GOAD](https://github.com/Orange-Cyberdefense/GOAD). The DC should now have around 3500 objects. Below is the average time it takes to run the following tools:
 
-| Tool              | Environment         | Objects | Time     | Command line     |
+| Tool              | Environment         | Objects | Time     | Command      |
 | -------------------------- | ----------------- | ---------- | -------  | -------  |
 | SharpHound.exe        | Windows <img width="20px"  src="https://github.com/OPENCYBER-FR/RustHound/blob/main/img/windows.png"/> | ~3500   | ~51.605s | Measure-Command { sharphound.exe -d essos.local --ldapusername 'khal.drogo' --ldappassword 'horse' --domaincontroller '192.168.56.12' -c All } |
 | BloodHound.py | Linux <img width="20px" src="https://github.com/OPENCYBER-FR/RustHound/blob/main/img/linux.png"/>    | ~3500   | ~9.657s  | time python3 bloodhound.py -u khal.drogo -p horse -d essos.local -ns 192.168.56.12 --zip -c all |
