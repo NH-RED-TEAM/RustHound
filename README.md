@@ -5,7 +5,7 @@
   <img alt="GitHub" src="https://img.shields.io/github/license/OPENCYBER-FR/RustHound?style=for-the-badge">
   <img alt="Linux supported" src="https://img.shields.io/badge/Supported%20OS-Linux-orange?style=for-the-badge">
   <img alt="Windows supported" src="https://img.shields.io/badge/Supported%20OS-Windows-green?style=for-the-badge">
-  <img alt="MacOS supported" src="https://img.shields.io/badge/Supported%20OS-MacOS-blue?style=for-the-badge">
+  <img alt="macOS supported" src="https://img.shields.io/badge/Supported%20OS-MacOS-blue?style=for-the-badge">
   <a href="https://twitter.com/intent/follow?screen_name=OPENCYBER_FR" title="Follow"><img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/OPENCYBER_FR?label=OPENCYBER_FR&style=for-the-badge"></a>
   <a href="https://twitter.com/intent/follow?screen_name=g0h4n_0" title="Follow"><img src="https://img.shields.io/twitter/follow/g0h4n_0?label=g0h4n&style=for-the-badge"></a>
   <br>
@@ -25,7 +25,7 @@
   - [Using Cargo](#using-cargo)
   - [Linux x86_64 static version](#manually-for-linux-x86_64-static-version)
   - [Windows static version from Linux](#manually-for-windows-static-version-from-linux)
-  - [MacOS static version from Linux](#manually-for-macos-static-version-from-linux)
+  - [macOS static version from Linux](#manually-for-macos-static-version-from-linux)
 - [How to build documentation?](#how-to-build-documentation)
 - [Usage](#usage)
 - [Demo](#demo)
@@ -38,25 +38,25 @@
 
 # Limitations
 
-Not all SharpHound features are implemented yet but some are existing in RustHound and do not in SharpHound or BloodHound-Python. Please refer to the [roadmap](#-roadmap) for more information.
+Not all SharpHound features have been implemented. Some exist in RustHound and not in SharpHound or BloodHound-Python. Please refer to the [roadmap](#-roadmap) for more information.
 
 # Description
 
-RustHound is a **cross-platform** BloodHound collector tool, written in Rust. (Linux,Windows,MacOS)
+RustHound is a **cross-platform** BloodHound collector tool written in Rust, making it compatible with Linux, Windows, and macOS.
 
-No anti-virus detection and **cross-compiled**.
+No AV detection and **cross-compiled**.
 
-RustHound generate users,groups,computers,ous,gpos,containers,domains json files to analyze it with BloodHound application.
+RustHound generates users, groups, computers, OUs, GPOs, containers, and domain JSON files that can be analyzed with BloodHound.
 
-> 💡 If you can use SharpHound.exe, use it.
-> Rusthound is a backup solution if SharpHound.exe is detected by AV or if SharpHound.exe isn't executable from the system where you have access to.
+> 💡 If you can use SharpHound, use it.
+> Use RustHound as a backup solution if SharpHound is detected by AV or if it not compatible with your OS.
 
 
 # How to compile it?
 
 ## Using Makefile
 
-You can use **make** command to install Rusthound or to compile it for Linux or Windows.
+You can use the **make** command to install RustHound or to compile it for Linux or Windows.
 
 ```bash
 make install
@@ -85,7 +85,7 @@ usage: make install_macos_deps
 
 ## Using Dockerfile
 
-Use RustHound with docker to make sure to have all dependencies.
+Use RustHound with Docker to make sure to have all dependencies.
 
 ```bash
 docker build -t rusthound .
@@ -94,97 +94,98 @@ docker run rusthound -h
 
 ## Using Cargo
 
-You need to install rust on your system (Windows/Linux/MacOS).
+You will need to install Rust on your system.
 
 [https://www.rust-lang.org/fr/tools/install](https://www.rust-lang.org/fr/tools/install)
 
-RustHound support Kerberos/GSSAPI but this means that it needs Clang and its development libraries, as well as the Kerberos development libraries. On Debian/Ubuntu, that means **clang-N**, **libclang-N-dev** and **libkrb5-dev**.
+RustHound supports Kerberos and GSSAPI. Therefore, it requires Clang and its development libraries, as well as the Kerberos development libraries. On Debian and Ubuntu, this means **clang-N**, **libclang-N-dev**, and **libkrb5-dev**.
 
 For example:
 ```bash
-#Debian/Ubuntu
+# Debian/Ubuntu
 sudo apt-get -y update && sudo apt-get -y install gcc libclang-dev clang libclang-dev libgssapi-krb5-2 libkrb5-dev libsasl2-modules-gssapi-mit musl-tools gcc-mingw-w64-x86-64
 ```
 
-Here is how to compile the "release" and "debug" versions from "cargo" command.
+Here is how to compile the "release" and "debug" versions using the **cargo** command.
 
 ```bash
 git clone https://github.com/OPENCYBER-FR/RustHound
 cd RustHound
 cargo build --release
-#or debug version
+# or debug version
 cargo b
 ```
 
-The result can be found in "target/release" or in "target/debug" folder.
+The result can be found in the target/release or target/debug folder.
 
 Below you can find the compilation methodology for each of the OS from Linux.
-If you need another compilation system, please consult the list in this link : [https://doc.rust-lang.org/nightly/rustc/platform-support.html](https://doc.rust-lang.org/nightly/rustc/platform-support.html)
+If you need another compilation system, please consult the list in this link: [https://doc.rust-lang.org/nightly/rustc/platform-support.html](https://doc.rust-lang.org/nightly/rustc/platform-support.html)
 
 
 ## Manually for Linux x86_64 static version
+
 ```bash
-#Install rustup and cargo in Linux
+# Install rustup and Cargo for Linux
 curl https://sh.rustup.rs -sSf | sh
 
-#Add Linux deps
+# Add Linux deps
 rustup install stable-x86_64-unknown-linux-gnu
 rustup target add x86_64-unknown-linux-gnu
 
-#Static compilation for Linux
+# Static compilation for Linux
 git clone https://github.com/OPENCYBER-FR/RustHound
 cd RustHound
 CFLAGS="-lrt";LDFLAGS="-lrt";RUSTFLAGS='-C target-feature=+crt-static';cargo build --release --target x86_64-unknown-linux-gnu
 ```
 
-The result can be found in "target/x86_64-unknown-linux-gnu/release" folder.
+The result can be found in the target/x86_64-unknown-linux-gnu/release folder.
 
 
 ## Manually for Windows static version from Linux
 ```bash
-#Install rustup and cargo in Linux
+# Install rustup and Cargo in Linux
 curl https://sh.rustup.rs -sSf | sh
 
-#Add Windows deps
+# Add Windows deps
 rustup install stable-x86_64-pc-windows-gnu
 rustup target add x86_64-pc-windows-gnu
 
-#Static compilation for Windows
+# Static compilation for Windows
 git clone https://github.com/OPENCYBER-FR/RustHound
 cd RustHound
 RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-pc-windows-gnu
 ```
 
-The result can be found in "target/x86_64-pc-windows-gnu/release" folder.
+The result can be found in the target/x86_64-pc-windows-gnu/release folder.
 
-## Manually for MacOS static version from Linux
+## Manually for macOS static version from Linux
 
 Amazing documentation: [https://wapl.es/rust/2019/02/17/rust-cross-compile-linux-to-macos.html](https://wapl.es/rust/2019/02/17/rust-cross-compile-linux-to-macos.html)
 
 ```bash
-#Install rustup and cargo in Linux
+# Install rustup and Cargo in Linux
 curl https://sh.rustup.rs -sSf | sh
 
-#Add MacOS tool chain
+# Add macOS tool chain
 sudo git clone https://github.com/tpoechtrager/osxcross /usr/local/bin/osxcross
 sudo wget -P /usr/local/bin/osxcross/ -nc https://s3.dockerproject.org/darwin/v2/MacOSX10.10.sdk.tar.xz && sudo mv /usr/local/bin/osxcross/MacOSX10.10.sdk.tar.xz /usr/local/bin/osxcross/tarballs/
 sudo UNATTENDED=yes OSX_VERSION_MIN=10.7 /usr/local/bin/osxcross/build.sh
 sudo chmod 775 /usr/local/bin/osxcross/ -R
 export PATH="/usr/local/bin/osxcross/target/bin:$PATH"
 
-#Cargo needs to be told to use the correct linker for the x86_64-apple-darwin target, so add the following to your project’s .cargo/config file:
+# Cargo needs to be told to use the correct linker for the x86_64-apple-darwin target, so add the following to your project’s .cargo/config file:
 grep 'target.x86_64-apple-darwin' ~/.cargo/config || echo "[target.x86_64-apple-darwin]" >> ~/.cargo/config
 grep 'linker = "x86_64-apple-darwin14-clang"' ~/.cargo/config || echo 'linker = "x86_64-apple-darwin14-clang"' >> ~/.cargo/config
 grep 'ar = "x86_64-apple-darwin14-clang"' ~/.cargo/config || echo 'ar = "x86_64-apple-darwin14-clang"' >> ~/.cargo/config
 
-#Static compilation for MacOS
+# Static compilation for macOS
 git clone https://github.com/OPENCYBER-FR/RustHound
 cd RustHound
-#Uncomment line 32 and comment line 34 in Cargo.toml
+# Uncomment line 32 and comment line 34 in Cargo.toml
 RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-apple-darwin
 ```
 
-The result can be found in "target/x86_64-apple-darwin/release" folder.
+The result can be found in the target/x86_64-apple-darwin/release folder.
 
 # How to build the documentation?
 
@@ -252,7 +253,7 @@ rusthound -d north.sevenkingdoms.local --ldaps -u 'jeor.mormont@north.sevenkingd
 
 # Windows with GSSAPI session
 rusthound.exe -d sevenkingdoms.local --ldapfqdn kingslanding
-# Windows simple bind connection username:password (don't use simple quote or double quote with cmd.exe)
+# Windows simple bind connection username:password (do not use single or double quotes with cmd.exe)
 rusthound.exe -d sevenkingdoms.local -u jeor.mormont@north.sevenkingdoms.local -p _L0ngCl@w_ -o output -z
 ```
 <p align="center">
@@ -269,7 +270,7 @@ rusthound -d essos.local --ldaps -u 'daenerys.targaryen@essos.local' -p 'BurnThe
 
 # Windows with GSSAPI session and FQDN resolver module
 rusthound.exe -d essos.local -f meereen -o output --fqdn-resolver -z
-# Windows simple bind connection username:password and FQDN resolver module and TCP DNS request and custom name server (don't use simple quote or double quote with cmd.exe)
+# Windows simple bind connection username:password and FQDN resolver module and TCP DNS request and custom name server (do not use single or double quotes with cmd.exe)
 rusthound.exe -d essos.local -u daenerys.targaryen@essos.local -p BurnThemAll! -o output -z --fqdn-resolver --tcp-dns --name-server 192.168.56.12 
 ```
 <p align="center">
@@ -279,7 +280,7 @@ rusthound.exe -d essos.local -u daenerys.targaryen@essos.local -p BurnThemAll! -
 
 ## Module ADCS collector
 
-Example is done with the [@ly4k BloodHound version](https://github.com/ly4k/BloodHound).
+Example using [@ly4k BloodHound version](https://github.com/ly4k/BloodHound).
 
 ```bash
 # Linux with username:password and ADCS module for @ly4k BloodHound version
@@ -294,7 +295,7 @@ rusthound -d essos.local -u 'daenerys.targaryen@essos.local' -p 'BurnThemAll!' -
 rusthound.exe -d essos.local -f meereen -o output -z --adcs
 # Windows with GSSAPI session and ADCS module and TCP DNS request and custom name server
 rusthound.exe -d essos.local --ldapfqdn meereen -o output -z --adcs --tcp-dns --name-server 192.168.56.12
-# Windows simple bind connection username:password (don't use simple quote or double quote with cmd.exe)
+# Windows simple bind connection username:password (do not use single or double quotes with cmd.exe)
 rusthound.exe -d essos.local -u daenerys.targaryen@essos.local -p BurnThemAll! -o output -z --adcs --dc-only
 ```
 <p align="center">
@@ -302,7 +303,7 @@ rusthound.exe -d essos.local -u daenerys.targaryen@essos.local -p BurnThemAll! -
 </p>
 
 
-You can find the custom queries used in the demo, in the resource folder.
+You can find the custom queries used in the demo in the resource folder.
 
 Use the following command to install it:
 
@@ -312,9 +313,9 @@ cp resources/customqueries.json ~/.config/bloodhound/customqueries.json
 
 # :rocket: Statistics
 
-In order to make statistics on a DC with more LDAP objects, we run the [BadBlood](https://github.com/davidprowe/BadBlood) project on the domain controller ESSOS.local from [GOAD](https://github.com/Orange-Cyberdefense/GOAD). The DC has now around 3500 objects. An execution average time has been done and here are the output:
+In order to make statistics on a DC with more LDAP objects, run the [BadBlood](https://github.com/davidprowe/BadBlood) on the domain controller ESSOS.local from [GOAD](https://github.com/Orange-Cyberdefense/GOAD). The DC should now have around 3500 objects. Below is the average time it takes to run the following tools:
 
-| Tool              | Environment         | Objects | Time     | Command line     |
+| Tool              | Environment         | Objects | Time     | Command      |
 | -------------------------- | ----------------- | ---------- | -------  | -------  |
 | SharpHound.exe        | Windows <img width="20px"  src="https://github.com/OPENCYBER-FR/RustHound/blob/main/img/windows.png"/> | ~3500   | ~51.605s | Measure-Command { sharphound.exe -d essos.local --ldapusername 'khal.drogo' --ldappassword 'horse' --domaincontroller '192.168.56.12' -c All } |
 | BloodHound.py | Linux <img width="20px" src="https://github.com/OPENCYBER-FR/RustHound/blob/main/img/linux.png"/>    | ~3500   | ~9.657s  | time python3 bloodhound.py -u khal.drogo -p horse -d essos.local -ns 192.168.56.12 --zip -c all |
@@ -324,11 +325,11 @@ In order to make statistics on a DC with more LDAP objects, we run the [BadBlood
 #  🚥 Roadmap
 
 ## Authentification
-  - [x] ldap (389)
-  - [x] ldaps (636)
+  - [x] LDAP (389)
+  - [x] LDAPS (636)
   - [x] `BIND`
   - [ ] `NTLM`
-  - [x] `GSSAPI` for Windows ok but not tested for Linux
+  - [x] `GSSAPI` for Windows ok, but not tested on Linux
 
 ## Outputs
   - [x] users.json
@@ -340,18 +341,18 @@ In order to make statistics on a DC with more LDAP objects, we run the [BadBlood
   - [x] domains.json
   - [x] cas.json
   - [x] templates.json
-  - [x] args and function to zip json files **--zip**
+  - [x] args and function to zip JSON files **--zip**
 
 ## Modules
 
 - [x] Retreive LAPS password if your user can read them **automatic**
 - [x] Resolve FQDN computers found to IP address **--fqdn-resolver**
 - [x] Retrieve certificates for ESC exploitation with [Certipy](https://github.com/ly4k/Certipy) **--adcs**
-- [ ] Kerberos attack module (ASREPROASTING,KERBEROASTING) **--attack-kerberos**
-- [ ] Retrieve datas from trusted domains  **--follow-trust** (Currently working on it, got beta version of this module)
+- [ ] Kerberos attack module (ASREPROASTING and KERBEROASTING) **--attack-kerberos**
+- [ ] Retrieve datas from trusted domains **--follow-trust** (Currently working on it, got beta version of this module)
 
 
-## Bloodhound v4.2
+## BloodHound v4.2
 
 - Parsing Features
   - Users & Computers
