@@ -1,10 +1,11 @@
 use crate::enums::secdesc::LdapSid;
-//use log::trace;
+use log::{trace,error};
 
 /// Function to make SID String from ldap_sid struct
 pub fn sid_maker(sid: LdapSid, domain: &String) -> String {
     let mut sub: String = "".to_owned();
-    for v in sid.sub_authority {
+    trace!("sid_maker before: {:?}",&sid);
+    for v in &sid.sub_authority {
         sub.push_str(&"-".to_owned());
         sub.push_str(&v.to_string());
     }
@@ -23,7 +24,10 @@ pub fn sid_maker(sid: LdapSid, domain: &String) -> String {
     } else {
         final_sid = result;
     }
-    //trace!("sid_maker value: {}",final_sid);
+    trace!("sid_maker value: {}",final_sid);
+    if final_sid.contains("S-0-0"){
+        error!("SID contains null bytes!\n[INPUT: {:?}]\n[OUTPUT: {}]", &sid, final_sid);
+    }
     return final_sid;
 }
 

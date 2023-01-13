@@ -6,7 +6,7 @@ keywords = ["bloodhound", "pentest", "ldap", "tokio", "async"]
 repository = "https://github.com/OPENCYBER-FR/RustHound"
 homepage = "https://github.com/OPENCYBER-FR/RustHound"
 documentation = "https://docs.rs/rusthound/"
-version = "1.1.51"
+version = "1.1.6"
 edition = "2018"
 license = "MIT"
 readme = "README.md"
@@ -14,7 +14,7 @@ readme = "README.md"
 [dependencies]
 tokio = "1.1"
 clap = "4.0"
-nom = "6.2.1"
+nom7 = { version="7.0", package="nom" }
 colored = "2"
 chrono = "0.4"
 bitflags = "1.0"

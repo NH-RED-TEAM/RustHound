@@ -78,8 +78,7 @@ pub async fn ldap_search(
         let ctrls = RawControl {
             ctype: String::from("1.2.840.113556.1.4.801"),
             crit: true,
-            // flag to 7 or 5?
-            val: Some(vec![48,132,00,00,00,3,2,1,7]),
+            val: Some(vec![48,3,2,1,5]),
         };
         ldap.with_controls(ctrls.to_owned());
 
