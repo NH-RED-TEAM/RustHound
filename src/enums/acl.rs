@@ -134,8 +134,7 @@ fn ace_maker(
             continue
         }
 
-        let ace_data_formated = AceFormat::parse(&ace.data[..], ace.ace_type).unwrap().1;
-        let sid = sid_maker(AceFormat::get_sid(ace_data_formated.to_owned()).unwrap(), domain);
+        let sid = sid_maker(AceFormat::get_sid(ace.data.to_owned()).unwrap(), domain);
         trace!("SID for this ACE: {}", &sid);
 
         // Check if sid is in the ignored list
@@ -148,13 +147,13 @@ fn ace_maker(
         if ace.ace_type == 0x05 {
             trace!("TYPE: 0x05");
             // GUID : inherited_object_type
-            let inherited_object_type = match AceFormat::get_inherited_object_type(ace_data_formated.to_owned()) 
+            let inherited_object_type = match AceFormat::get_inherited_object_type(ace.data.to_owned()) 
             {
                 Some(inherited_object_type) => inherited_object_type,
                 None => 0,
             };
             // GUID : object_type
-            let object_type = match AceFormat::get_object_type(ace_data_formated.to_owned()) 
+            let object_type = match AceFormat::get_object_type(ace.data.to_owned()) 
             {
                 Some(object_type) => object_type,
                 None => 0,
@@ -163,7 +162,7 @@ fn ace_maker(
             let is_inherited = ace.ace_flags & INHERITED_ACE == INHERITED_ACE;
 
             // Get the Flag for the ace.datas
-            let flags = AceFormat::get_flags(ace_data_formated.to_owned()).unwrap().bits();
+            let flags = AceFormat::get_flags(ace.data.to_owned()).unwrap().bits();
 
             // https://github.com/fox-it/BloodHound.py/blob/645082e3462c93f31b571db945cde1fd7b837fb9/bloodhound/enumeration/acls.py#L77
             if (ace.ace_flags & INHERITED_ACE != INHERITED_ACE)
@@ -174,7 +173,6 @@ fn ace_maker(
             }
 
             // https://github.com/fox-it/BloodHound.py/blob/645082e3462c93f31b571db945cde1fd7b837fb9/bloodhound/enumeration/acls.py#L82
-            //let ace_object_flags = AceFormat::get_flags(&ace_data_formated).unwrap();
             if (ace.ace_flags & INHERITED_ACE == INHERITED_ACE) 
             && (&flags & ACE_INHERITED_OBJECT_TYPE_PRESENT == ACE_INHERITED_OBJECT_TYPE_PRESENT)
             {
@@ -191,7 +189,7 @@ fn ace_maker(
                 }
             }
 
-            let mask = match AceFormat::get_mask(ace_data_formated.to_owned()) {
+            let mask = match AceFormat::get_mask(ace.data.to_owned()) {
                 Some(mask) => mask,
                 None => continue,
             };
@@ -349,7 +347,7 @@ fn ace_maker(
             trace!("TYPE: 0x00");
             let is_inherited = ace.ace_flags & INHERITED_ACE == INHERITED_ACE;
 
-            let mask = match AceFormat::get_mask(ace_data_formated.to_owned()) {
+            let mask = match AceFormat::get_mask(ace.data.to_owned()) {
                 Some(mask) => mask,
                 None => continue,
             };
@@ -424,9 +422,8 @@ fn can_write_property(ace: &Ace, bin_property: &str) -> bool {
     // is empty, in which case we can write to any property. This is documented in
     // [MS-ADTS] section 5.1.3.2: https://msdn.microsoft.com/en-us/library/cc223511.aspx
 
-    let ace_data_formated = AceFormat::parse(&ace.data[..], ace.ace_type).unwrap().1;
     // If not found, then assume can't write. Should not happen, but missing some parsers.
-    let mask = match AceFormat::get_mask(ace_data_formated.to_owned()) {
+    let mask = match AceFormat::get_mask(ace.data.to_owned()) {
         Some(mask) => mask,
         None => return false,
     };
@@ -437,14 +434,14 @@ fn can_write_property(ace: &Ace, bin_property: &str) -> bool {
     }
 
     // Get the Flag for the ace.datas
-    let flags = AceFormat::get_flags(ace_data_formated.to_owned()).unwrap().bits();
+    let flags = AceFormat::get_flags(ace.data.to_owned()).unwrap().bits();
 
     if !((&flags & ACE_OBJECT_TYPE_PRESENT) == ACE_OBJECT_TYPE_PRESENT)
     {
         return true;
     }
 
-    let typea = match AceFormat::get_object_type(ace_data_formated.to_owned()) {
+    let typea = match AceFormat::get_object_type(ace.data.to_owned()) {
         Some(typea) => typea,
         None => 0,
     };
@@ -469,8 +466,7 @@ fn has_extended_right(ace: &Ace, bin_right_guid: &str) -> bool {
     // is empty, in which case we have all extended rights. This is documented in
     // [MS-ADTS] section 5.1.3.2: https://msdn.microsoft.com/en-us/library/cc223511.aspx
 
-    let ace_data_formated = AceFormat::parse(&ace.data[..], ace.ace_type).unwrap().1;
-    let mask = match AceFormat::get_mask(ace_data_formated.to_owned()) {
+    let mask = match AceFormat::get_mask(ace.data.to_owned()) {
         Some(mask) => mask,
         None => return false,
     };
@@ -480,7 +476,7 @@ fn has_extended_right(ace: &Ace, bin_right_guid: &str) -> bool {
         return false;
     }
     // Get the Flag for the ace.datas
-    let flags = AceFormat::get_flags(ace_data_formated.to_owned()).unwrap().bits();
+    let flags = AceFormat::get_flags(ace.data.to_owned()).unwrap().bits();
 
     if !((&flags & ACE_OBJECT_TYPE_PRESENT) == ACE_OBJECT_TYPE_PRESENT) {
         // if not ace_object.acedata.has_flag(ACCESS_ALLOWED_OBJECT_ACE.ACE_OBJECT_TYPE_PRESENT):
@@ -488,7 +484,7 @@ fn has_extended_right(ace: &Ace, bin_right_guid: &str) -> bool {
         return true;
     }
 
-    let typea = match AceFormat::get_object_type(ace_data_formated.to_owned()) {
+    let typea = match AceFormat::get_object_type(ace.data.to_owned()) {
         Some(typea) => typea,
         None => 0,
     };
