@@ -6,8 +6,8 @@
   <img alt="Linux supported" src="https://img.shields.io/badge/Supported%20OS-Linux-orange?style=for-the-badge">
   <img alt="Windows supported" src="https://img.shields.io/badge/Supported%20OS-Windows-green?style=for-the-badge">
   <img alt="macOS supported" src="https://img.shields.io/badge/Supported%20OS-MacOS-blue?style=for-the-badge">
-  <a href="https://twitter.com/intent/follow?screen_name=OPENCYBER_FR" title="Follow"><img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/OPENCYBER_FR?label=OPENCYBER_FR&style=for-the-badge"></a>
-  <a href="https://twitter.com/intent/follow?screen_name=g0h4n_0" title="Follow"><img src="https://img.shields.io/twitter/follow/g0h4n_0?label=g0h4n&style=for-the-badge"></a>
+  <a href="https://twitter.com/intent/follow?screen_name=OPENCYBER_FR" title="Follow" rel="nofollow"><img alt="Twitter Follow" src="https://img.shields.io/badge/TWITTER-OPENCYBER_FR-white?style=for-the-badge"></a>
+  <a href="https://twitter.com/intent/follow?screen_name=g0h4n_0" title="Follow" rel="nofollow"><img alt="Twitter Follow" src="https://img.shields.io/badge/TWITTER-g0h4n-white?style=for-the-badge"></a>
   <br>
 </p>
 

@@ -1,5 +1,4 @@
 /target
-/Cargo.lock
 *.json
 *.zip
 /datas
