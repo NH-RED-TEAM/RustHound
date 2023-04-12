@@ -26,6 +26,8 @@
   - [Linux x86_64 static version](#manually-for-linux-x86_64-static-version)
   - [Windows static version from Linux](#manually-for-windows-static-version-from-linux)
   - [macOS static version from Linux](#manually-for-macos-static-version-from-linux)
+  - [Optimize the binary size](#optimize-the-binary-size)
+
 - [How to build documentation?](#how-to-build-documentation)
 - [Usage](#usage)
 - [Demo](#demo)
@@ -158,6 +160,7 @@ RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-
 
 The result can be found in the target/x86_64-pc-windows-gnu/release folder.
 
+
 ## Manually for macOS static version from Linux
 
 Amazing documentation: [https://wapl.es/rust/2019/02/17/rust-cross-compile-linux-to-macos.html](https://wapl.es/rust/2019/02/17/rust-cross-compile-linux-to-macos.html)
@@ -186,6 +189,30 @@ RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-
 ```
 
 The result can be found in the target/x86_64-apple-darwin/release folder.
+
+
+## Optimize the binary size
+
+> 💡 To obtain an optimized compilation of RustHound add the following compilation parameters at the end of the `Cargo.toml` file.
+
+```bash
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true
+codegen-units = 1
+panic = "abort"
+```
+
+The size of the binary will be considerably minimized.
+Basic cargo compiler commands can be used.
+
+```bash
+make windows
+```
+
+More information [here](https://github.com/johnthagen/min-sized-rust)
+
 
 # How to build the documentation?
 
