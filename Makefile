@@ -18,11 +18,13 @@ check_rustup:
 
 release: check_cargo
 	cargo build --release
-	@echo "[+] You can find rusthound release version in target/release/ folder."
+	cp target/release/$(prog) .
+	@echo -e "[+] You can find \033[1;32m$(prog)\033[0m in yout current folder."
 
 debug: check_cargo
 	cargo build
-	@echo "[+] You can find rusthound debug version in target/debug/ folder."
+	cp target/debug/$(prog) ./$(prog)_debug
+	@echo -e "[+] You can find \033[1;32m$(prog)_debug\033[0m in yout current folder."
 
 doc: check_cargo
 	cargo doc --open --no-deps
@@ -40,7 +42,8 @@ install_windows_deps:
 
 build_windows:
 	RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-pc-windows-gnu
-	@echo "[+] You can find rusthound.exe in target/x86_64-pc-windows-gnu/release folder."
+	cp target/x86_64-pc-windows-gnu/release/$(prog).exe .
+	@echo -e "[+] You can find \033[1;32m$(prog).exe\033[0m in yout current folder."
 
 windows: check_rustup install_windows_deps build_windows
 
@@ -50,7 +53,8 @@ install_linux_musl_deps:
 
 build_linux_musl:
 	cargo build --release --target x86_64-unknown-linux-musl
-	@echo "[+] You can find rusthound in target/x86_64-unknown-linux-musl/release folder."
+	cp target/x86_64-unknown-linux-musl/release/$(prog) ./$(prog)_musl
+	@echo -e "[+] You can find \033[1;32m$(prog)_musl\033[0m in yout current folder."
 
 linux_musl:	check_rustup install_linux_musl_deps build_linux_musl
 
@@ -69,7 +73,8 @@ build_macos:
 	@echo "[?] Make sure you have uncomment line 32 and comment line 34 in Cargo.toml for MacOS."
 	@export PATH="/usr/local/bin/osxcross/target/bin:$PATH"
 	RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-apple-darwin
-	@echo "[+] You can find rusthound in target/x86_64-apple-darwin/release folder."
+	cp target/x86_64-apple-darwin/release/$(prog).exe ./$(prog)_MacOS
+	@echo -e "[+] You can find \033[1;32m$(prog)_MacOS\033[0m in yout current folder."
 
 macos: build_macos
 
