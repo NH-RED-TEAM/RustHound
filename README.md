@@ -91,7 +91,11 @@ Use RustHound with Docker to make sure to have all dependencies.
 
 ```bash
 docker build -t rusthound .
-docker run rusthound -h
+
+# Then
+docker run -v ./:/usr/src/rusthound -it rusthound windows
+docker run -v ./:/usr/src/rusthound -it rusthound linux_musl
+docker run -v ./:/usr/src/rusthound -it rusthound macos
 ```
 
 ## Using Cargo
