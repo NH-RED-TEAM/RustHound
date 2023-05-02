@@ -90,12 +90,12 @@ usage: make install_macos_deps
 Use RustHound with Docker to make sure to have all dependencies.
 
 ```bash
-docker build -t rusthound .
+docker build --rm -t rusthound .
 
 # Then
-docker run -v ./:/usr/src/rusthound -it rusthound windows
-docker run -v ./:/usr/src/rusthound -it rusthound linux_musl
-docker run -v ./:/usr/src/rusthound -it rusthound macos
+docker run --rm -v ./:/usr/src/rusthound rusthound windows
+docker run --rm -v ./:/usr/src/rusthound rusthound linux_musl
+docker run --rm -v ./:/usr/src/rusthound rusthound macos
 ```
 
 ## Using Cargo
@@ -109,7 +109,7 @@ RustHound supports Kerberos and GSSAPI. Therefore, it requires Clang and its dev
 For example:
 ```bash
 # Debian/Ubuntu
-sudo apt-get -y update && sudo apt-get -y install gcc libclang-dev clang libclang-dev libgssapi-krb5-2 libkrb5-dev libsasl2-modules-gssapi-mit musl-tools gcc-mingw-w64-x86-64
+sudo apt-get -y update && sudo apt-get -y install gcc clang libclang-dev libgssapi-krb5-2 libkrb5-dev libsasl2-modules-gssapi-mit musl-tools gcc-mingw-w64-x86-64
 ```
 
 Here is how to compile the "release" and "debug" versions using the **cargo** command.
