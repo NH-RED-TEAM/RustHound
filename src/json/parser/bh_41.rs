@@ -127,7 +127,7 @@ pub fn parse_user(
                 //trace!("UAC : {:?}",uac_flags);
                 for flag in uac_flags {
                     if flag.contains("AccountDisable") {
-                        user_json["Properties"]["enabled"] = true.into();
+                        user_json["Properties"]["enabled"] = false.into();
                     };
                     //if flag.contains("Lockout") { let enabled = true; user_json["Properties"]["enabled"] = enabled.into(); };
                     if flag.contains("PasswordNotRequired") {
