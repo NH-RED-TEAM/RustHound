@@ -24,7 +24,7 @@ pub struct Options {
 fn cli() -> Command {
 
     Command::new("rusthound")
-        .version("1.1.62")
+        .version("1.1.63")
         .about("Active Directory data collector for BloodHound.\ng0h4n <https://twitter.com/g0h4n_0>")
         .arg(Arg::new("v")
             .short('v')
