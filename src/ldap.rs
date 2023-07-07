@@ -182,15 +182,17 @@ fn ldap_constructor(
     }
 
     // Password prompt
-    let mut s_password: String = String::new();
+    let mut _s_password: String = String::new();
     if !username.contains("not set") && !kerberos {
         if password.contains("not set") {
             // Prompt for user password
             let rpass: String = rpassword::prompt_password("Password: ").unwrap_or("not set".to_string());
-            s_password = rpass;
+            _s_password = rpass;
+        } else {
+            _s_password = password.to_owned();
         }
     } else {
-        s_password = password.to_owned();
+        _s_password = password.to_owned();
     }
 
     // Print infos if verbose mod is set
@@ -201,7 +203,7 @@ fn ldap_constructor(
     debug!("Domain: {}", domain);
     debug!("Username: {}", &username);
     debug!("Email: {}", s_email.to_lowercase());
-    debug!("Password: {}", s_password);
+    debug!("Password: {}", _s_password);
     debug!("DC: {:?}", s_dc);
     debug!("ADCS: {:?}", adcs);
     debug!("Kerberos: {:?}", kerberos);
@@ -211,7 +213,7 @@ fn ldap_constructor(
         s_dc: s_dc,
         _s_email: s_email.to_string().to_lowercase(),
         s_username: s_username.to_string(),
-        s_password: s_password.to_string(),
+        s_password: _s_password.to_string(),
     }
 }
 
