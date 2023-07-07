@@ -16,12 +16,12 @@
 //!g0h4n https://twitter.com/g0h4n_0
 //!Active Directory data collector for BloodHound.
 //!
-//!Usage: rusthound [OPTIONS] --domain <domain>
+//!Usage: rusthound_musl [OPTIONS] --domain <domain>
 //!
 //!Options:
 //!  -v...          Set the level of verbosity
-//!  -h, --help     Print help information
-//!  -V, --version  Print version information
+//!  -h, --help     Print help
+//!  -V, --version  Print version
 //!
 //!REQUIRED VALUES:
 //!  -d, --domain <domain>  Domain name like: DOMAIN.LOCAL
@@ -37,6 +37,7 @@
 //!
 //!OPTIONAL FLAGS:
 //!      --ldaps           Force LDAPS using for request like: ldaps://DOMAIN.LOCAL/
+//!  -k, --kerberos        Use Kerberos authentication. Grabs credentials from ccache file (KRB5CCNAME) based on target parameters for Linux.
 //!      --dns-tcp         Use TCP instead of UDP for DNS queries
 //!      --dc-only         Collects data only from the domain controller. Will not try to retrieve CA security/configuration or check for Web Enrollment
 //!      --old-bloodhound  For ADCS only. Output result as BloodHound data for the original BloodHound version from @BloodHoundAD without PKI support

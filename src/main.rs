@@ -49,6 +49,7 @@ async fn main() -> Result<()> {
         &common_args.username,
         &common_args.password,
         common_args.adcs,
+        common_args.kerberos,
     ).await?;
 
     // Vector for content all

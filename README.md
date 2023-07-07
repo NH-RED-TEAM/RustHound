@@ -286,6 +286,12 @@ rusthound -d north.sevenkingdoms.local --ldaps -u 'jeor.mormont@north.sevenkingd
 rusthound.exe -d sevenkingdoms.local --ldapfqdn kingslanding
 # Windows simple bind connection username:password (do not use single or double quotes with cmd.exe)
 rusthound.exe -d sevenkingdoms.local -u jeor.mormont@north.sevenkingdoms.local -p _L0ngCl@w_ -o output -z
+
+# Kerberos authentication (Linux)
+export KRB5CCNAME="/tmp/jeor.mormont.ccache"
+rusthound -d sevenkingdoms.local -f kingslanding -k -z
+# Kerberos authentication (Windows)
+rusthound.exe -d sevenkingdoms.local -f kingslanding -k -z
 ```
 <p align="center">
 <img width="100%" src="img/demo.gif">
@@ -360,7 +366,8 @@ In order to make statistics on a DC with more LDAP objects, run the [BadBlood](h
   - [x] LDAPS (636)
   - [x] `BIND`
   - [ ] `NTLM`
-  - [x] `GSSAPI` for Windows ok, but not tested on Linux
+  - [x] `Kerberos`
+  - [x] Prompt for password
 
 ## Outputs
   - [x] users.json

@@ -6,7 +6,7 @@ keywords = ["bloodhound", "pentest", "ldap", "tokio", "async"]
 repository = "https://github.com/OPENCYBER-FR/RustHound"
 homepage = "https://github.com/OPENCYBER-FR/RustHound"
 documentation = "https://docs.rs/rusthound/"
-version = "1.1.63"
+version = "1.1.64"
 edition = "2018"
 license = "MIT"
 readme = "README.md"
@@ -23,12 +23,13 @@ env_logger = "0.10"
 log = "0.4"
 lazy_static = "1.4.0"
 indicatif = "0.17"
-x509-parser = "0.14"
+x509-parser = "0.15"
 trust-dns-resolver = "0.22"
 serde_json = {version = "1.0.89", features = ["preserve_order"]}
 zip= {version = "0.6.3", default-features = false}
+rpassword = "7.2"
 
 # macos
 #ldap3 = {version = "0.10.6", default-features = false, features = ["tls-native"]}
 # windows or linux
-ldap3 = {version = "0.10.6", default-features = false, features = ["tls-rustls", "gssapi"]}
+ldap3 = {version = "0.11.3", default-features = false, features = ["tls-rustls", "gssapi"]}

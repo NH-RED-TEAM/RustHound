@@ -14,7 +14,7 @@ use colored::Colorize;
 use ldap3::adapters::{Adapter, EntriesOnly};
 use ldap3::{adapters::PagedResults, controls::RawControl, LdapConnAsync, LdapConnSettings};
 use ldap3::{Scope, SearchEntry};
-use log::{debug, error, info};
+use log::{info, debug, error};
 use std::process;
 use indicatif::ProgressBar;
 use crate::banner::progress_bar;
@@ -29,16 +29,17 @@ pub async fn ldap_search(
     username: &String,
     password: &String,
     adcs: bool,
+    kerberos: bool,
 ) -> Result<Vec<SearchEntry>> {
     // Construct LDAP args
-    let ldap_args = ldap_constructor(ldaps, ip, port, domain, ldapfqdn, username, password, adcs);
+    let ldap_args = ldap_constructor(ldaps, ip, port, domain, ldapfqdn, username, password, adcs, kerberos);
 
     // LDAP connection
     let consettings = LdapConnSettings::new().set_no_tls_verify(true);
     let (conn, mut ldap) = LdapConnAsync::with_settings(consettings, &ldap_args.s_url).await?;
     ldap3::drive!(conn);
 
-    if !&password.contains("not set") || !&username.contains("not set") {
+    if !&username.contains("not set") || !kerberos {
         debug!("Trying to connect with simple_bind() function (username:password)");
         let res = ldap.simple_bind(&ldap_args.s_username, &ldap_args.s_password).await?.success();
         match res {
@@ -160,6 +161,7 @@ fn ldap_constructor(
     username: &String,
     password: &String,
     adcs: bool,
+    kerberos: bool,
 ) -> LdapArgs {
     // Prepare ldap url
     let s_url = prepare_ldap_url(ldaps, ip, port, domain);
@@ -167,18 +169,28 @@ fn ldap_constructor(
     // Prepare full DC chain
     let s_dc = prepare_ldap_dc(domain,adcs);
 
-    // Format username and password in str
-    let s_username: &str = &username[..];
-    let s_password: &str = &password[..];
-
-    // Format email
-    let mut _s_email: String = "".to_owned();
+    // Format username and email
+    let mut s_username: &str = &username[..];
+    let mut s_email: String = "".to_owned();
     if !username.contains("@") {
-        _s_email.push_str(s_username);
-        _s_email.push_str("@");
-        _s_email.push_str(domain);
+        s_email.push_str(&username);
+        s_email.push_str("@");
+        s_email.push_str(domain);
+        s_username = &s_email.as_str();
     } else {
-        _s_email = username.to_string();
+        s_email = username.to_string().to_lowercase();
+    }
+
+    // Password prompt
+    let mut s_password: String = String::new();
+    if !username.contains("not set") && !kerberos {
+        if password.contains("not set") {
+            // Prompt for user password
+            let rpass: String = rpassword::prompt_password("Password: ").unwrap_or("not set".to_string());
+            s_password = rpass;
+        }
+    } else {
+        s_password = password.to_owned();
     }
 
     // Print infos if verbose mod is set
@@ -187,15 +199,17 @@ fn ldap_constructor(
     debug!("FQDN: {}", ldapfqdn);
     debug!("Url: {}", s_url);
     debug!("Domain: {}", domain);
-    debug!("Username: {}", s_username);
-    debug!("Email: {}", _s_email.to_lowercase());
+    debug!("Username: {}", &username);
+    debug!("Email: {}", s_email.to_lowercase());
     debug!("Password: {}", s_password);
     debug!("DC: {:?}", s_dc);
+    debug!("ADCS: {:?}", adcs);
+    debug!("Kerberos: {:?}", kerberos);
 
     LdapArgs {
         s_url: s_url.to_string(),
         s_dc: s_dc,
-        _s_email: _s_email.to_string().to_lowercase(),
+        _s_email: s_email.to_string().to_lowercase(),
         s_username: s_username.to_string(),
         s_password: s_password.to_string(),
     }

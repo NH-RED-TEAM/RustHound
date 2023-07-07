@@ -17,14 +17,14 @@ pub struct Options {
     pub adcs: bool,
     pub old_bloodhound: bool,
     pub dc_only: bool,
+    pub kerberos: bool,
     pub zip: bool,
     pub verbose: log::LevelFilter,
 }
 
 fn cli() -> Command {
-
     Command::new("rusthound")
-        .version("1.1.63")
+        .version("1.1.64")
         .about("Active Directory data collector for BloodHound.\ng0h4n <https://twitter.com/g0h4n_0>")
         .arg(Arg::new("v")
             .short('v')
@@ -97,6 +97,14 @@ fn cli() -> Command {
             .action(ArgAction::SetTrue)
             .global(false)
         )
+        .arg(Arg::new("kerberos")
+            .short('k')
+            .long("kerberos")
+            .help("Use Kerberos authentication. Grabs credentials from ccache file (KRB5CCNAME) based on target parameters for Linux.")
+            .required(false)
+            .action(ArgAction::SetTrue)
+            .global(false)
+        )
         .arg(Arg::new("dns-tcp")
                 .long("dns-tcp")
                 .help("Use TCP instead of UDP for DNS queries")
@@ -141,7 +149,6 @@ fn cli() -> Command {
             .action(ArgAction::SetTrue)
             .global(false)
         )
-
 }
 
 /// Function to extract all argument and put it in 'Options' structure.
@@ -166,6 +173,7 @@ pub fn extract_args() -> Options {
     let z = matches.get_one::<bool>("zip").map(|s| s.to_owned()).unwrap_or(false);
     let fqdn_resolver = matches.get_one::<bool>("fqdn-resolver").map(|s| s.to_owned()).unwrap_or(false);
     let adcs = matches.get_one::<bool>("adcs").map(|s| s.to_owned()).unwrap_or(false);
+    let kerberos = matches.get_one::<bool>("kerberos").map(|s| s.to_owned()).unwrap_or(false);
     let v = match matches.get_count("v") {
         0 => log::LevelFilter::Info,
         1 => log::LevelFilter::Debug,
@@ -188,6 +196,7 @@ pub fn extract_args() -> Options {
         old_bloodhound: old_bh,
         fqdn_resolver: fqdn_resolver,
         adcs: adcs,
+        kerberos: kerberos,
         zip: z,
         verbose: v,
     }
