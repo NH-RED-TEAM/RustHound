@@ -76,8 +76,17 @@ usage: make release
 
 Static:
 usage: make windows
+usage: make windows_x64
+usage: make windows_x86
+usage: make linux_aarch64
+usage: make linux_x86_64
 usage: make linux_musl
 usage: make macos
+usage: make arm_musl
+usage: make armv7
+
+Without cli argument:
+usage: make windows_noargs
 
 Dependencies:
 usage: make install_windows_deps
@@ -188,8 +197,7 @@ grep 'ar = "x86_64-apple-darwin14-clang"' ~/.cargo/config || echo 'ar = "x86_64-
 # Static compilation for macOS
 git clone https://github.com/OPENCYBER-FR/RustHound
 cd RustHound
-# Uncomment line 32 and comment line 34 in Cargo.toml
-RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-apple-darwin
+RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-apple-darwin --features nogssapi
 ```
 
 The result can be found in the target/x86_64-apple-darwin/release folder.

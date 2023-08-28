@@ -18,6 +18,7 @@ use log::{info, debug, error};
 use std::process;
 use indicatif::ProgressBar;
 use crate::banner::progress_bar;
+use std::io::{self, Write, stdin};
 
 /// Function to request all AD values.
 pub async fn ldap_search(
@@ -39,7 +40,7 @@ pub async fn ldap_search(
     let (conn, mut ldap) = LdapConnAsync::with_settings(consettings, &ldap_args.s_url).await?;
     ldap3::drive!(conn);
 
-    if !&username.contains("not set") || !kerberos {
+    if !kerberos {
         debug!("Trying to connect with simple_bind() function (username:password)");
         let res = ldap.simple_bind(&ldap_args.s_username, &ldap_args.s_password).await?.success();
         match res {
@@ -57,10 +58,12 @@ pub async fn ldap_search(
     {
         debug!("Trying to connect with sasl_gssapi_bind() function (kerberos session)");
         if !&ldapfqdn.contains("not set") {
-            #[cfg(not(target_os = "macos"))]
+            #[cfg(not(feature = "nogssapi"))]
             gssapi_connection(&mut ldap,&ldapfqdn,&domain).await?;
-            #[cfg(target_os = "macos")]
-            process::exit(0x0100);
+            #[cfg(feature = "nogssapi")]{
+                error!("Kerberos auth and GSSAPI not compatible with current os!");
+                process::exit(0x0100);
+            }
         } else {
             error!("Need Domain Controler FQDN to bind GSSAPI connection. Please use '{}'\n", "-f DC01.DOMAIN.LAB".bold());
             process::exit(0x0100);
@@ -169,21 +172,39 @@ fn ldap_constructor(
     // Prepare full DC chain
     let s_dc = prepare_ldap_dc(domain,adcs);
 
+    // Username prompt
+    let mut s=String::new();
+    let mut _s_username: String;
+    if username.contains("not set") && !kerberos {
+        print!("Username: ");
+        io::stdout().flush().unwrap();
+        stdin().read_line(&mut s).expect("Did not enter a correct username");
+        io::stdout().flush().unwrap();
+        if let Some('\n')=s.chars().next_back() {
+            s.pop();
+        }
+        if let Some('\r')=s.chars().next_back() {
+            s.pop();
+        }
+        _s_username = s.to_owned();
+    } else {
+        _s_username = username.to_owned();
+    }
+
     // Format username and email
-    let mut s_username: &str = &username[..];
     let mut s_email: String = "".to_owned();
-    if !username.contains("@") {
-        s_email.push_str(&username);
+    if !_s_username.contains("@") {
+        s_email.push_str(&_s_username.to_string());
         s_email.push_str("@");
         s_email.push_str(domain);
-        s_username = &s_email.as_str();
+        _s_username = s_email.to_string();
     } else {
-        s_email = username.to_string().to_lowercase();
+        s_email = _s_username.to_string().to_lowercase();
     }
 
     // Password prompt
     let mut _s_password: String = String::new();
-    if !username.contains("not set") && !kerberos {
+    if !_s_username.contains("not set") && !kerberos {
         if password.contains("not set") {
             // Prompt for user password
             let rpass: String = rpassword::prompt_password("Password: ").unwrap_or("not set".to_string());
@@ -201,7 +222,7 @@ fn ldap_constructor(
     debug!("FQDN: {}", ldapfqdn);
     debug!("Url: {}", s_url);
     debug!("Domain: {}", domain);
-    debug!("Username: {}", &username);
+    debug!("Username: {}", _s_username);
     debug!("Email: {}", s_email.to_lowercase());
     debug!("Password: {}", _s_password);
     debug!("DC: {:?}", s_dc);
@@ -212,7 +233,7 @@ fn ldap_constructor(
         s_url: s_url.to_string(),
         s_dc: s_dc,
         _s_email: s_email.to_string().to_lowercase(),
-        s_username: s_username.to_string(),
+        s_username: s_email.to_string().to_lowercase(),
         s_password: _s_password.to_string(),
     }
 }
@@ -293,7 +314,7 @@ pub fn prepare_ldap_dc(domain: &String, adcs: bool) -> Vec<String> {
 }
 
 /// Function to make GSSAPI ldap connection.
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(feature = "nogssapi"))]
 async fn gssapi_connection(
     ldap: &mut ldap3::Ldap,
     ldapfqdn: &String,

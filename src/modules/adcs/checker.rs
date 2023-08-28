@@ -107,7 +107,7 @@ async fn web_enrollment(
         }
     } else 
     {
-        error!("Couldn't connect to server {}",format!("http://{}/certsrv/",target).bold().red());
+        error!("Couldn't connect to server {}, please try manually and check for https access if EPA is enable.",format!("http://{}/certsrv/",target).bold().red());
     }
     return "Unknown".to_string()
 }

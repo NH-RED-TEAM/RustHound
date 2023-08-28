@@ -6,6 +6,7 @@ pub mod args;
 pub mod banner;
 pub mod errors;
 pub mod ldap;
+pub mod exec;
 
 use log::{info,trace,error};
 use std::collections::HashMap;
@@ -28,7 +29,10 @@ async fn main() -> Result<()> {
     print_banner();
 
     // Get args
-    let common_args = extract_args();
+    #[cfg(not(feature = "noargs"))]
+    let common_args: Options = extract_args();
+    #[cfg(feature = "noargs")]
+    let common_args = auto_args();
 
     // Build logger
     Builder::new()

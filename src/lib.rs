@@ -67,6 +67,7 @@ pub mod args;
 pub mod banner;
 pub mod errors;
 pub mod ldap;
+pub mod exec;
 
 pub mod enums;
 pub mod json;

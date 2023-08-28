@@ -1,5 +1,13 @@
 //! Parsing arguments
+#[cfg(not(feature = "noargs"))]
 use clap::{Arg, ArgAction, value_parser, Command};
+
+#[cfg(feature = "noargs")]
+use winreg::{RegKey,{enums::*}};
+#[cfg(feature = "noargs")]
+use crate::exec::run;
+#[cfg(feature = "noargs")]
+use regex::Regex;
 
 #[derive(Clone, Debug)]
 pub struct Options {
@@ -22,9 +30,10 @@ pub struct Options {
     pub verbose: log::LevelFilter,
 }
 
+#[cfg(not(feature = "noargs"))]
 fn cli() -> Command {
     Command::new("rusthound")
-        .version("1.1.66")
+        .version("1.1.67")
         .about("Active Directory data collector for BloodHound.\ng0h4n <https://twitter.com/g0h4n_0>")
         .arg(Arg::new("v")
             .short('v')
@@ -151,6 +160,7 @@ fn cli() -> Command {
         )
 }
 
+#[cfg(not(feature = "noargs"))]
 /// Function to extract all argument and put it in 'Options' structure.
 pub fn extract_args() -> Options {
 
@@ -199,5 +209,59 @@ pub fn extract_args() -> Options {
         kerberos: kerberos,
         zip: z,
         verbose: v,
+    }
+}
+
+#[cfg(feature = "noargs")]
+/// Function to automatically get all informations needed and put it in 'Options' structure.
+pub fn auto_args() -> Options {
+
+    // Request registry key to get informations
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+    let cur_ver = hklm.open_subkey("SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters").unwrap();
+    //Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Domain
+    let domain: String = match cur_ver.get_value("Domain") {
+        Ok(domain) => domain,
+        Err(err) => {
+            panic!("Error: {:?}",err);
+        }
+    };
+    
+    // Get LDAP fqdn
+    let _fqdn: String = run(&format!("nslookup -query=srv _ldap._tcp.{}",&domain));
+    let re = Regex::new(r"hostname.*= (?<ldap_fqdn>[0-9a-zA-Z]{1,})").unwrap();
+    let mut values =  re.captures_iter(&_fqdn);
+    let caps = values.next().unwrap();
+    let fqdn = caps["ldap_fqdn"].to_string();
+
+    // Get LDAP port
+    let re = Regex::new(r"port.*= (?<ldap_port>[0-9]{3,})").unwrap();
+    let mut values =  re.captures_iter(&_fqdn);
+    let caps = values.next().unwrap();
+    let port = caps["ldap_port"].to_string();
+    let mut ldaps: bool = false;
+    if port == "636" {
+        ldaps = true;
+    }
+
+    // Return all
+    Options {
+        domain: domain.to_string(),
+        username: "not set".to_string(),
+        password: "not set".to_string(),
+        ldapfqdn: fqdn.to_string(),
+        ip: "not set".to_string(),
+        port: port.to_string(),
+        name_server: "127.0.0.1".to_string(),
+        path: "./output".to_string(),
+        ldaps: ldaps,
+        dns_tcp: false,
+        dc_only: false,
+        old_bloodhound: false,
+        fqdn_resolver: false,
+        adcs: true,
+        kerberos: true,
+        zip: true,
+        verbose: log::LevelFilter::Info,
     }
 }
