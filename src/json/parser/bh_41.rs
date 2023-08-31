@@ -614,6 +614,13 @@ pub fn parse_computer(
                 }
                 computer_json["Members"] = vec_localadmins.to_owned().into();
             }
+            "lastLogon" => {
+                let lastlogon = &value[0].parse::<i64>().unwrap_or(0);
+                if lastlogon.is_positive() {
+                    let epoch = convert_timestamp(*lastlogon);
+                    computer_json["Properties"]["lastlogon"] = epoch.into();
+                }
+            }
             "lastLogonTimestamp" => {
                 let lastlogontimestamp = &value[0].parse::<i64>().unwrap_or(0);
                 if lastlogontimestamp.is_positive() {
