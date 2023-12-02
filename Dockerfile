@@ -1,4 +1,4 @@
-FROM rust:1.69-slim-buster
+FROM rust:1.74-slim-buster
 
 WORKDIR /usr/src/rusthound
 
