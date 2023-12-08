@@ -403,7 +403,7 @@ pub fn parse_group(
                 group_json["Properties"]["admincount"] = admincount.into();
             }
             "sAMAccountName" => {
-                group_json["Properties"]["samaccoutname"] = value[0].to_owned().into();
+                group_json["Properties"]["samaccountname"] = value[0].to_owned().into();
             }
             "member" => {
                 if value.len() > 0 {
@@ -586,7 +586,7 @@ pub fn parse_computer(
                 computer_json["Properties"]["name"] = email.to_uppercase().into();
             }
             "sAMAccountName" => {
-                computer_json["Properties"]["samaccoutname"] = value[0].to_owned().into();
+                computer_json["Properties"]["samaccountname"] = value[0].to_owned().into();
             }
             "dNSHostName" => {
                 computer_json["Properties"]["name"] = value[0].to_uppercase().into();
