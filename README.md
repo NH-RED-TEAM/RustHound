@@ -1,18 +1,23 @@
-# RustHound
+> :warning: *This version is only compatible with [BloodHound Legacy 4.x](https://github.com/BloodHoundAD/BloodHound)*
+
+> [BloodHound Community Edition (CE)](https://github.com/SpecterOps/BloodHound) version will be publish in [v2](https://github.com/NH-RED-TEAM/RustHound/tree/v2) branch.
+
+<p align="center">
+<img width="30%" src="img/rusthound_logo_v3.png">
+</p>
+
 
 <p align="center">
   <a href="https://crates.io/crates/rusthound"><img alt="Crates.io" src="https://img.shields.io/crates/v/rusthound?style=for-the-badge"></a>
   <img alt="GitHub" src="https://img.shields.io/github/license/OPENCYBER-FR/RustHound?style=for-the-badge">
-  <img alt="Linux supported" src="https://img.shields.io/badge/Supported%20OS-Linux-orange?style=for-the-badge">
-  <img alt="Windows supported" src="https://img.shields.io/badge/Supported%20OS-Windows-green?style=for-the-badge">
-  <img alt="macOS supported" src="https://img.shields.io/badge/Supported%20OS-MacOS-blue?style=for-the-badge">
   <a href="https://twitter.com/intent/follow?screen_name=OPENCYBER_FR" title="Follow" rel="nofollow"><img alt="Twitter Follow" src="https://img.shields.io/badge/TWITTER-OPENCYBER_FR-white?style=for-the-badge"></a>
   <a href="https://twitter.com/intent/follow?screen_name=g0h4n_0" title="Follow" rel="nofollow"><img alt="Twitter Follow" src="https://img.shields.io/badge/TWITTER-g0h4n-white?style=for-the-badge"></a>
   <br>
-</p>
+  <img alt="Linux supported" src="https://img.shields.io/badge/Supported%20OS-Linux-orange?style=for-the-badge">
+  <img alt="Windows supported" src="https://img.shields.io/badge/Supported%20OS-Windows-green?style=for-the-badge">
+  <img alt="macOS supported" src="https://img.shields.io/badge/Supported%20OS-MacOS-blue?style=for-the-badge">
 
-<p align="center">
-<img width="30%" src="img/rusthound_logo_v3.png">
+  <br>
 </p>
 
 # Summary
