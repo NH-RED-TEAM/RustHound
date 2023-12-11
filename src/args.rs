@@ -33,7 +33,7 @@ pub struct Options {
 #[cfg(not(feature = "noargs"))]
 fn cli() -> Command {
     Command::new("rusthound")
-        .version("1.1.68")
+        .version("1.1.69")
         .about("Active Directory data collector for BloodHound.\ng0h4n <https://twitter.com/g0h4n_0>")
         .arg(Arg::new("v")
             .short('v')
