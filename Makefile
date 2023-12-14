@@ -100,6 +100,8 @@ build_linux_x86_64:
 
 linux_x86_64: check_rustup install_linux_deps build_linux_x86_64
 
+linux: check_rustup install_cross build_linux_aarch64
+
 install_macos_deps:
 	@sudo git clone https://github.com/tpoechtrager/osxcross /usr/local/bin/osxcross || exit
 	@sudo wget -P /usr/local/bin/osxcross/ -nc https://s3.dockerproject.org/darwin/v2/MacOSX10.10.sdk.tar.xz && sudo mv /usr/local/bin/osxcross/MacOSX10.10.sdk.tar.xz /usr/local/bin/osxcross/tarballs/
@@ -144,6 +146,7 @@ help:
 	@echo "usage: make windows"
 	@echo "usage: make windows_x64"
 	@echo "usage: make windows_x86"
+	@echo "usage: make linux"
 	@echo "usage: make linux_aarch64"
 	@echo "usage: make linux_x86_64"
 	@echo "usage: make linux_musl"

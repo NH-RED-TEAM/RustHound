@@ -2,37 +2,55 @@ use std::collections::HashMap;
 use ldap3::SearchEntry;
 use regex::Regex;
 use indicatif::ProgressBar;
+use crate::objects::common::parse_unknown;
+use crate::objects::{
+    user::User,
+    computer::Computer,
+    group::Group,
+    ou::Ou,
+    container::Container,
+    gpo::Gpo,
+    domain::Domain,
+    fsp::Fsp,
+    trust::Trust,
+    ntauthstore::NtAuthStore,
+    aiaca::AIACA,
+    rootca::RootCA,
+    enterpriseca::EnterpriseCA,
+    certtemplate::CertTemplate,
+};
 use std::convert::TryInto;
 
 use log::info;
 use crate::args::Options;
 use crate::banner::progress_bar;
 use crate::enums::ldaptype::*;
-use crate::modules::adcs::parser::{parse_adcs_ca,parse_adcs_template};
-
-pub mod bh_41;
+// use crate::modules::adcs::parser::{parse_adcs_ca,parse_adcs_template};
 
 /// Function to get type for object by object
 pub fn parse_result_type(
-    common_args: &Options, 
-    result: Vec<SearchEntry>,
-    vec_users: &mut Vec<serde_json::value::Value>,
-    vec_groups: &mut Vec<serde_json::value::Value>,
-    vec_computers: &mut Vec<serde_json::value::Value>,
-    vec_ous: &mut Vec<serde_json::value::Value>,
-    vec_domains: &mut Vec<serde_json::value::Value>,
-    vec_gpos: &mut Vec<serde_json::value::Value>,
-    vec_fsps: &mut Vec<serde_json::value::Value>,
-    vec_containers: &mut Vec<serde_json::value::Value>,
-    vec_trusts: &mut Vec<serde_json::value::Value>,
-    vec_cas: &mut Vec<serde_json::value::Value>,
-    vec_templates: &mut Vec<serde_json::value::Value>,
+    common_args:            &Options, 
+    result:                 Vec<SearchEntry>,
+    vec_users:              &mut Vec<User>,
+    vec_groups:             &mut Vec<Group>,
+    vec_computers:          &mut Vec<Computer>,
+    vec_ous:                &mut Vec<Ou>,
+    vec_domains:            &mut Vec<Domain>,
+    vec_gpos:               &mut Vec<Gpo>,
+    vec_fsps:               &mut Vec<Fsp>,
+    vec_containers:         &mut Vec<Container>,
+    vec_trusts:             &mut Vec<Trust>,
+    vec_ntauthstore:        &mut Vec<NtAuthStore>,
+    vec_aiacas:             &mut Vec<AIACA>,
+    vec_rootcas:            &mut Vec<RootCA>,
+    vec_enterprisecas:      &mut Vec<EnterpriseCA>,
+    vec_certtemplates:      &mut Vec<CertTemplate>,
 
-    dn_sid: &mut HashMap<String, String>,
-    sid_type: &mut HashMap<String, String>,
-    fqdn_sid: &mut HashMap<String, String>,
-    fqdn_ip: &mut HashMap<String, String>,
-    adcs_templates: &mut HashMap<String, Vec<String>>,
+    dn_sid:             &mut HashMap<String, String>,
+    sid_type:           &mut HashMap<String, String>,
+    fqdn_sid:           &mut HashMap<String, String>,
+    fqdn_ip:            &mut HashMap<String, String>,
+    // adcs_templates: &mut HashMap<String, Vec<String>>,
 )
 {
     // Domain name
@@ -42,6 +60,7 @@ pub fn parse_result_type(
     let pb = ProgressBar::new(1);
     let mut count = 0;
     let total = result.len();
+    let mut domain_sid: String = "DOMAIN_SID".to_owned();
 
     info!("Starting the LDAP objects parsing...");
     for entry in result {
@@ -51,26 +70,29 @@ pub fn parse_result_type(
         let atype = get_type(entry).unwrap_or(Type::Unknown);
         match atype {
             Type::User => {
-                let user = parse_user(
+                let mut user: User = User::new();
+                user.parse(
                     cloneresult,
                     domain,
                     dn_sid,
                     sid_type,
-                    common_args.adcs,
                 );
                 vec_users.push(user);
             }
             Type::Group => {
-                let group = parse_group(
+                let mut group = Group::new();
+                group.parse(
                     cloneresult,
                     domain,
                     dn_sid,
                     sid_type,
+                    &domain_sid
                 );
                 vec_groups.push(group);
             }
             Type::Computer => {
-                let computer = parse_computer(
+                let mut computer = Computer::new();
+                computer.parse(
                     cloneresult,
                     domain,
                     dn_sid,
@@ -81,34 +103,41 @@ pub fn parse_result_type(
                 vec_computers.push(computer);
             }
             Type::Ou => {
-                let ou = parse_ou(
+                let mut ou = Ou::new();
+                ou.parse(
                     cloneresult,
                     domain,
                     dn_sid,
                     sid_type,
+                    &domain_sid
                 );
                 vec_ous.push(ou);
             }
             Type::Domain => {
-                let domain = parse_domain(
+                let mut domain_object = Domain::new();
+                let domain_sid_from_domain = domain_object.parse(
                     cloneresult,
                     domain,
                     dn_sid,
                     sid_type,
                 );
-                vec_domains.push(domain);
+                domain_sid = domain_sid_from_domain;
+                vec_domains.push(domain_object);
             }
             Type::Gpo => {
-                let gpo = parse_gpo(
+                let mut  gpo = Gpo::new();
+                gpo.parse(
                     cloneresult,
                     domain,
                     dn_sid,
                     sid_type,
+                    &domain_sid
                 );
                 vec_gpos.push(gpo);
             }
             Type::ForeignSecurityPrincipal => {
-                let security_principal = parse_fsp(
+                let mut security_principal = Fsp::new();
+                security_principal.parse(
                     cloneresult,
                     domain,
                     dn_sid,
@@ -130,37 +159,78 @@ pub fn parse_result_type(
                     continue
                 }
                 //trace!("Container: {}",&cloneresult.dn.to_uppercase());
-                let container = parse_container(
+                let mut container = Container::new();
+                container.parse(
                     cloneresult,
                     domain,
                     dn_sid,
                     sid_type,
+                    &domain_sid
                 );
                 vec_containers.push(container);
             }
             Type::Trust => {
-                let trust = parse_trust(
+                let mut trust = Trust::new();
+                trust.parse(
                     cloneresult,
                     domain
                 );
                 vec_trusts.push(trust);
             }
-            Type::AdcsAuthority => {
-                let adcs_ca = parse_adcs_ca(
-                    cloneresult.to_owned(),
+            Type::NtAutStore => {
+                let mut nt_auth_store = NtAuthStore::new();
+                nt_auth_store.parse(
+                    cloneresult,
                     domain,
-                    adcs_templates,
-                    common_args.old_bloodhound,
+                    dn_sid,
+                    sid_type,
+                    &domain_sid
                 );
-                vec_cas.push(adcs_ca); 
+                vec_ntauthstore.push(nt_auth_store); 
             }
-            Type::AdcsTemplate => {
-                let adcs_template = parse_adcs_template(
-                    cloneresult.to_owned(),
+            Type::AIACA => {
+                let mut aiaca = AIACA::new();
+                aiaca.parse(
+                    cloneresult,
                     domain,
-                    common_args.old_bloodhound,
+                    dn_sid,
+                    sid_type,
+                    &domain_sid
                 );
-                vec_templates.push(adcs_template);
+                vec_aiacas.push(aiaca); 
+            }
+            Type::RootCA => {
+                let mut root_ca = RootCA::new();
+                root_ca.parse(
+                    cloneresult,
+                    domain,
+                    dn_sid,
+                    sid_type,
+                    &domain_sid
+                );
+                vec_rootcas.push(root_ca); 
+            }
+            Type::EnterpriseCA => {
+                let mut enterprise_ca = EnterpriseCA::new();
+                enterprise_ca.parse(
+                    cloneresult,
+                    domain,
+                    dn_sid,
+                    sid_type,
+                    &domain_sid
+                );
+                vec_enterprisecas.push(enterprise_ca); 
+            }
+            Type::CertTemplate => {
+                let mut cert_template = CertTemplate::new();
+                cert_template.parse(
+                    cloneresult,
+                    domain,
+                    dn_sid,
+                    sid_type,
+                    &domain_sid
+                );
+                vec_certtemplates.push(cert_template);
             }
             Type::Unknown => {
                 let _unknown = parse_unknown(cloneresult, domain);
@@ -174,104 +244,4 @@ pub fn parse_result_type(
     }
     pb.finish_and_clear();
     info!("Parsing LDAP objects finished!");
-}
-
-
-/// Parse user. Select parser based on BH version.
-pub fn parse_user(
-    result: SearchEntry,
-    domain: &String,
-    dn_sid: &mut HashMap<String, String>,
-    sid_type: &mut HashMap<String, String>,
-    adcs: bool,
-) -> serde_json::value::Value {
-    bh_41::parse_user(result, domain, dn_sid, sid_type, adcs)
-}
-
-/// Parse group. Select parser based on BH version.
-pub fn parse_group(
-    result: SearchEntry,
-    domain: &String,
-    dn_sid: &mut HashMap<String, String>,
-    sid_type: &mut HashMap<String, String>,
-) -> serde_json::value::Value {
-    bh_41::parse_group(result, domain, dn_sid, sid_type)
-}
-
-/// Parse computer. Select parser based on BH version.
-pub fn parse_computer(
-    result: SearchEntry,
-    domain: &String,
-    dn_sid: &mut HashMap<String, String>,
-    sid_type: &mut HashMap<String, String>,
-    fqdn_sid: &mut HashMap<String, String>,
-    fqdn_ip: &mut HashMap<String, String>,
-) -> serde_json::value::Value {
-    bh_41::parse_computer(result, domain, dn_sid, sid_type, fqdn_sid, fqdn_ip)
-}
-
-/// Parse ou. Select parser based on BH version.
-pub fn parse_ou(
-    result: SearchEntry,
-    domain: &String,
-    dn_sid: &mut HashMap<String, String>,
-    sid_type: &mut HashMap<String, String>,
-) -> serde_json::value::Value {
-    bh_41::parse_ou(result, domain, dn_sid, sid_type)
-}
-
-/// Parse gpo. Select parser based on BH version.
-pub fn parse_gpo(
-    result: SearchEntry,
-    domain: &String,
-    dn_sid: &mut HashMap<String, String>,
-    sid_type: &mut HashMap<String, String>,
-) -> serde_json::value::Value {
-    bh_41::parse_gpo(result, domain, dn_sid, sid_type)
-}
-
-/// Parse domain. Select parser based on BH version.
-pub fn parse_domain(
-    result: SearchEntry,
-    domain: &String,
-    dn_sid: &mut HashMap<String, String>,
-    sid_type: &mut HashMap<String, String>,
-) -> serde_json::value::Value {
-    bh_41::parse_domain(result, domain, dn_sid, sid_type)
-}
-
-/// Parse ForeignSecurityPrincipal object. Select parser based on BH version.
-pub fn parse_fsp(
-    result: SearchEntry,
-    domain: &String,
-    dn_sid: &mut HashMap<String, String>,
-    sid_type: &mut HashMap<String, String>,
-) -> serde_json::value::Value {
-    bh_41::parse_fsp(result, domain, dn_sid, sid_type)
-}
-
-/// Parse Containers object. Select parser based on BH version new in BH4.1+
-pub fn parse_container(
-    result: SearchEntry,
-    domain: &String,
-    dn_sid: &mut HashMap<String, String>,
-    sid_type: &mut HashMap<String, String>,
-) -> serde_json::value::Value {
-    bh_41::parse_container(result, domain, dn_sid, sid_type)
-}
-
-/// Parse Trust domain object. Select parser based on BH version.
-pub fn parse_trust(
-    result: SearchEntry, 
-    _domain: &String,
-) -> serde_json::value::Value {
-    bh_41::parse_trust(result, _domain)
-}
-
-/// Parse unknown object. Select parser based on BH version.
-pub fn parse_unknown(
-    result: SearchEntry, 
-    _domain: &String,
-) -> serde_json::value::Value {
-    bh_41::parse_unknown(result, _domain)
 }

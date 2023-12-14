@@ -1,10 +1,10 @@
 use regex::Regex;
-use crate::json::templates::bh_41::prepare_gplink_json_template;
+use crate::objects::common::Link;
 
 /// Function to parse gplink and push it in json format
-pub fn parse_gplink(all_link: String) -> Vec<serde_json::value::Value>
+pub fn parse_gplink(all_link: String) -> Vec<Link>
 {
-   let mut gplinks: Vec<serde_json::value::Value> = Vec::new();
+   let mut gplinks: Vec<Link> = Vec::new();
 
    let re = Regex::new(r"[a-zA-Z0-9-]{36}").unwrap();
    let mut cpaths: Vec<String> = Vec::new();
@@ -21,15 +21,14 @@ pub fn parse_gplink(all_link: String) -> Vec<serde_json::value::Value>
 
    for i in 0..cpaths.len()
    {
-      let mut gplink = prepare_gplink_json_template();
-      gplink["GUID"] = cpaths[i].to_string().into();
+      let mut gplink = Link::new(false,cpaths[i].to_string());
       
       // Thanks to: https://techibee.com/group-policies/find-link-status-and-enforcement-status-of-group-policies-using-powershell/2424
       if status[i].to_string().contains(";2"){
-         gplink["IsEnforced"] = true.into();
+         *gplink.is_enforced_mut() = true;
       }
       if status[i].to_string().contains(";3"){
-         gplink["IsEnforced"] = true.into();
+         *gplink.is_enforced_mut() = true;
       }
 
       //trace!("gpo link: {:?}",cpaths[i]);

@@ -15,10 +15,13 @@ pub use secdesc::*;
 pub use spntasks::*;
 #[doc(inline)]
 pub use gplink::*;
+#[doc(inline)]
+pub use trusts::*;
+#[doc(inline)]
+pub use adcs::*;
 
 pub mod uacflags;
 pub mod ldaptype;
-pub mod date;
 pub mod sid;
 pub mod forestlevel;
 pub mod acl;
@@ -27,3 +30,4 @@ pub mod spntasks;
 pub mod gplink;
 pub mod constants;
 pub mod trusts;
+pub mod adcs;

@@ -1,14 +1,14 @@
-use serde_json::json;
-use crate::json::templates::bh_41::prepare_mssqlsvc_spn_json_template;
+use crate::objects::common::SPNTarget;
 //use log::trace;
 
 /// Function to check if spns start with mssqlsvc to make SPNTargets
 /// <https://github.com/BloodHoundAD/SharpHound3/blob/master/SharpHound3/Tasks/SPNTasks.cs#L22>
-pub fn check_spn(serviceprincipalname: &String) -> serde_json::value::Value
+pub fn check_spn(serviceprincipalname: &String) -> Option<SPNTarget>
 {
-   let mut mssqlsvc_spn = prepare_mssqlsvc_spn_json_template();
    if serviceprincipalname.to_lowercase().contains("mssqlsvc")
    {
+      let mut mssqlsvc_spn = SPNTarget::new();
+
       //trace!("{:?}",serviceprincipalname);
       if serviceprincipalname.to_lowercase().contains(":")
       {
@@ -27,8 +27,8 @@ pub fn check_spn(serviceprincipalname: &String) -> serde_json::value::Value
          fqdn = vec[1].to_owned().to_uppercase();
 
          //trace!("{:?}",fqdn);
-         mssqlsvc_spn["ComputerSID"] = fqdn.into();
-         mssqlsvc_spn["Port"] = port.into();
+         *mssqlsvc_spn.computer_sid_mut() = fqdn;
+         *mssqlsvc_spn.port_mut() = port;
       }
       else
       {
@@ -40,13 +40,12 @@ pub fn check_spn(serviceprincipalname: &String) -> serde_json::value::Value
          let port = 1433;
          
          //trace!("{:?}",fqdn);
-         mssqlsvc_spn["ComputerSID"] = fqdn.into();
-         mssqlsvc_spn["Port"] = port.into();
+         *mssqlsvc_spn.computer_sid_mut() = fqdn;
+         *mssqlsvc_spn.port_mut() = port;
       }
+      Some(mssqlsvc_spn)
    }
-   else
-   {
-      mssqlsvc_spn = json!({});
+   else {
+      None
    }
-   return mssqlsvc_spn
 }

@@ -1,6 +1,6 @@
 //! Launch and end banners
 use colored::*;
-use crate::enums::date::{return_current_date,return_current_time};
+use crate::utils::date::{return_current_date,return_current_time};
 use indicatif::{ProgressBar, ProgressStyle};
 
 /// Banner when RustHound start.
@@ -16,7 +16,7 @@ pub fn print_banner() {
         return_current_time(),
         return_current_date()
     );
-    println!("Powered by g0h4n from {}","OpenCyber".truecolor(97,221,179));
+    println!("Powered by g0h4n from {} | {}","OpenCyber".truecolor(97,221,179),"NH-RED-TEAM".truecolor(153,71,146));
     println!("{}\n","---------------------------------------------------".clear().bold());
 }
 

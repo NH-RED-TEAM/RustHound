@@ -5,7 +5,7 @@ use clap::{Arg, ArgAction, value_parser, Command};
 #[cfg(feature = "noargs")]
 use winreg::{RegKey,{enums::*}};
 #[cfg(feature = "noargs")]
-use crate::exec::run;
+use crate::utils::exec::run;
 #[cfg(feature = "noargs")]
 use regex::Regex;
 
@@ -19,21 +19,26 @@ pub struct Options {
     pub port: String,
     pub name_server: String,
     pub path: String,
+    pub collection_method: CollectionMethod,
     pub ldaps: bool,
     pub dns_tcp: bool,
     pub fqdn_resolver: bool,
-    pub adcs: bool,
-    pub old_bloodhound: bool,
     pub dc_only: bool,
     pub kerberos: bool,
     pub zip: bool,
     pub verbose: log::LevelFilter,
 }
 
+#[derive(Clone, Debug)]
+pub enum CollectionMethod {
+    All,
+    DCOnly,
+}
+
 #[cfg(not(feature = "noargs"))]
 fn cli() -> Command {
-    Command::new("rusthound")
-        .version("1.1.68")
+    let cmd = Command::new("rusthound")
+        .version("2.0.0")
         .about("Active Directory data collector for BloodHound.\ng0h4n <https://twitter.com/g0h4n_0>")
         .arg(Arg::new("v")
             .short('v')
@@ -99,6 +104,16 @@ fn cli() -> Command {
             .value_parser(value_parser!(String))
         )
         .next_help_heading("OPTIONAL FLAGS")
+        .arg(Arg::new("collectionmethod")
+            .short('c')
+            .long("collectionmethod")
+            .help("Which information to collect. Supported: All (LDAP,SMB,HTTP requests), DCOnly (no computer connections, only LDAP requests). (default: All)")
+            .required(false)
+            .value_name("COLLECTIONMETHOD")
+            .value_parser(["All", "DCOnly"])
+            .num_args(0..=1)
+            .default_missing_value("All")
+        )
         .arg(Arg::new("ldaps")
             .long("ldaps")
             .help("Force LDAPS using for request like: ldaps://DOMAIN.LOCAL/")
@@ -128,13 +143,6 @@ fn cli() -> Command {
             .action(ArgAction::SetTrue)
             .global(false)
         )
-        .arg(Arg::new("old-bloodhound")
-            .long("old-bloodhound")
-            .help("For ADCS only. Output result as BloodHound data for the original BloodHound version from @BloodHoundAD without PKI support")
-            .required(false)
-            .action(ArgAction::SetTrue)
-            .global(false)
-        )
         .arg(Arg::new("zip")
             .long("zip")
             .short('z')
@@ -150,14 +158,9 @@ fn cli() -> Command {
             .required(false)
             .action(ArgAction::SetTrue)
             .global(false)
-        )
-        .arg(Arg::new("adcs")
-            .long("adcs")
-            .help("Use ADCS module to enumerate Certificate Templates, Certificate Authorities and other configurations.\n(For the custom-built BloodHound version from @ly4k with PKI support)")
-            .required(false)
-            .action(ArgAction::SetTrue)
-            .global(false)
-        )
+        );
+        // Return Command args
+        cmd
 }
 
 #[cfg(not(feature = "noargs"))]
@@ -179,15 +182,20 @@ pub fn extract_args() -> Options {
     let ldaps = matches.get_one::<bool>("ldaps").map(|s| s.to_owned()).unwrap_or(false);
     let dns_tcp = matches.get_one::<bool>("dns-tcp").map(|s| s.to_owned()).unwrap_or(false);
     let dc_only = matches.get_one::<bool>("dc-only").map(|s| s.to_owned()).unwrap_or(false);
-    let old_bh = matches.get_one::<bool>("old-bloodhound").map(|s| s.to_owned()).unwrap_or(false);
     let z = matches.get_one::<bool>("zip").map(|s| s.to_owned()).unwrap_or(false);
     let fqdn_resolver = matches.get_one::<bool>("fqdn-resolver").map(|s| s.to_owned()).unwrap_or(false);
-    let adcs = matches.get_one::<bool>("adcs").map(|s| s.to_owned()).unwrap_or(false);
+    #[cfg(feature = "ly4k_adcs")]
+    let ly4k_adcs = matches.get_one::<bool>("ly4k-adcs").map(|s| s.to_owned()).unwrap_or(false);
     let kerberos = matches.get_one::<bool>("kerberos").map(|s| s.to_owned()).unwrap_or(false);
     let v = match matches.get_count("v") {
         0 => log::LevelFilter::Info,
         1 => log::LevelFilter::Debug,
         _ => log::LevelFilter::Trace,
+    };
+    let collection_method = match matches.get_one::<String>("collectionmethod").map(|s| s.as_str()).unwrap_or("All") {
+        "All"       => CollectionMethod::All,
+        "DCOnly"    => CollectionMethod::DCOnly,
+         _          => CollectionMethod::All,
     };
 
     // Return all
@@ -200,12 +208,11 @@ pub fn extract_args() -> Options {
         port: port.to_string(),
         name_server: n.to_string(),
         path: path.to_string(),
+        collection_method: collection_method,
         ldaps: ldaps,
         dns_tcp: dns_tcp,
         dc_only: dc_only,
-        old_bloodhound: old_bh,
         fqdn_resolver: fqdn_resolver,
-        adcs: adcs,
         kerberos: kerberos,
         zip: z,
         verbose: v,
@@ -254,12 +261,13 @@ pub fn auto_args() -> Options {
         port: port.to_string(),
         name_server: "127.0.0.1".to_string(),
         path: "./output".to_string(),
+        collection_method: CollectionMethod::All,
         ldaps: ldaps,
         dns_tcp: false,
         dc_only: false,
-        old_bloodhound: false,
         fqdn_resolver: false,
-        adcs: true,
+        #[cfg(feature = "ly4k_adcs")]
+        ly4k_adcs: true,
         kerberos: true,
         zip: true,
         verbose: log::LevelFilter::Info,

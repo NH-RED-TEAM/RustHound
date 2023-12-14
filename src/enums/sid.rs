@@ -1,5 +1,13 @@
 use crate::enums::secdesc::LdapSid;
 use log::{trace,error};
+use regex::Regex;
+
+
+/// Function to check if string is SID
+pub fn is_sid(input: &String) -> bool {
+    let regex = Regex::new(".*S-1-5.*").unwrap();
+    regex.is_match(input)
+}
 
 /// Function to make SID String from ldap_sid struct
 pub fn sid_maker(sid: LdapSid, domain: &String) -> String {
@@ -163,55 +171,3 @@ pub fn bin_to_string(raw_guid: &Vec<u8>) -> String
 
     return str_guid  
 }
-
-/* Another way to decode objectSID binary to string value. 
-// src: https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/f992ad60-0fe4-4b87-9fed-beb478836861
-pub fn decode_sid(raw_sid: &Vec<u8>, domain: &String) -> String
-{
-    let mut str_sid: String = "".to_owned();
-    if raw_sid.len() <= 16 {
-        str_sid.push_str(&domain.to_uppercase());
-        str_sid.push_str(&"-S-".to_owned());
-    }
-    else
-    {
-        str_sid.push_str(&"S-".to_owned());
-    }
-    
-    // get byte(0) - revision level
-    let revision = String::from(raw_sid[0].to_string());
-    str_sid.push_str(&revision);
-
-    //next byte byte(1) - count of sub-authorities
-    let count_sub_auths = usize::from(raw_sid[1]) & 0xFF;
-    
-    //byte(2-7) - 48 bit authority ([Big-Endian])
-    let mut authority = 0;
-    //String rid = "";
-    for i in 2..=7 
-    {
-        authority = (usize::from(raw_sid[i])) << (8 * (5 - (i - 2)));
-    }
-    str_sid.push_str(&"-".to_owned());
-    str_sid.push_str(&authority.to_string());
-
-    //iterate all the sub-auths and then countSubAuths x 32 bit sub authorities ([Little-Endian])
-    let mut offset = 8;
-    let size = 4; //4 bytes for each sub auth
-
-    for _j in 0..count_sub_auths
-    {
-        let mut sub_authority = 0;
-        for k in 0..size
-        {
-            sub_authority |= (usize::from(raw_sid[offset + k] & 0xFF)) << (8 * k);
-        }
-        // format it
-        str_sid.push_str(&"-".to_owned());
-        str_sid.push_str(&sub_authority.to_string());
-        offset += size;
-    }
-    
-    return str_sid   
-}
-*/

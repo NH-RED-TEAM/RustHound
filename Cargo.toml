@@ -3,35 +3,44 @@ authors = ["g0h4n <g0h4n_0@protonmail.com>"]
 name = "rusthound"
 description = "Active Directory data collector for Bloodhound written in rust."
 keywords = ["bloodhound", "pentest", "ldap", "tokio", "async"]
-repository = "https://github.com/OPENCYBER-FR/RustHound"
-homepage = "https://github.com/OPENCYBER-FR/RustHound"
+repository = "https://github.com/NH-RED-TEAM/RustHound"
+homepage = "https://github.com/NH-RED-TEAM/RustHound"
 documentation = "https://docs.rs/rusthound/"
-version = "1.1.68"
-edition = "2018"
+version = "2.0.0"
+edition = "2021"
 license = "MIT"
 readme = "README.md"
 
 [dependencies]
 tokio = "1.1"
 clap = "4.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1.0", features = ["preserve_order"] }
 nom7 = { version="7.0", package="nom" }
 colored = "2"
 chrono = "0.4"
-bitflags = "1.0"
+bitflags = "2.4.1"
 regex = "1"
 env_logger = "0.10"
 log = "0.4"
 lazy_static = "1.4.0"
 indicatif = "0.17"
 x509-parser = "0.15"
-trust-dns-resolver = "0.22"
-serde_json = { version = "1.0.89", features = ["preserve_order"] }
+trust-dns-resolver = "0.23"
 zip= { version = "0.6.3", default-features = false }
 rpassword = "7.2"
 ldap3 = { version = "0.11.3", default-features = false }
-winreg = { version = "0.50", optional = true }
+winreg = { version = "0.52", optional = true }
+sha1 = "0.10"
 
 [features]
 noargs = ["winreg"] # Only available for Windows
 nogssapi = ["ldap3/tls-native"] # Used for linux_musl armv7 and macos compilation
 default = ["ldap3/tls-rustls","ldap3/gssapi"]
+
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true
+codegen-units = 1
+panic = "abort"

@@ -4,25 +4,27 @@ use colored::Colorize;
 use trust_dns_resolver::TokioAsyncResolver;
 use trust_dns_resolver::config::*;
 
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::net::{IpAddr,Ipv4Addr,SocketAddr};
 use std::collections::HashMap;
 use std::time::Duration;
+use crate::objects::computer::Computer;
 
 /// Function to resolve all IP address from the LDAP FQDN vector
 /// <https://docs.rs/trust-dns-resolver/latest/trust_dns_resolver/index.html>
 /// <https://github.com/shadowsocks/shadowsocks-rust/blob/master/crates/shadowsocks-service/src/config.rs>
 pub async fn resolving_all_fqdn(
-   dns_tcp: bool,
-   name_server: &String,
-   fqdn_ip: &mut HashMap<String, String>,
-   vec_computer: &Vec<serde_json::value::Value>
+   dns_tcp:       bool,
+   name_server:   &String,
+   fqdn_ip:       &mut HashMap<String, String>,
+   vec_computer:  &Vec<Computer>
 ) {
    info!("Resolving FQDN to IP address started...");
    for value in fqdn_ip.to_owned()
    {
       for i in 0..vec_computer.len()
       {
-          if (vec_computer[i]["Properties"]["name"].as_str().unwrap().to_string() == value.0.to_owned().to_string()) && (vec_computer[i]["Properties"]["enabled"] == true) {
+         if (vec_computer[i].properties().name().to_string() == value.0.to_owned().to_string()) 
+         && (vec_computer[i].properties().enabled().to_owned() == true) {
             debug!("Trying to resolve FQDN: {}",value.0.to_string());
             // Resolve FQDN to IP address
             let address = resolver(value.0.to_string(),dns_tcp,name_server).await;
@@ -30,7 +32,7 @@ pub async fn resolving_all_fqdn(
                fqdn_ip.insert(value.0.to_owned().to_string(),address.to_owned().to_string());
                info!("IP address for {}: {}",&value.0.to_string().yellow().bold(),&address.yellow().bold());
             }
-          }
+         }
          continue
       }
    }
@@ -48,7 +50,7 @@ pub async fn resolver(
    let (c,o) = make_resolver_conf(dns_tcp,name_server);
 
    // Construct a new Resolver with default configuration options
-   let resolver = TokioAsyncResolver::tokio(c,o).unwrap();
+   let resolver = TokioAsyncResolver::tokio(c,o);
 
    // Resolver
    let result = resolver.lookup_ip(fqdn);
@@ -89,7 +91,7 @@ pub fn make_resolver_conf(
       socket_addr: socket,
       protocol: dns_protocol,
       tls_dns_name: None,
-      trust_nx_responses: false,
+      trust_negative_responses: false,
       bind_addr: None,
    });
 

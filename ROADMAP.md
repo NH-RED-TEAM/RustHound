@@ -1,0 +1,314 @@
+#  🚥 Roadmap
+
+## Authentification
+  - [x] LDAP (389) :white_check_mark:
+  - [x] LDAPS (636) :white_check_mark:
+  - [x] `BIND` :white_check_mark:
+  - [ ] `NTLM` :red_circle:
+  - [x] `Kerberos` :white_check_mark:
+  - [x] Prompt for password :white_check_mark:
+
+## Outputs
+  - [x] users.json :white_check_mark:
+  - [x] groups.json :white_check_mark:
+  - [x] computers.json :white_check_mark:
+  - [x] ous.json :white_check_mark:
+  - [x] gpos.json :white_check_mark:
+  - [x] containers.json :white_check_mark:
+  - [x] domains.json :white_check_mark:
+  - [x] cas.json :white_check_mark:
+  - [x] templates.json :white_check_mark:
+  - [x] :new: aiacas.json :white_check_mark:
+  - [x] :new: rootcas.json :white_check_mark:
+  - [x] :new: enterprisecas.json :white_check_mark:
+  - [x] :new: certtemplates.json :white_check_mark:
+  - [x] :new: ntauthstores.json :white_check_mark:
+  - [x] all.zip :white_check_mark:
+
+## Modules
+
+- [x] Retreive LAPS password if your user can read them **automatic** :white_check_mark:
+- [ ] Retreive LAPSv2 password if your user can read them **automatic** :red_circle:
+- [x] Resolve FQDN computers found to IP address **--fqdn-resolver** :white_check_mark:
+- [ ] Kerberos attack module (ASREPROASTING and KERBEROASTING) **--attack-kerberos** :red_circle:
+- [ ] Retrieve datas from trusted domains **--follow-trust**  :red_circle:
+
+## List of attributes
+
+- **BloodHound-CE version**
+    - [x] **Domain** 
+        - [x] `Properties`:`domain` :white_check_mark:
+        - [x] `Properties`:`name` :white_check_mark:
+        - [x] `Properties`:`distinguishedname` :white_check_mark:
+        - [x] `Properties`:`domainsid` :white_check_mark:
+        - [x] `Properties`:`highvalue` :white_check_mark:
+        - [x] `Properties`:`description` :white_check_mark:
+        - [x] `Properties`:`whencreated` :white_check_mark:
+        - [x] `Properties`:`functionallevel` :white_check_mark:
+        - [ ] `GPOChanges`:`LocalAdmins` :red_circle: need RPC call [src GPOLocalGroupProcessor.cs](https://github.com/BloodHoundAD/SharpHoundCommon/blob/v3/src/CommonLib/Processors/GPOLocalGroupProcessor.cs)
+        - [ ] `GPOChanges`:`RemoteDesktopUsers` :red_circle: need RPC call
+        - [ ] `GPOChanges`:`DcomUsers` :red_circle: need RPC call
+        - [ ] `GPOChanges`:`PSRemoteUsers` :red_circle: need RPC call
+        - [x] `GPOChanges`:`AffectedComputers` :white_check_mark:
+        - [x] `ChildObjects` :white_check_mark:
+        - [x] `Trusts` :white_check_mark:
+        - [x] `Links` :white_check_mark:
+        - [x] `Aces` :white_check_mark:
+        - [x] `ObjectIdentifier` :white_check_mark:
+        - [x] `IsDeleted` :white_check_mark:
+        - [x] `IsACLProtected` :white_check_mark:
+        - [x] `ContainedBy` :white_check_mark:
+    - [x] **Computer**
+        - [x] `Properties`:`domain` :white_check_mark:
+        - [x] `Properties`:`name` :white_check_mark:
+        - [x] `Properties`:`distinguishedname` :white_check_mark:
+        - [x] `Properties`:`domainsid` :white_check_mark:
+        - [x] `Properties`:`highvalue` :white_check_mark:
+        - [x] `Properties`:`samaccountname` :white_check_mark:
+        - [x] `Properties`:`haslaps` :white_check_mark:
+        - [x] `Properties`:`description` :white_check_mark:
+        - [x] `Properties`:`whencreated` :white_check_mark:
+        - [x] `Properties`:`enabled` :white_check_mark:
+        - [x] `Properties`:`unconstraineddelegation` :white_check_mark:
+        - [x] `Properties`:`trustedtoauth` :white_check_mark:
+        - [x] `Properties`:`lastlogon` :white_check_mark:
+        - [x] `Properties`:`lastlogontimestamp` :white_check_mark:
+        - [x] `Properties`:`pwdlastset` :white_check_mark:
+        - [x] `Properties`:`serviceprincipalnames` :white_check_mark:
+        - [x] `Properties`:`operatingsystem` :white_check_mark:
+        - [ ] `Properties`:`sidhistory`
+        - [x] `PrimaryGroupSID` :white_check_mark:
+        - [x] `AllowedToDelegate` :white_check_mark:
+        - [x] `AllowedToAct` :white_check_mark:
+        - [ ] `HasSIDHistory` :red_circle:
+        - [ ] `DumpSMSAPassword` :red_circle:
+        - [ ] `Sessions` :red_circle: need RPC call
+        - [ ] `PrivilegedSessions` :red_circle: need RPC call
+        - [ ] `RegistrySessions` :red_circle: need RPC call
+        - [ ] `LocalGroups` :red_circle:
+        - [ ] `UserRights` :red_circle: need [LSAOpenPolicy](https://microsoft.github.io/windows-docs-rs/doc/windows/Win32/Security/Authentication/Identity/fn.LsaOpenPolicy.html)
+        - [ ] `DCRegistryData` :red_circle: need RPC call and [GetRegistryKeyData src Helper.cs](https://github.com/BloodHoundAD/SharpHoundCommon/blob/v3/src/CommonLib/Helpers.cs#L278)
+            - [CertificateMappingMethods](https://support.microsoft.com/en-us/topic/kb5014754-certificate-based-authentication-changes-on-windows-domain-controllers-ad2c23b0-15d8-4340-a468-4d4f3b188f16)
+            - [StrongCertificateBindingEnforcement](https://support.microsoft.com/en-us/topic/kb5014754-certificate-based-authentication-changes-on-windows-domain-controllers-ad2c23b0-15d8-4340-a468-4d4f3b188f16)
+        - [x] `Status` :white_check_mark:
+        - [x] `Aces` :white_check_mark:
+        - [x] `ObjectIdentifier` :white_check_mark:
+        - [x] `IsDeleted` :white_check_mark:
+        - [x] `IsACLProtected` :white_check_mark:
+        - [x] `ContainedBy` :white_check_mark:
+    - [x] **User**
+        - [x] `Properties`:`domain` :white_check_mark:
+        - [x] `Properties`:`name` :white_check_mark:
+        - [x] `Properties`:`distinguishedname` :white_check_mark:
+        - [x] `Properties`:`domainsid` :white_check_mark:
+        - [x] `Properties`:`highvalue` :white_check_mark:
+        - [x] `Properties`:`samaccountname` :white_check_mark:
+        - [x] `Properties`:`description` :white_check_mark:
+        - [x] `Properties`:`whencreated` :white_check_mark:
+        - [x] `Properties`:`sensitive` :white_check_mark:
+        - [x] `Properties`:`dontreqpreauth` :white_check_mark:
+        - [x] `Properties`:`passwordnotreqd` :white_check_mark:
+        - [x] `Properties`:`unconstraineddelegation` :white_check_mark:
+        - [x] `Properties`:`pwdneverexpires` :white_check_mark:
+        - [x] `Properties`:`enabled` :white_check_mark:
+        - [x] `Properties`:`trustedtoauth` :white_check_mark:
+        - [x] `Properties`:`lastlogon` :white_check_mark:
+        - [x] `Properties`:`lastlogontimestamp` :white_check_mark:
+        - [x] `Properties`:`pwdlastset` :white_check_mark:
+        - [x] `Properties`:`serviceprincipalnames` :white_check_mark:
+        - [x] `Properties`:`hasspn` :white_check_mark:
+        - [x] `Properties`:`displayname` :white_check_mark:
+        - [x] `Properties`:`email` :white_check_mark:
+        - [x] `Properties`:`title` :white_check_mark:
+        - [x] `Properties`:`homedirectory` :white_check_mark:
+        - [x] `Properties`:`userpassword` :white_check_mark:
+        - [x] `Properties`:`unixpassword` :white_check_mark:
+        - [x] `Properties`:`unicodepassword` :white_check_mark:
+        - [ ] `Properties`:`sfupassword` :red_circle:
+        - [x] `Properties`:`logonscript` :white_check_mark:
+        - [x] `Properties`:`admincount` :white_check_mark:
+        - [ ] `Properties`:`sidhistory` :red_circle:
+        - [x] `PrimaryGroupSID` :white_check_mark:
+        - [x] `AllowedToDelegate` :white_check_mark:
+        - [ ] `HasSIDHistory` :red_circle:
+        - [x] `SPNTargets` :white_check_mark:
+        - [x] `Aces` :white_check_mark:
+        - [x] `ObjectIdentifier` :white_check_mark:
+        - [x] `IsDeleted` :white_check_mark:
+        - [x] `IsACLProtected` :white_check_mark:
+        - [x] `ContainedBy` :white_check_mark:
+    - [x] **Group**
+        - [x] `Properties`:`domain` :white_check_mark:
+        - [x] `Properties`:`name` :white_check_mark:
+        - [x] `Properties`:`distinguishedname` :white_check_mark:
+        - [x] `Properties`:`domainsid` :white_check_mark:
+        - [x] `Properties`:`highvalue` :white_check_mark:
+        - [x] `Properties`:`samaccountname` :white_check_mark:
+        - [x] `Properties`:`description` :white_check_mark:
+        - [x] `Properties`:`whencreated` :white_check_mark:
+        - [x] `Properties`:`admincount` :white_check_mark:
+        - [x] `Members` :white_check_mark:
+        - [x] `Aces` :white_check_mark:
+        - [x] `ObjectIdentifier` :white_check_mark:
+        - [x] `IsDeleted` :white_check_mark:
+        - [x] `IsACLProtected` :white_check_mark:
+        - [x] `ContainedBy` :white_check_mark:
+    - [x] **OU**
+        - [x] `Properties`:`domain` :white_check_mark:
+        - [x] `Properties`:`name` :white_check_mark:
+        - [x] `Properties`:`distinguishedname` :white_check_mark:
+        - [x] `Properties`:`domainsid` :white_check_mark:
+        - [x] `Properties`:`highvalue` :white_check_mark:
+        - [x] `Properties`:`samaccountname` :white_check_mark:
+        - [x] `Properties`:`description` :white_check_mark:
+        - [x] `Properties`:`whencreated` :white_check_mark:
+        - [x] `Properties`:`blocksinheritance` :white_check_mark:
+        - [ ] `GPOChanges`:`LocalAdmins` :red_circle: need RPC call src [GPOLocalGroupProcessor.cs](https://github.com/BloodHoundAD/SharpHoundCommon/blob/v3/src/CommonLib/Processors/GPOLocalGroupProcessor.cs)
+        - [ ] `GPOChanges`:`RemoteDesktopUsers` :red_circle: need RPC call
+        - [ ] `GPOChanges`:`DcomUsers` :red_circle: need RPC call
+        - [ ] `GPOChanges`:`PSRemoteUsers` :red_circle: need RPC call
+        - [x] `GPOChanges`:`AffectedComputers` :white_check_mark:
+        - [x] `Links` :white_check_mark:
+        - [x] `ChildObjects` :white_check_mark:
+        - [x] `Aces` :white_check_mark:
+        - [x] `ObjectIdentifier` :white_check_mark:
+        - [x] `IsDeleted` :white_check_mark:
+        - [x] `IsACLProtected` :white_check_mark:
+        - [x] `ContainedBy` :white_check_mark:
+    - [x] **Gpo**
+        - [x] `Properties`:`domain` :white_check_mark:
+        - [x] `Properties`:`name` :white_check_mark:
+        - [x] `Properties`:`distinguishedname` :white_check_mark:
+        - [x] `Properties`:`domainsid` :white_check_mark:
+        - [x] `Properties`:`highvalue` :white_check_mark:
+        - [x] `Properties`:`samaccountname` :white_check_mark:
+        - [x] `Properties`:`description` :white_check_mark:
+        - [x] `Properties`:`whencreated` :white_check_mark:
+        - [x] `Properties`:`gpcpath` :white_check_mark:
+        - [x] `Aces` :white_check_mark:
+        - [x] `ObjectIdentifier` :white_check_mark:
+        - [x] `IsDeleted` :white_check_mark:
+        - [x] `IsACLProtected` :white_check_mark:
+        - [x] `ContainedBy` :white_check_mark:
+    - [x] **Container**
+        - [x] `Properties`:`domain` :white_check_mark:
+        - [x] `Properties`:`name` :white_check_mark:
+        - [x] `Properties`:`distinguishedname` :white_check_mark:
+        - [x] `Properties`:`domainsid` :white_check_mark:
+        - [x] `Properties`:`highvalue` :white_check_mark:
+        - [x] `ChildObjects` :white_check_mark:
+        - [x] `Aces` :white_check_mark:
+        - [x] `ObjectIdentifier` :white_check_mark:
+        - [x] `IsDeleted` :white_check_mark:
+        - [x] `IsACLProtected` :white_check_mark:
+        - [x] `ContainedBy` :white_check_mark:
+    - [x] :new: **NtAuthStore**
+        - [x] `Properties`:`domain` :white_check_mark:
+        - [x] `Properties`:`name` :white_check_mark:
+        - [x] `Properties`:`distinguishedname` :white_check_mark:
+        - [x] `Properties`:`domainsid` :white_check_mark:
+        - [x] `Properties`:`description` :white_check_mark:
+        - [x] `Properties`:`whencreated` :white_check_mark:
+        - [x] `Properties`:`certthumbprints` :white_check_mark:
+        - [x] `DomainSID` :white_check_mark:
+        - [x] `Aces` :white_check_mark:
+        - [x] `ObjectIdentifier` :white_check_mark:
+        - [x] `IsDeleted` :white_check_mark:
+        - [x] `IsACLProtected` :white_check_mark:
+        - [x] `ContainedBy` :white_check_mark:
+    - [x] :new: **AIACA**
+        - [x] `Properties`:`domain` :white_check_mark:
+        - [x] `Properties`:`name` :white_check_mark:
+        - [x] `Properties`:`distinguishedname` :white_check_mark:
+        - [x] `Properties`:`domainsid` :white_check_mark:
+        - [x] `Properties`:`description` :white_check_mark:
+        - [x] `Properties`:`whencreated` :white_check_mark:
+        - [ ] `Properties`:`crosscertificatepair` :red_circle: What value should be added to the output? (x509 cert)
+        - [x] `Properties`:`hascrosscertificatepair` :white_check_mark:
+        - [x] `Properties`:`certthumbprint` :white_check_mark:
+        - [x] `Properties`:`certname` :white_check_mark:
+        - [x] `Properties`:`certchain` :white_check_mark:
+        - [x] `Properties`:`hasbasicconstraints` :white_check_mark:
+        - [x] `Properties`:`basicconstraintpathlength` :white_check_mark:
+        - [x] `DomainSID` :white_check_mark:
+        - [x] `Aces` :white_check_mark:
+        - [x] `ObjectIdentifier` :white_check_mark:
+        - [x] `IsDeleted` :white_check_mark:
+        - [x] `IsACLProtected` :white_check_mark:
+        - [x] `ContainedBy` :white_check_mark:
+    - [x] :new: **RootCA**
+        - [x] `Properties`:`domain` :white_check_mark:
+        - [x] `Properties`:`name` :white_check_mark:
+        - [x] `Properties`:`distinguishedname` :white_check_mark:
+        - [x] `Properties`:`domainsid` :white_check_mark:
+        - [x] `Properties`:`description` :white_check_mark:
+        - [x] `Properties`:`whencreated` :white_check_mark:
+        - [x] `Properties`:`certthumbprint` :white_check_mark:
+        - [x] `Properties`:`certname` :white_check_mark:
+        - [x] `Properties`:`certchain` :white_check_mark:
+        - [x] `Properties`:`hasbasicconstraints` :white_check_mark:
+        - [x] `Properties`:`basicconstraintpathlength` :white_check_mark:
+        - [x] `DomainSID` :white_check_mark:
+        - [x] `Aces` :white_check_mark:
+        - [x] `ObjectIdentifier` :white_check_mark:
+        - [x] `IsDeleted` :white_check_mark:
+        - [x] `IsACLProtected` :white_check_mark:
+        - [x] `ContainedBy` :white_check_mark:
+    - [x] :new: **EnterpriseCA**
+        - [x] `Properties`:`domain` :white_check_mark:
+        - [x] `Properties`:`name` :white_check_mark:
+        - [x] `Properties`:`distinguishedname` :white_check_mark:
+        - [x] `Properties`:`domainsid` :white_check_mark:
+        - [x] `Properties`:`description` :white_check_mark:
+        - [x] `Properties`:`whencreated` :white_check_mark:
+        - [ ] `Properties`:`flags` :red_circle:
+        - [x] `Properties`:`caname` :white_check_mark:
+        - [x] `Properties`:`dnshostname` :white_check_mark:
+        - [x] `Properties`:`certthumbprint` :white_check_mark:
+        - [x] `Properties`:`certname` :white_check_mark:
+        - [x] `Properties`:`certchain` :white_check_mark:
+        - [x] `Properties`:`hasbasicconstraints` :white_check_mark:
+        - [x] `Properties`:`basicconstraintpathlength` :white_check_mark:
+        - [x] `Properties`:`casecuritycollected` :white_check_mark:
+        - [ ] `Properties`:`enrollmentagentrestrictionscollected` :red_circle: linked to RCP for `CARegistryData`:`EnrollmentAgentRestrictions`
+        - [ ] `Properties`:`isuserspecifiessanenabledcollected` :red_circle: linked to RCP for `CARegistryData`:`IsUserSpecifiesSanEnabled`
+        - [x] `HostingComputer` :white_check_mark:
+        - [ ] `CARegistryData`:`CASecurity` :warning: (collected directly from DACL to validate)
+        - [ ] `CARegistryData`:`EnrollmentAgentRestrictions` :red_circle: src [ObjectProcessors.cs](https://github.com/BloodHoundAD/SharpHound/blob/2.X/src/Runtime/ObjectProcessors.cs#L667C28-L667C38)
+        - [ ] `CARegistryData`:`IsUserSpecifiesSanEnabled` :red_circle: src [ObjectProcessors.cs](https://github.com/BloodHoundAD/SharpHound/blob/2.X/src/Runtime/ObjectProcessors.cs#L667C28-L667C38)
+        - [x] `EnabledCertTemplates` :white_check_mark:
+        - [x] `Aces` :white_check_mark:
+        - [x] `ObjectIdentifier` :white_check_mark:
+        - [x] `IsDeleted` :white_check_mark:
+        - [x] `IsACLProtected` :white_check_mark:
+        - [x] `ContainedBy` :white_check_mark:
+    - [x] :new: **CertTemplate**
+        - [x] `Properties`:`domain` :white_check_mark:
+        - [x] `Properties`:`name` :white_check_mark:
+        - [x] `Properties`:`distinguishedname` :white_check_mark:
+        - [x] `Properties`:`domainsid` :white_check_mark:
+        - [x] `Properties`:`description` :white_check_mark:
+        - [x] `Properties`:`whencreated` :white_check_mark:
+        - [x] `Properties`:`validityperiod` :white_check_mark:
+        - [x] `Properties`:`renewalperiod` :white_check_mark:
+        - [x] `Properties`:`schemaversion` :white_check_mark:
+        - [x] `Properties`:`displayname` :white_check_mark:
+        - [x] `Properties`:`oid` :white_check_mark:
+        - [x] `Properties`:`enrollmentflag` :white_check_mark:
+        - [x] `Properties`:`requiresmanagerapproval` :white_check_mark:
+        - [x] `Properties`:`nosecurityextension` :white_check_mark:
+        - [x] `Properties`:`certificatenameflag` :white_check_mark:
+        - [x] `Properties`:`enrolleesuppliessubject` :white_check_mark:
+        - [x] `Properties`:`subjectaltrequireupn` :white_check_mark:
+        - [x] `Properties`:`ekus` :white_check_mark:
+        - [x] `Properties`:`certificateapplicationpolicy` :white_check_mark:
+        - [x] `Properties`:`authorizedsignatures` :white_check_mark:
+        - [x] `Properties`:`applicationpolicies` :white_check_mark:
+        - [x] `Properties`:`issuancepolicies` :white_check_mark:
+        - [x] `Properties`:`effectiveekus` :white_check_mark:
+        - [x] `Properties`:`authenticationenabled` :white_check_mark:
+        - [x] `Aces` :white_check_mark:
+        - [x] `ObjectIdentifier` :white_check_mark:
+        - [x] `IsDeleted` :white_check_mark:
+        - [x] `IsACLProtected` :white_check_mark:
+        - [x] `ContainedBy` :white_check_mark:

@@ -1,6 +1,7 @@
 /target
+/Cargo.lock
 *.json
 *.zip
 /datas
-/.vscode
 rusthound*
+/.vscode

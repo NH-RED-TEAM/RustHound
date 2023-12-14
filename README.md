@@ -1,18 +1,21 @@
-# RustHound
+> :warning: *This version is only compatible with [BloodHound Community Edition (CE)](https://github.com/SpecterOps/BloodHound)*
+
+<p align="center">
+<img width="30%" src="img/rusthound_logo_v3.png">
+</p>
+
 
 <p align="center">
   <a href="https://crates.io/crates/rusthound"><img alt="Crates.io" src="https://img.shields.io/crates/v/rusthound?style=for-the-badge"></a>
   <img alt="GitHub" src="https://img.shields.io/github/license/OPENCYBER-FR/RustHound?style=for-the-badge">
-  <img alt="Linux supported" src="https://img.shields.io/badge/Supported%20OS-Linux-orange?style=for-the-badge">
-  <img alt="Windows supported" src="https://img.shields.io/badge/Supported%20OS-Windows-green?style=for-the-badge">
-  <img alt="macOS supported" src="https://img.shields.io/badge/Supported%20OS-MacOS-blue?style=for-the-badge">
   <a href="https://twitter.com/intent/follow?screen_name=OPENCYBER_FR" title="Follow" rel="nofollow"><img alt="Twitter Follow" src="https://img.shields.io/badge/TWITTER-OPENCYBER_FR-white?style=for-the-badge"></a>
   <a href="https://twitter.com/intent/follow?screen_name=g0h4n_0" title="Follow" rel="nofollow"><img alt="Twitter Follow" src="https://img.shields.io/badge/TWITTER-g0h4n-white?style=for-the-badge"></a>
   <br>
-</p>
+  <img alt="Linux supported" src="https://img.shields.io/badge/Supported%20OS-Linux-orange?style=for-the-badge">
+  <img alt="Windows supported" src="https://img.shields.io/badge/Supported%20OS-Windows-green?style=for-the-badge">
+  <img alt="macOS supported" src="https://img.shields.io/badge/Supported%20OS-MacOS-blue?style=for-the-badge">
 
-<p align="center">
-<img width="30%" src="img/rusthound_logo_v3.png">
+  <br>
 </p>
 
 # Summary
@@ -27,7 +30,6 @@
   - [Windows static version from Linux](#manually-for-windows-static-version-from-linux)
   - [macOS static version from Linux](#manually-for-macos-static-version-from-linux)
   - [Optimize the binary size](#optimize-the-binary-size)
-
 - [How to build documentation?](#how-to-build-documentation)
 - [Usage](#usage)
 - [Demo](#demo)
@@ -35,12 +37,12 @@
   - [Module FQDN resolver](#module-fqdn-resolver)
   - [Module ADCS collector](#module-adcs-collector)
 - [Statistics](#rocket-statistics)
-- [Roadmap](#-roadmap)
+- [Roadmap](./ROADMAP.md)
 - [Links](#link-links)
 
 # Limitations
 
-Not all SharpHound features have been implemented. Some exist in RustHound and not in SharpHound or BloodHound-Python. Please refer to the [roadmap](#-roadmap) for more information.
+Not all SharpHound features have been implemented. Some exist in RustHound and not in SharpHound or BloodHound-Python. Please refer to the [roadmap](./ROADMAP.md) for more information.
 
 # Description
 
@@ -48,7 +50,7 @@ RustHound is a **cross-platform** BloodHound collector tool written in Rust, mak
 
 No AV detection and **cross-compiled**.
 
-RustHound generates users, groups, computers, OUs, GPOs, containers, and domain JSON files that can be analyzed with BloodHound.
+RustHound generates all JSON files that can be analyzed with BloodHound Community Edition.
 
 > 💡 If you can use SharpHound, use it.
 > Use RustHound as a backup solution if SharpHound is detected by AV or if it not compatible with your OS.
@@ -78,6 +80,7 @@ Static:
 usage: make windows
 usage: make windows_x64
 usage: make windows_x86
+usage: make linux
 usage: make linux_aarch64
 usage: make linux_x86_64
 usage: make linux_musl
@@ -102,10 +105,13 @@ Use RustHound with Docker to make sure to have all dependencies.
 docker build --rm -t rusthound .
 
 # Then
+docker run --rm -v ./:/usr/src/rusthound rusthound help
 docker run --rm -v ./:/usr/src/rusthound rusthound windows
-docker run --rm -v ./:/usr/src/rusthound rusthound linux_musl
+docker run --rm -v ./:/usr/src/rusthound rusthound linux
 docker run --rm -v ./:/usr/src/rusthound rusthound macos
 ```
+
+<details><summary><b>SHOW MORE COMPILATION METHODS</b></summary>
 
 ## Using Cargo
 
@@ -234,6 +240,8 @@ cd RustHound
 cargo doc --open --no-deps
 ```
 
+</details>
+
 # Usage
 
 ```bash
@@ -241,8 +249,8 @@ Usage: rusthound [OPTIONS] --domain <domain>
 
 Options:
   -v...          Set the level of verbosity
-  -h, --help     Print help information
-  -V, --version  Print version information
+  -h, --help     Print help
+  -V, --version  Print version
 
 REQUIRED VALUES:
   -d, --domain <domain>  Domain name like: DOMAIN.LOCAL
@@ -257,16 +265,14 @@ OPTIONAL VALUES:
   -o, --output <output>              Output directory where you would like to save JSON files [default: ./]
 
 OPTIONAL FLAGS:
-      --ldaps           Force LDAPS using for request like: ldaps://DOMAIN.LOCAL/
-      --dns-tcp         Use TCP instead of UDP for DNS queries
-      --dc-only         Collects data only from the domain controller. Will not try to retrieve CA security/configuration or check for Web Enrollment
-      --old-bloodhound  For ADCS only. Output result as BloodHound data for the original BloodHound version from @BloodHoundAD without PKI support
-  -z, --zip             Compress the JSON files into a zip archive
+      --ldaps     Force LDAPS using for request like: ldaps://DOMAIN.LOCAL/
+  -k, --kerberos  Use Kerberos authentication. Grabs credentials from ccache file (KRB5CCNAME) based on target parameters for Linux.
+      --dns-tcp   Use TCP instead of UDP for DNS queries
+      --dc-only   Collects data only from the domain controller. Will not try to retrieve CA security/configuration or check for Web Enrollment
+  -z, --zip       Compress the JSON files into a zip archive
 
 OPTIONAL MODULES:
       --fqdn-resolver  Use fqdn-resolver module to get computers IP address
-      --adcs           Use ADCS module to enumerate Certificate Templates, Certificate Authorities and other configurations.
-                       (For the custom-built BloodHound version from @ly4k with PKI support)
 ```
 
 # Demo
@@ -278,6 +284,9 @@ Examples are done on the [GOADv2](https://github.com/Orange-Cyberdefense/GOAD) i
 ```bash
 # Linux with username:password
 rusthound -d north.sevenkingdoms.local -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo -z
+
+# Linux with username:password DCOnly collection method
+rusthound -c DCOnly -d north.sevenkingdoms.local -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo -z
 
 # Linux with username:password and ldapip
 rusthound -d north.sevenkingdoms.local -i 192.168.56.11 -u 'jeor.mormont@north.sevenkingdoms.local' -p '_L0ngCl@w_' -o /tmp/demo -z
@@ -325,28 +334,7 @@ rusthound.exe -d essos.local -u daenerys.targaryen@essos.local -p BurnThemAll! -
 
 ## Module ADCS collector
 
-Example using [@ly4k BloodHound version](https://github.com/ly4k/BloodHound).
-
-```bash
-# Linux with username:password and ADCS module for @ly4k BloodHound version
-rusthound -d essos.local -u 'daenerys.targaryen@essos.local' -p 'BurnThemAll!' -o /tmp/adcs --adcs -z
-# Linux with username:password and ADCS module and dconly flag (will don't check webenrollment)
-rusthound -d essos.local -u 'daenerys.targaryen@essos.local' -p 'BurnThemAll!' -o /tmp/adcs --adcs --dc-only -z
-
-# Linux with username:password and ADCS module using "--old-bloodhound" argument for official @BloodHoundAd version
-rusthound -d essos.local -u 'daenerys.targaryen@essos.local' -p 'BurnThemAll!' -o /tmp/adcs --adcs --old-bloodhound -z
-
-# Windows with GSSAPI session and ADCS module
-rusthound.exe -d essos.local -f meereen -o output -z --adcs
-# Windows with GSSAPI session and ADCS module and TCP DNS request and custom name server
-rusthound.exe -d essos.local --ldapfqdn meereen -o output -z --adcs --tcp-dns --name-server 192.168.56.12
-# Windows simple bind connection username:password (do not use single or double quotes with cmd.exe)
-rusthound.exe -d essos.local -u daenerys.targaryen@essos.local -p BurnThemAll! -o output -z --adcs --dc-only
-```
-<p align="center">
-<img width="100%" src="img/demo_windows_adcs_collector.gif">
-</p>
-
+> 💡 Automatic collection of ADCS data in RustHound version 2.0.0.
 
 You can find the custom queries used in the demo in the resource folder.
 
@@ -367,60 +355,9 @@ In order to make statistics on a DC with more LDAP objects, run the [BadBlood](h
 | RustHound.exe         | Windows <img width="20px"  src="https://github.com/OPENCYBER-FR/RustHound/blob/main/img/windows.png"/> | ~3500   | **~5.315s**  | Measure-Command { rusthound.exe -d essos.local -u khal.drogo@essos.local -p horse -z } | 
 | RustHound         | Linux <img width="20px"  src="https://github.com/OPENCYBER-FR/RustHound/blob/main/img/linux.png"/>    | ~3500   | **~3.166s**  | time rusthound -d essos.local -u khal.drogo@essos.local -p horse -z  |
 
-#  🚥 Roadmap
-
-## Authentification
-  - [x] LDAP (389)
-  - [x] LDAPS (636)
-  - [x] `BIND`
-  - [ ] `NTLM`
-  - [x] `Kerberos`
-  - [x] Prompt for password
-
-## Outputs
-  - [x] users.json
-  - [x] groups.json
-  - [x] computers.json
-  - [x] ous.json
-  - [x] gpos.json
-  - [x] containers.json
-  - [x] domains.json
-  - [x] cas.json
-  - [x] templates.json
-  - [x] args and function to zip JSON files **--zip**
-
-## Modules
-
-- [x] Retreive LAPS password if your user can read them **automatic**
-- [x] Resolve FQDN computers found to IP address **--fqdn-resolver**
-- [x] Retrieve certificates for ESC exploitation with [Certipy](https://github.com/ly4k/Certipy) **--adcs**
-- [ ] Kerberos attack module (ASREPROASTING and KERBEROASTING) **--attack-kerberos**
-- [ ] Retrieve datas from trusted domains **--follow-trust** (Currently working on it, got beta version of this module)
-
-
-## BloodHound v4.2
-
-- Parsing Features
-  - Users & Computers
-    - [ ] `HasSIDHistory`
-  - Users
-    - [ ] `Properties` : `sfupassword`
-
-- **DCERPC (dependencies)**
-  - Computers
-    - [ ] `Sessions`
-  - OUs & Domains
-    - [ ] `LocalAdmins`
-    - [ ] `RemoteDesktopUsers`
-    - [ ] `DcomUsers`
-    - [ ] `PSRemoteUsers`
-  - CAs
-    - [ ] `User Specified SAN`
-    - [ ] `Request Disposition`
-
 # :link: Links
 
-- Blog post: [https://www.opencyber.com/rusthound-data-collector-for-bloodhound-written-in-rust/](https://www.opencyber.com/rusthound-data-collector-for-bloodhound-written-in-rust/)
+- Podcast Hack'n Speak: [https://www.listennotes.com/fr/podcasts/hackn-speak/0x1a-g0h4n-retour-sur-la-loedqZh9PUw/](https://www.listennotes.com/fr/podcasts/hackn-speak/0x1a-g0h4n-retour-sur-la-loedqZh9PUw/)
 - BloodHound.py: [https://github.com/fox-it/BloodHound.py](https://github.com/fox-it/BloodHound.py)
 - SharpHound:  [https://github.com/BloodHoundAD/SharpHound](https://github.com/BloodHoundAD/SharpHound)
 - BloodHound: [https://github.com/BloodHoundAD/BloodHound](https://github.com/BloodHoundAD/BloodHound)
