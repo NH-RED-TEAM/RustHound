@@ -23,7 +23,6 @@ pub struct Options {
     pub ldaps: bool,
     pub dns_tcp: bool,
     pub fqdn_resolver: bool,
-    pub dc_only: bool,
     pub kerberos: bool,
     pub zip: bool,
     pub verbose: log::LevelFilter,
@@ -136,13 +135,6 @@ fn cli() -> Command {
                 .action(ArgAction::SetTrue)
                 .global(false)
             )
-        .arg(Arg::new("dc-only")
-            .long("dc-only")
-            .help("Collects data only from the domain controller. Will not try to retrieve CA security/configuration or check for Web Enrollment")
-            .required(false)
-            .action(ArgAction::SetTrue)
-            .global(false)
-        )
         .arg(Arg::new("zip")
             .long("zip")
             .short('z')
@@ -181,11 +173,8 @@ pub fn extract_args() -> Options {
     let path = matches.get_one::<String>("output").map(|s| s.as_str()).unwrap_or("./");
     let ldaps = matches.get_one::<bool>("ldaps").map(|s| s.to_owned()).unwrap_or(false);
     let dns_tcp = matches.get_one::<bool>("dns-tcp").map(|s| s.to_owned()).unwrap_or(false);
-    let dc_only = matches.get_one::<bool>("dc-only").map(|s| s.to_owned()).unwrap_or(false);
     let z = matches.get_one::<bool>("zip").map(|s| s.to_owned()).unwrap_or(false);
     let fqdn_resolver = matches.get_one::<bool>("fqdn-resolver").map(|s| s.to_owned()).unwrap_or(false);
-    #[cfg(feature = "ly4k_adcs")]
-    let ly4k_adcs = matches.get_one::<bool>("ly4k-adcs").map(|s| s.to_owned()).unwrap_or(false);
     let kerberos = matches.get_one::<bool>("kerberos").map(|s| s.to_owned()).unwrap_or(false);
     let v = match matches.get_count("v") {
         0 => log::LevelFilter::Info,
@@ -211,7 +200,6 @@ pub fn extract_args() -> Options {
         collection_method: collection_method,
         ldaps: ldaps,
         dns_tcp: dns_tcp,
-        dc_only: dc_only,
         fqdn_resolver: fqdn_resolver,
         kerberos: kerberos,
         zip: z,
@@ -264,10 +252,7 @@ pub fn auto_args() -> Options {
         collection_method: CollectionMethod::All,
         ldaps: ldaps,
         dns_tcp: false,
-        dc_only: false,
         fqdn_resolver: false,
-        #[cfg(feature = "ly4k_adcs")]
-        ly4k_adcs: true,
         kerberos: true,
         zip: true,
         verbose: log::LevelFilter::Info,

@@ -245,7 +245,7 @@ cargo doc --open --no-deps
 # Usage
 
 ```bash
-Usage: rusthound [OPTIONS] --domain <domain>
+Usage: rusthound_debug [OPTIONS] --domain <domain>
 
 Options:
   -v...          Set the level of verbosity
@@ -265,11 +265,18 @@ OPTIONAL VALUES:
   -o, --output <output>              Output directory where you would like to save JSON files [default: ./]
 
 OPTIONAL FLAGS:
-      --ldaps     Force LDAPS using for request like: ldaps://DOMAIN.LOCAL/
-  -k, --kerberos  Use Kerberos authentication. Grabs credentials from ccache file (KRB5CCNAME) based on target parameters for Linux.
-      --dns-tcp   Use TCP instead of UDP for DNS queries
-      --dc-only   Collects data only from the domain controller. Will not try to retrieve CA security/configuration or check for Web Enrollment
-  -z, --zip       Compress the JSON files into a zip archive
+  -c, --collectionmethod [<COLLECTIONMETHOD>]
+          Which information to collect. Supported: All (LDAP,SMB,HTTP requests), DCOnly (no computer connections, only LDAP requests). (default: All) [possible values: All, DCOnly]
+      --ldaps
+          Force LDAPS using for request like: ldaps://DOMAIN.LOCAL/
+  -k, --kerberos
+          Use Kerberos authentication. Grabs credentials from ccache file (KRB5CCNAME) based on target parameters for Linux.
+      --dns-tcp
+          Use TCP instead of UDP for DNS queries
+      --dc-only
+          Collects data only from the domain controller. Will not try to retrieve CA security/configuration or check for Web Enrollment
+  -z, --zip
+          Compress the JSON files into a zip archive
 
 OPTIONAL MODULES:
       --fqdn-resolver  Use fqdn-resolver module to get computers IP address
