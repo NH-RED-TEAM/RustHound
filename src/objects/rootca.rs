@@ -43,7 +43,7 @@ impl RootCA {
         Self { ..Default::default() } 
     }
 
-    /// Function to parse and replace value in json template for ForeignSecurityPrincipal object.
+    /// Function to parse and replace value in json template for ROOT CA object.
     pub fn parse(
         &mut self,
         result: SearchEntry,

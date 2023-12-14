@@ -59,7 +59,7 @@ impl EnterpriseCA {
         &mut self.enabled_cert_templates
     }
 
-    /// Function to parse and replace value in json template for ForeignSecurityPrincipal object.
+    /// Function to parse and replace value in json template for Enterprise CA object.
     pub fn parse(
         &mut self,
         result: SearchEntry,

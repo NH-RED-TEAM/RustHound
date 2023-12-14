@@ -42,43 +42,11 @@ impl CertTemplate {
     pub fn properties(&self) -> &CertTemplateProperties {
         &self.properties
     }
-    // pub fn aces(&self) -> &Vec<AceTemplate> {
-    //     &self.aces
-    // }
     pub fn object_identifier(&self) -> &String {
         &self.object_identifier
     }
-    // pub fn is_deleted(&self) -> &bool {
-    //     &self.is_deleted
-    // }
-    // pub fn is_acl_protected(&self) -> &bool {
-    //     &self.is_acl_protected
-    // }
-    // pub fn contained_by(&self) -> &Option<Member> {
-    //     &self.contained_by
-    // }
 
-    // // Mutable access.
-    // pub fn properties_mut(&mut self) -> &mut CertTemplateProperties {
-    //     &mut self.properties
-    // }
-    // pub fn aces_mut(&mut self) -> &mut Vec<AceTemplate> {
-    //     &mut self.aces
-    // }
-    // pub fn object_identifier_mut(&mut self) -> &mut String {
-    //     &mut self.object_identifier
-    // }
-    // pub fn is_deleted_mut(&mut self) -> &mut bool {
-    //     &mut self.is_deleted
-    // }
-    // pub fn is_acl_protected_mut(&mut self) -> &mut bool {
-    //     &mut self.is_acl_protected
-    // }
-    // pub fn contained_by_mut(&mut self) -> &mut Option<Member> {
-    //     &mut self.contained_by
-    // }
-
-    /// Function to parse and replace value in json template for ForeignSecurityPrincipal object.
+    /// Function to parse and replace value in json template for Certificate Template object.
     pub fn parse(
         &mut self,
         result: SearchEntry,

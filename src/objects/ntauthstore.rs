@@ -41,7 +41,7 @@ impl NtAuthStore {
         Self { ..Default::default() } 
     }
 
-    /// Function to parse and replace value in json template for ForeignSecurityPrincipal object.
+    /// Function to parse and replace value in json template for NT Auth Store object.
     pub fn parse(
         &mut self,
         result: SearchEntry,
