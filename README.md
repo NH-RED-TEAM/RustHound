@@ -245,7 +245,7 @@ cargo doc --open --no-deps
 # Usage
 
 ```bash
-Usage: rusthound_debug [OPTIONS] --domain <domain>
+Usage: rusthound [OPTIONS] --domain <domain>
 
 Options:
   -v...          Set the level of verbosity
