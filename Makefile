@@ -22,12 +22,12 @@ update_rustup:
 release: check_cargo
 	cargo build --release
 	cp target/release/$(prog) .
-	@echo -e "[+] You can find \033[1;32m$(prog)\033[0m in yout current folder."
+	@echo -e "[+] You can find \033[1;32m$(prog)\033[0m in your current folder."
 
 debug: check_cargo
 	cargo build
 	cp target/debug/$(prog) ./$(prog)_debug
-	@echo -e "[+] You can find \033[1;32m$(prog)_debug\033[0m in yout current folder."
+	@echo -e "[+] You can find \033[1;32m$(prog)_debug\033[0m in your current folder."
 
 doc: check_cargo
 	cargo doc --open --no-deps
@@ -51,12 +51,12 @@ install_windows_deps: update_rustup
 build_windows_x64:
 	RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-pc-windows-gnu
 	cp target/x86_64-pc-windows-gnu/release/$(prog).exe .
-	@echo -e "[+] You can find \033[1;32m$(prog).exe\033[0m in yout current folder."
+	@echo -e "[+] You can find \033[1;32m$(prog).exe\033[0m in your current folder."
 
 build_windows_x86:
 	RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target i686-pc-windows-gnu
 	cp target/i686-pc-windows-gnu/release/$(prog).exe ./$(prog)_x86.exe
-	@echo -e "[+] You can find \033[1;32m$(prog)_x86.exe\033[0m in yout current folder."
+	@echo -e "[+] You can find \033[1;32m$(prog)_x86.exe\033[0m in your current folder."
 
 windows: check_rustup install_windows_deps build_windows_x64
 
@@ -67,7 +67,7 @@ windows_x86: check_rustup install_windows_deps build_windows_x86
 build_windows_noargs:
 	RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-pc-windows-gnu --features noargs
 	cp target/x86_64-pc-windows-gnu/release/$(prog).exe ./$(prog)_noargs.exe
-	@echo -e "[+] You can find \033[1;32m$(prog)_noargs.exe\033[0m in yout current folder."
+	@echo -e "[+] You can find \033[1;32m$(prog)_noargs.exe\033[0m in your current folder."
 
 windows_noargs: check_rustup install_windows_deps build_windows_noargs
 
@@ -78,7 +78,7 @@ install_linux_musl_deps:
 build_linux_musl:
 	cross build --target x86_64-unknown-linux-musl --release --features nogssapi --no-default-features
 	cp target/x86_64-unknown-linux-musl/release/$(prog) ./$(prog)_musl
-	@echo -e "[+] You can find \033[1;32m$(prog)_musl\033[0m in yout current folder."
+	@echo -e "[+] You can find \033[1;32m$(prog)_musl\033[0m in your current folder."
 
 linux_musl: check_rustup install_cross build_linux_musl
 
@@ -89,14 +89,14 @@ install_linux_deps:update_rustup
 build_linux_aarch64:
 	cross build --target aarch64-unknown-linux-gnu --release --features nogssapi --no-default-features
 	cp target/aarch64-unknown-linux-gnu/release/$(prog) ./$(prog)_aarch64
-	@echo -e "[+] You can find \033[1;32m$(prog)_aarch64\033[0m in yout current folder."
+	@echo -e "[+] You can find \033[1;32m$(prog)_aarch64\033[0m in your current folder."
 
 linux_aarch64: check_rustup install_cross build_linux_aarch64
 
 build_linux_x86_64:
 	RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --features nogssapi --target x86_64-unknown-linux-gnu --no-default-features
 	cp target/x86_64-unknown-linux-gnu/release/$(prog) ./$(prog)_x86_64
-	@echo -e "[+] You can find \033[1;32m$(prog)_x86_64\033[0m in yout current folder."
+	@echo -e "[+] You can find \033[1;32m$(prog)_x86_64\033[0m in your current folder."
 
 linux_x86_64: check_rustup install_linux_deps build_linux_x86_64
 
@@ -117,7 +117,7 @@ build_macos:
 	@export PATH="/usr/local/bin/osxcross/target/bin:$PATH"
 	RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-apple-darwin --features nogssapi --no-default-features
 	cp target/x86_64-apple-darwin/release/$(prog).exe ./$(prog)_MacOS
-	@echo -e "[+] You can find \033[1;32m$(prog)_MacOS\033[0m in yout current folder."
+	@echo -e "[+] You can find \033[1;32m$(prog)_MacOS\033[0m in your current folder."
 
 macos: build_macos
 
@@ -127,12 +127,12 @@ install_cross:
 arm_musl: check_rustup install_cross
 	cross build --target arm-unknown-linux-musleabi --release --features nogssapi --no-default-features
 	cp target/arm-unknown-linux-musleabi/release/$(prog) ./$(prog)_arm_musl
-	@echo -e "[+] You can find \033[1;32m$(prog)_arm_musl\033[0m in yout current folder."
+	@echo -e "[+] You can find \033[1;32m$(prog)_arm_musl\033[0m in your current folder."
 
 armv7: check_rustup install_cross
 	cross build --target armv7-unknown-linux-gnueabihf --release --features nogssapi --no-default-features
 	cp target/armv7-unknown-linux-gnueabihf/release/$(prog) ./$(prog)_armv7
-	@echo -e "[+] You can find \033[1;32m$(prog)_armv7\033[0m in yout current folder."
+	@echo -e "[+] You can find \033[1;32m$(prog)_armv7\033[0m in your current folder."
 
 help:
 	@echo ""
