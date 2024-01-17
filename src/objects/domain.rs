@@ -157,7 +157,7 @@ impl Domain {
                 _ => {}
             }
         }
-        // For all, bins attributs
+        // For all, bins attributes
         for (key, value) in &result_bin {
             match key.as_str() {
                 "objectSid" => {
@@ -171,6 +171,9 @@ impl Domain {
                         self.properties.domainsid = domain_sid[0].to_owned().to_string();
                         global_domain_sid = domain_sid[0].to_owned().to_string();
                     }
+
+                    // Data Quality flag
+                    self.properties.collected = true;
                 }
                 "nTSecurityDescriptor" => {
                     // Needed with acl
@@ -276,5 +279,6 @@ pub struct DomainProperties {
     highvalue: bool,
     description: Option<String>,
     whencreated: i64,
-    functionallevel: String
+    functionallevel: String,
+    collected: bool
 }
