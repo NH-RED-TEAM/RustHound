@@ -23,8 +23,8 @@ use std::io::{self, Write, stdin};
 /// Function to request all AD values.
 pub async fn ldap_search(
     ldaps: bool,
-    ip: &String,
-    port: &String,
+    ip: &Option<String>,
+    port: &Option<u16>,
     domain: &String,
     ldapfqdn: &String,
     username: &String,
@@ -157,8 +157,8 @@ struct LdapArgs {
 /// Function to prepare LDAP arguments.
 fn ldap_constructor(
     ldaps: bool,
-    ip: &String,
-    port: &String,
+    ip: &Option<String>,
+    port: &Option<u16>,
     domain: &String,
     ldapfqdn: &String,
     username: &String,
@@ -192,15 +192,15 @@ fn ldap_constructor(
     }
 
     // Format username and email
-    let mut s_email: String = "".to_owned();
-    if !_s_username.contains("@") {
-        s_email.push_str(&_s_username.to_string());
-        s_email.push_str("@");
-        s_email.push_str(domain);
-        _s_username = s_email.to_string();
-    } else {
-        s_email = _s_username.to_string().to_lowercase();
-    }
+    let s_email: String = {
+        if !_s_username.contains("@") {
+            let email = format!("{}@{}", _s_username, domain);
+            _s_username = email.clone();
+            email
+        } else {
+            _s_username.to_string().to_lowercase()
+        }
+    };
 
     // Password prompt
     let mut _s_password: String = String::new();
@@ -217,8 +217,16 @@ fn ldap_constructor(
     }
 
     // Print infos if verbose mod is set
-    debug!("IP: {}", ip);
-    debug!("PORT: {}", port);
+    debug!("IP: {}", match ip {
+        Some(ip) => ip.to_owned(),
+        None => "not set".to_owned()
+    });
+    debug!("PORT: {}", match port {
+        Some(p) => {
+            p.to_string()
+        },
+        None => "not set".to_owned()
+    });
     debug!("FQDN: {}", ldapfqdn);
     debug!("Url: {}", s_url);
     debug!("Domain: {}", domain);
@@ -239,78 +247,37 @@ fn ldap_constructor(
 }
 
 /// Function to prepare LDAP url.
-fn prepare_ldap_url(ldaps: bool, ip: &String, port: &String, domain: &String) -> String {
-    let mut url: String = "".to_owned();
-
-    // ldap or ldaps?
-    if port.contains("636") || ldaps {
-        url.push_str("ldaps://");
-    }
-    else
-    {
-        url.push_str("ldap://");
-    }
-
-    // If ldapip is set apply it to ldap url
-    if ip.contains("not set") {
-        url.push_str(&domain);
+fn prepare_ldap_url(ldaps: bool, ip: &Option<String>, port: &Option<u16>, domain: &String) -> String {
+    let protocol = if ldaps || port.unwrap_or(0) == 636 {
+        "ldaps"
     } else {
-        url.push_str(&ip);
-    }
+        "ldap"
+    };
 
-    // Push the port
-    //trace!("port: {:?}", port);
-    if port.contains("not set") || port == "636" || port == "389" {
-        return url
-    }
-    else 
-    {
-        //trace!("port set");
-        let mut final_port: String = ":".to_owned();
-        final_port.push_str(&port);
-        url.push_str(&final_port);
-        return url
+    let target = match ip {
+        Some(ip) => ip,
+        None => domain
+    };
+
+    match port {
+        Some(port) => {
+            format!("{protocol}://{target}:{port}")
+        }
+        None => {
+            format!("{protocol}://{target}")
+        }
     }
 }
 
 /// Function to prepare LDAP DC from DOMAIN.LOCAL
 pub fn prepare_ldap_dc(domain: &String, adcs: bool) -> Vec<String> {
+    let dc = domain.split(".").map(|x| {format!("DC={}", x)}).collect::<Vec<String>>().join(",");
 
-    let mut dc: String = "".to_owned();
-    let mut naming_context: Vec<String> = Vec::new();
-
-    // Format DC
-    if !domain.contains(".") {
-        dc.push_str("DC=");
-        dc.push_str(&domain);
-        naming_context.push(dc[..].to_string());
-    }
-    else 
-    {
-        let split = domain.split(".");
-        let slen = split.to_owned().count();
-        let mut cpt = 1;
-        for s in split {
-            if cpt < slen {
-                dc.push_str("DC=");
-                dc.push_str(&s);
-                dc.push_str(",");
-            }
-            else
-            {
-                dc.push_str("DC=");
-                dc.push_str(&s);
-            }
-            cpt += 1;
-        }
-        naming_context.push(dc[..].to_string());
+    if adcs { 
+        vec![dc.clone(), format!("CN=Configuration,{}", dc)];
     }
 
-    if adcs {
-        naming_context.push(format!("{}{}","CN=Configuration,",dc[..].to_string())); 
-    }
-
-    return naming_context
+    vec![dc]
 }
 
 /// Function to make GSSAPI ldap connection.

@@ -15,8 +15,8 @@ pub struct Options {
     pub username: String,
     pub password: String,
     pub ldapfqdn: String,
-    pub ip: String,
-    pub port: String,
+    pub ip: Option<String>,
+    pub port: Option<u16>,
     pub name_server: String,
     pub path: String,
     pub ldaps: bool,
@@ -172,8 +172,19 @@ pub fn extract_args() -> Options {
     let u = matches.get_one::<String>("ldapusername").map(|s| s.as_str()).unwrap_or("not set");
     let p = matches.get_one::<String>("ldappassword").map(|s| s.as_str()).unwrap_or("not set");
     let f = matches.get_one::<String>("ldapfqdn").map(|s| s.as_str()).unwrap_or("not set");
-    let ip = matches.get_one::<String>("ldapip").map(|s| s.as_str()).unwrap_or("not set");
-    let port = matches.get_one::<String>("ldapport").map(|s| s.as_str()).unwrap_or("not set");
+
+    let ip = matches.get_one::<String>("ldapip").map(|s| s.clone());
+
+    let port = match matches.get_one::<String>("ldapport") {
+        Some(val) => {
+            match val.parse::<u16>() {
+                Ok(x) => Some(x),
+                Err(_) => None,
+            }
+        },
+        None => None
+    };
+
     let n = matches.get_one::<String>("name-server").map(|s| s.as_str()).unwrap_or("not set");
     let path = matches.get_one::<String>("output").map(|s| s.as_str()).unwrap_or("./");
     let ldaps = matches.get_one::<bool>("ldaps").map(|s| s.to_owned()).unwrap_or(false);
@@ -196,8 +207,8 @@ pub fn extract_args() -> Options {
         username: u.to_string(),
         password: p.to_string(),
         ldapfqdn: f.to_string(),
-        ip: ip.to_string(),
-        port: port.to_string(),
+        ip: ip,
+        port: port,
         name_server: n.to_string(),
         path: path.to_string(),
         ldaps: ldaps,
