@@ -437,251 +437,70 @@ pub fn parse_adcs_template(
 // <https://github.com/ly4k/Certipy/blob/main/certipy/lib/constants.py#L145>
 lazy_static! {
     static ref OID_TO_STR_MAP: HashMap<String, String> = {
-        let mut map = HashMap::new();
-        map.insert(
-            "1.3.6.1.4.1.311.76.6.1".to_string(),
-            "Windows Update".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.11".to_string(),
-            "Key Recovery".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.25".to_string(),
-            "Windows Third Party Application Component".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.21.6".to_string(),
-            "Key Recovery Agent".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.6".to_string(),
-            "Windows System Component Verification".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.61.4.1".to_string(),
-            "Early Launch Antimalware Drive".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.23".to_string(),
-            "Windows TCB Component".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.61.1.1".to_string(),
-            "Kernel Mode Code Signing".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.26".to_string(),
-            "Windows Software Extension Verification".to_string(),
-        );
-        map.insert(
-            "2.23.133.8.3".to_string(),
-            "Attestation Identity Key Certificate".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.76.3.1".to_string(),
-            "Windows Store".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.6.1".to_string(),
-            "Key Pack Licenses".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.20.2.2".to_string(),
-            "Smart Card Logon".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.5.2.3.5".to_string(),
-            "KDC Authentication".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.5.5.7.3.7".to_string(),
-            "IP security use".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.8".to_string(),
-            "Embedded Windows System Component Verification".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.20".to_string(),
-            "Windows Kits Component".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.5.5.7.3.6".to_string(),
-            "IP security tunnel termination".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.5".to_string(),
-            "Windows Hardware Driver Verification".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.5.5.8.2.2".to_string(),
-            "IP security IKE intermediate".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.39".to_string(),
-            "Windows Hardware Driver Extended Verification".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.6.2".to_string(),
-            "License Server Verification".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.5.1".to_string(),
-            "Windows Hardware Driver Attested Verification".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.76.5.1".to_string(),
-            "Dynamic Code Generato".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.5.5.7.3.8".to_string(),
-            "Time Stamping".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.4.1".to_string(),
-            "File Recovery".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.2.6.1".to_string(),
-            "SpcRelaxedPEMarkerCheck".to_string(),
-        );
-        map.insert(
-            "2.23.133.8.1".to_string(),
-            "Endorsement Key Certificate".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.2.6.2".to_string(),
-            "SpcEncryptedDigestRetryCount".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.4".to_string(),
-            "Encrypting File System".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.5.5.7.3.1".to_string(),
-            "Server Authentication".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.61.5.1".to_string(),
-            "HAL Extension".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.5.5.7.3.4".to_string(),
-            "Secure Email".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.5.5.7.3.5".to_string(),
-            "IP security end system".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.9".to_string(),
-            "Root List Signe".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.30".to_string(),
-            "Disallowed List".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.19".to_string(),
-            "Revoked List Signe".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.21".to_string(),
-            "Windows RT Verification".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.10".to_string(),
-            "Qualified Subordination".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.12".to_string(),
-            "Document Signing".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.24".to_string(),
-            "Protected Process Verification".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.80.1".to_string(),
-            "Document Encryption".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.22".to_string(),
-            "Protected Process Light Verification".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.21.19".to_string(),
-            "Directory Service Email Replication".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.21.5".to_string(),
-            "Private Key Archival".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.5.1".to_string(),
-            "Digital Rights".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.27".to_string(),
-            "Preview Build Signing".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.20.2.1".to_string(),
-            "Certificate Request Agent".to_string(),
-        );
-        map.insert(
-            "2.23.133.8.2".to_string(),
-            "Platform Certificate".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.20.1".to_string(),
-            "CTL Usage".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.5.5.7.3.9".to_string(),
-            "OCSP Signing".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.5.5.7.3.3".to_string(),
-            "Code Signing".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.1".to_string(),
-            "Microsoft Trust List Signing".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.2".to_string(),
-            "Microsoft Time Stamping".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.76.8.1".to_string(),
-            "Microsoft Publishe".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.5.5.7.3.2".to_string(),
-            "Client Authentication".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.5.2.3.4".to_string(),
-            "PKIINIT Client Authentication".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.13".to_string(),
-            "Lifetime Signing".to_string(),
-        );
-        map.insert(
-            "2.5.29.37.0".to_string(),
-            "Any Purpose".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.64.1.1".to_string(),
-            "Server Trust".to_string(),
-        );
-        map.insert(
-            "1.3.6.1.4.1.311.10.3.7".to_string(),
-            "OEM Windows System Component Verification".to_string(),
-        );
-        map
+        let values = [
+            ("1.3.6.1.4.1.311.76.6.1", "Windows Update"),
+            ("1.3.6.1.4.1.311.10.3.11", "Key Recovery"),
+            ("1.3.6.1.4.1.311.10.3.25", "Windows Third Party Application Component"),
+            ("1.3.6.1.4.1.311.21.6", "Key Recovery Agent"),
+            ("1.3.6.1.4.1.311.10.3.6", "Windows System Component Verification"),
+            ("1.3.6.1.4.1.311.61.4.1", "Early Launch Antimalware Drive"),
+            ("1.3.6.1.4.1.311.10.3.23", "Windows TCB Component"),
+            ("1.3.6.1.4.1.311.61.1.1", "Kernel Mode Code Signing"),
+            ("1.3.6.1.4.1.311.10.3.26", "Windows Software Extension Verification"),
+            ("2.23.133.8.3", "Attestation Identity Key Certificate"),
+            ("1.3.6.1.4.1.311.76.3.1", "Windows Store"),
+            ("1.3.6.1.4.1.311.10.6.1", "Key Pack Licenses"),
+            ("1.3.6.1.4.1.311.20.2.2", "Smart Card Logon"),
+            ("1.3.6.1.5.2.3.5", "KDC Authentication"),
+            ("1.3.6.1.5.5.7.3.7", "IP security use"),
+            ("1.3.6.1.4.1.311.10.3.8", "Embedded Windows System Component Verification"),
+            ("1.3.6.1.4.1.311.10.3.20", "Windows Kits Component"),
+            ("1.3.6.1.5.5.7.3.6", "IP security tunnel termination"),
+            ("1.3.6.1.4.1.311.10.3.5", "Windows Hardware Driver Verification"),
+            ("1.3.6.1.5.5.8.2.2", "IP security IKE intermediate"),
+            ("1.3.6.1.4.1.311.10.3.39", "Windows Hardware Driver Extended Verification"),
+            ("1.3.6.1.4.1.311.10.6.2", "License Server Verification"),
+            ("1.3.6.1.4.1.311.10.3.5.1", "Windows Hardware Driver Attested Verification"),
+            ("1.3.6.1.4.1.311.76.5.1", "Dynamic Code Generato"),
+            ("1.3.6.1.5.5.7.3.8", "Time Stamping"),
+            ("1.3.6.1.4.1.311.10.3.4.1", "File Recovery"),
+            ("1.3.6.1.4.1.311.2.6.1", "SpcRelaxedPEMarkerCheck"),
+            ("2.23.133.8.1", "Endorsement Key Certificate"),
+            ("1.3.6.1.4.1.311.2.6.2", "SpcEncryptedDigestRetryCount"),
+            ("1.3.6.1.4.1.311.10.3.4", "Encrypting File System"),
+            ("1.3.6.1.5.5.7.3.1", "Server Authentication"),
+            ("1.3.6.1.4.1.311.61.5.1", "HAL Extension"),
+            ("1.3.6.1.5.5.7.3.4", "Secure Email"),
+            ("1.3.6.1.5.5.7.3.5", "IP security end system"),
+            ("1.3.6.1.4.1.311.10.3.9", "Root List Signe"),
+            ("1.3.6.1.4.1.311.10.3.30", "Disallowed List"),
+            ("1.3.6.1.4.1.311.10.3.19", "Revoked List Signe"),
+            ("1.3.6.1.4.1.311.10.3.21", "Windows RT Verification"),
+            ("1.3.6.1.4.1.311.10.3.10", "Qualified Subordination"),
+            ("1.3.6.1.4.1.311.10.3.12", "Document Signing"),
+            ("1.3.6.1.4.1.311.10.3.24", "Protected Process Verification"),
+            ("1.3.6.1.4.1.311.80.1", "Document Encryption"),
+            ("1.3.6.1.4.1.311.10.3.22", "Protected Process Light Verification"),
+            ("1.3.6.1.4.1.311.21.19", "Directory Service Email Replication"),
+            ("1.3.6.1.4.1.311.21.5", "Private Key Archival"),
+            ("1.3.6.1.4.1.311.10.5.1", "Digital Rights"),
+            ("1.3.6.1.4.1.311.10.3.27", "Preview Build Signing"),
+            ("1.3.6.1.4.1.311.20.2.1", "Certificate Request Agent"),
+            ("2.23.133.8.2", "Platform Certificate"),
+            ("1.3.6.1.4.1.311.20.1", "CTL Usage"),
+            ("1.3.6.1.5.5.7.3.9", "OCSP Signing"),
+            ("1.3.6.1.5.5.7.3.3", "Code Signing"),
+            ("1.3.6.1.4.1.311.10.3.1", "Microsoft Trust List Signing"),
+            ("1.3.6.1.4.1.311.10.3.2", "Microsoft Time Stamping"),
+            ("1.3.6.1.4.1.311.76.8.1", "Microsoft Publishe"),
+            ("1.3.6.1.5.5.7.3.2", "Client Authentication"),
+            ("1.3.6.1.5.2.3.4", "PKIINIT Client Authentication"),
+            ("1.3.6.1.4.1.311.10.3.13", "Lifetime Signing"),
+            ("2.5.29.37.0", "Any Purpose"),
+            ("1.3.6.1.4.1.311.64.1.1", "Server Trust"),
+            ("1.3.6.1.4.1.311.10.3.7", "OEM Windows System Component Verification")
+        ];
+
+        values.iter().map(|&(k, v)| (k.to_string(), v.to_string())).collect::<HashMap<String, String>>()
     };
 }
