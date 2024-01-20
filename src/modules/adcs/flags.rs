@@ -204,7 +204,7 @@ pub fn get_pki_enrollment_flags(
     }
     if (PkiEnrollmentFlag::ENABLE_KEY_REUSE_ON_NT_TOKEN_KEYSET_STORAGE_FULL.bits() | value) == value
     {
-        flags.push("EnbaleKeyReuseOnNtTokenKeysetStorageFull");
+        flags.push("EnableKeyReuseOnNtTokenKeysetStorageFull");
     }
     if (PkiEnrollmentFlag::NOREVOCATIONINFOINISSUEDCERTS.bits() | value) == value
     {
