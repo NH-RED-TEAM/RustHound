@@ -36,9 +36,12 @@ pub fn parse_ntsecuritydescriptor<T: LdapObject>(
     let acl_is_protected = has_control(secdesc.control, SecurityDescriptorFlags::DACL_PROTECTED);
     //trace!("{} acl_is_protected: {:?}",object.properties().name,acl_is_protected);
 
-    if !vec!["EnterpriseCA","RootCA","CertTemplate"].contains(&entry_type.as_str()) 
+    match entry_type.as_str()
     {
-        object.set_is_acl_protected(acl_is_protected);
+        "EnterpriseCA" | "RootCA" | "CertTemplate" => {
+            object.set_is_acl_protected(acl_is_protected);
+        }
+        _ => {}
     }
 
     if secdesc.offset_owner as usize != 0 
@@ -672,10 +675,8 @@ fn ace_applies(ace_guid: &String, entry_type: &String) -> bool {
     // If this is not set, the ACE applies to all object types.
     trace!("ACE GUID: {}", &ace_guid);
     trace!("OBJECTTYPE_GUID_HASHMAP: {}",OBJECTTYPE_GUID_HASHMAP.get(entry_type).unwrap_or(&String::from("GUID-NOT-FOUND")));
-    if &ace_guid == &OBJECTTYPE_GUID_HASHMAP.get(entry_type).unwrap_or(&String::from("GUID-NOT-FOUND")) {
-        return true;
-    }
-    return false;
+
+    return &ace_guid == &OBJECTTYPE_GUID_HASHMAP.get(entry_type).unwrap_or(&String::from("GUID-NOT-FOUND"))
 }
 
 /// Function to check the user can read Service Account password
@@ -685,13 +686,15 @@ pub fn parse_gmsa(
 ) {
     for i in 0..processed_aces.len()
     {
-        if processed_aces[i].right_name().to_string() == "Owns" || processed_aces[i].right_name().to_string() == "Owner"{
-            continue
+        match processed_aces[i].right_name().as_str() {
+            "Owns" | "Owner" => {},
+            _ => {
+                *processed_aces[i].right_name_mut() = "ReadGMSAPassword".to_string();
+                let mut aces = user.aces().to_owned();
+                aces.push(processed_aces[i].to_owned());
+                *user.aces_mut() = aces;
+            }
         }
-        *processed_aces[i].right_name_mut() = "ReadGMSAPassword".to_string();
-        let mut aces = user.aces().to_owned();
-        aces.push(processed_aces[i].to_owned());
-        *user.aces_mut() = aces;
     }
 }
 
@@ -867,7083 +870,1778 @@ fn has_control(secdesc_control: u16, flag: SecurityDescriptorFlags) -> bool {
 // OBJECTTYPE_GUID_HASHMAP with all know guid
 lazy_static! {
     static ref OBJECTTYPE_GUID_HASHMAP: HashMap<String, String> = {
-        let mut map = HashMap::new();
-        map.insert(
-            "ms-mcs-admpwdexpirationtime".to_string(),
-            "2bb09a7b-9acd-4082-9b51-104bb7f6a01e".to_string(),
-        );
-        map.insert(
-            "ms-mcs-admpwd".to_string(),
-            "a740f691-b206-4baa-9ab1-559f8985523f".to_string(),
-        );
-        map.insert(
-            "ms-ds-key-credential-link".to_string(),
-            "5b47d60f-6090-40b2-9f37-2a4de88f3063".to_string(),
-        );
-        map.insert(
-            "service-principal-name".to_string(),
-            "f3a64788-5306-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-sitename".to_string(),
-            "98a7f36d-3595-448a-9e6f-6b8965baed9c".to_string(),
-        );
-        map.insert(
-            "frs-staging-path".to_string(),
-            "1be8f175-a9ff-11d0-afe2-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "account-name-history".to_string(),
-            "031952ec-3b72-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-ts-property01".to_string(),
-            "faaea977-9655-49d7-853d-f27bb7aaca0f".to_string(),
-        );
-        map.insert(
-            "registered-address".to_string(),
-            "bf967a10-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msi-script-path".to_string(),
-            "bf967937-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-promotion-settings".to_string(),
-            "c881b4e2-43c0-4ebe-b9bb-5250aa9b434c".to_string(),
-        );
-        map.insert(
-            "frs-service-command-status".to_string(),
-            "2a132582-9373-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "attribute-schema".to_string(),
-            "bf967a80-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ntfrs-member".to_string(),
-            "2a132586-9373-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "configuration".to_string(),
-            "bf967a87-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ts-secondary-desktop-bl".to_string(),
-            "34b107af-a00a-455a-b139-dd1a1b12d8af".to_string(),
-        );
-        map.insert(
-            "rdn-att-id".to_string(),
-            "bf967a0f-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msi-script-name".to_string(),
-            "96a7dd62-9118-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-hab-seniority-index".to_string(),
-            "def449f1-fd3b-4045-98cf-d9658da788b5".to_string(),
-        );
-        map.insert(
-            "frs-service-command".to_string(),
-            "ddac0cee-af8f-11d0-afeb-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "account-expires".to_string(),
-            "bf967915-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ts-primary-desktop-bl".to_string(),
-            "9daadc18-40d1-4ed1-a2bf-6b9bf47d3daa".to_string(),
-        );
-        map.insert(
-            "rdn".to_string(),
-            "bf967a0e-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msi-script".to_string(),
-            "d9e18313-8939-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-phonetic-display-name".to_string(),
-            "e21a94e4-2d66-4ce5-b30d-0ef87a776ff0".to_string(),
-        );
-        map.insert(
-            "frs-root-security".to_string(),
-            "5245801f-ca6a-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "subschema".to_string(),
-            "5a8b3261-c38d-11d1-bbc9-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ntds-site-settings".to_string(),
-            "19195a5d-6da0-11d0-afd3-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "computer".to_string(),
-            "bf967a86-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ts-secondary-desktops".to_string(),
-            "f63aa29a-bb31-48e1-bfab-0a6c5a1d39c2".to_string(),
-        );
-        map.insert(
-            "range-upper".to_string(),
-            "bf967a0d-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msi-file-list".to_string(),
-            "7bfdcb7d-4807-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-phonetic-company-name".to_string(),
-            "5bd5208d-e5f4-46ae-a514-543bc9c47659".to_string(),
-        );
-        map.insert(
-            "frs-root-path".to_string(),
-            "1be8f174-a9ff-11d0-afe2-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-ts-primary-desktop".to_string(),
-            "29259694-09e4-4237-9f72-9306ebe63ab2".to_string(),
-        );
-        map.insert(
-            "range-lower".to_string(),
-            "bf967a0c-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "mscope-id".to_string(),
-            "963d2751-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-phonetic-department".to_string(),
-            "6cd53daf-003e-49e7-a702-6fa896e7a6ef".to_string(),
-        );
-        map.insert(
-            "frs-replica-set-type".to_string(),
-            "26d9736b-6070-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "dmd".to_string(),
-            "bf967a8f-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ntds-service".to_string(),
-            "19195a5f-6da0-11d0-afd3-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "com-connection-point".to_string(),
-            "bf967a85-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ts-endpoint-plugin".to_string(),
-            "3c08b569-801f-4158-b17b-e363d6ae696a".to_string(),
-        );
-        map.insert(
-            "querypoint".to_string(),
-            "7bfdcb86-4807-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-wmi-targettype".to_string(),
-            "ca2a281e-262b-4ff7-b419-bc123352a4e9".to_string(),
-        );
-        map.insert(
-            "ms-ds-phonetic-last-name".to_string(),
-            "f217e4ec-0836-4b90-88af-2f5d4bbda2bc".to_string(),
-        );
-        map.insert(
-            "frs-replica-set-guid".to_string(),
-            "5245801a-ca6a-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ts-endpoint-type".to_string(),
-            "377ade80-e2d8-46c5-9bcd-6d9dec93b35e".to_string(),
-        );
-        map.insert(
-            "query-policy-object".to_string(),
-            "e1aea403-cd5b-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-wmi-targetpath".to_string(),
-            "5006a79a-6bfe-4561-9f52-13cf4dd3e560".to_string(),
-        );
-        map.insert(
-            "ms-ds-phonetic-first-name".to_string(),
-            "4b1cba4e-302f-4134-ac7c-f01f6c797843".to_string(),
-        );
-        map.insert(
-            "frs-primary-member".to_string(),
-            "2a132581-9373-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ntds-dsa".to_string(),
-            "f0f8ffab-1191-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ntds-dsa-ro".to_string(),
-            "85d16ec1-0791-4bc8-8ab3-70980602ff8c".to_string(),
-        );
-        map.insert(
-            "class-store".to_string(),
-            "bf967a84-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ts-endpoint-data".to_string(),
-            "40e1c407-4344-40f3-ab43-3625a34a63a2".to_string(),
-        );
-        map.insert(
-            "query-policy-bl".to_string(),
-            "e1aea404-cd5b-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-wmi-targetobject".to_string(),
-            "c44f67a5-7de5-4a1f-92d9-662b57364b77".to_string(),
-        );
-        map.insert(
-            "ms-ds-non-members-bl".to_string(),
-            "2a8c68fc-3a7a-4e87-8720-fe77c51cbe74".to_string(),
-        );
-        map.insert(
-            "frs-partner-auth-level".to_string(),
-            "2a132580-9373-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ts-initial-program".to_string(),
-            "9201ac6f-1d69-4dfb-802e-d95510109599".to_string(),
-        );
-        map.insert(
-            "query-filter".to_string(),
-            "cbf70a26-7e78-11d2-9921-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-wmi-targetnamespace".to_string(),
-            "1c4ab61f-3420-44e5-849d-8b5dbf60feb7".to_string(),
-        );
-        map.insert(
-            "ms-ds-non-members".to_string(),
-            "cafcb1de-f23c-46b5-adf7-1e64957bd5db".to_string(),
-        );
-        map.insert(
-            "frs-member-reference-bl".to_string(),
-            "2a13257f-9373-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "organization".to_string(),
-            "bf967aa3-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ts-work-directory".to_string(),
-            "a744f666-3d3c-4cc8-834b-9d4f6f687b8b".to_string(),
-        );
-        map.insert(
-            "quality-of-service".to_string(),
-            "80a67e4e-9f22-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-wmi-targetclass".to_string(),
-            "95b6d8d6-c9e8-4661-a2bc-6a5cabc04c62".to_string(),
-        );
-        map.insert(
-            "ms-ds-nc-type".to_string(),
-            "5a2eacd7-cc2b-48cf-9d9a-b6f1a0024de9".to_string(),
-        );
-        map.insert(
-            "frs-member-reference".to_string(),
-            "2a13257e-9373-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ntds-connection".to_string(),
-            "19195a60-6da0-11d0-afd3-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "class-registration".to_string(),
-            "bf967a82-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ts-default-to-main-printer".to_string(),
-            "c0ffe2bd-cacf-4dc7-88d5-61e9e95766f6".to_string(),
-        );
-        map.insert(
-            "pwd-properties".to_string(),
-            "bf967a0b-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-wmi-stringvalidvalues".to_string(),
-            "37609d31-a2bf-4b58-8f53-2b64e57a076d".to_string(),
-        );
-        map.insert(
-            "ms-ds-members-for-az-role-bl".to_string(),
-            "ececcd20-a7e0-4688-9ccf-02ece5e287f5".to_string(),
-        );
-        map.insert(
-            "frs-level-limit".to_string(),
-            "5245801e-ca6a-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ts-connect-printer-drives".to_string(),
-            "8ce6a937-871b-4c92-b285-d99d4036681c".to_string(),
-        );
-        map.insert(
-            "pwd-last-set".to_string(),
-            "bf967a0a-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-wmi-stringdefault".to_string(),
-            "152e42b6-37c5-4f55-ab48-1606384a9aea".to_string(),
-        );
-        map.insert(
-            "ms-ds-members-for-az-role".to_string(),
-            "cbf7e6cd-85a4-4314-8939-8bfe80597835".to_string(),
-        );
-        map.insert(
-            "frs-flags".to_string(),
-            "2a13257d-9373-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "msmq-site-link".to_string(),
-            "9a0dc346-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "certification-authority".to_string(),
-            "3fdfee50-47f4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ts-connect-client-drives".to_string(),
-            "23572aaf-29dd-44ea-b0fa-7e8438b9a4a3".to_string(),
-        );
-        map.insert(
-            "pwd-history-length".to_string(),
-            "bf967a09-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-wmi-sourceorganization".to_string(),
-            "34f7ed6c-615d-418d-aa00-549a7d7be03e".to_string(),
-        );
-        map.insert(
-            "ms-ds-max-values".to_string(),
-            "d1e169a4-ebe9-49bf-8fcb-8aef3874592d".to_string(),
-        );
-        map.insert(
-            "frs-file-filter".to_string(),
-            "1be8f170-a9ff-11d0-afe2-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-ts-broken-connection-action".to_string(),
-            "1cf41bba-5604-463e-94d6-1a1287b72ca3".to_string(),
-        );
-        map.insert(
-            "purported-search".to_string(),
-            "b4b54e50-943a-11d1-aebd-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-wmi-scopeguid".to_string(),
-            "87b78d51-405f-4b7f-80ed-2bd28786f48d".to_string(),
-        );
-        map.insert(
-            "ms-ds-password-settings-precedence".to_string(),
-            "456374ac-1f0a-4617-93cf-bc55a7c9d341".to_string(),
-        );
-        map.insert(
-            "frs-fault-condition".to_string(),
-            "1be8f178-a9ff-11d0-afe2-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-settings".to_string(),
-            "9a0dc347-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "category-registration".to_string(),
-            "7d6c0e9d-7e20-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-ts-reconnection-action".to_string(),
-            "366ed7ca-3e18-4c7f-abae-351a01e4b4f7".to_string(),
-        );
-        map.insert(
-            "public-key-policy".to_string(),
-            "80a67e28-9f22-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-wmi-querylanguage".to_string(),
-            "7d3cfa98-c17b-4254-8bd7-4de9b932a345".to_string(),
-        );
-        map.insert(
-            "ms-ds-resultant-pso".to_string(),
-            "b77ea093-88d0-4780-9a98-911f8e8b1dca".to_string(),
-        );
-        map.insert(
-            "frs-extensions".to_string(),
-            "52458020-ca6a-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "msmq-foreign".to_string(),
-            "9a0dc32f-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-quota-amount".to_string(),
-            "fbb9a00d-3a8c-4233-9cf9-7189264903a1".to_string(),
-        );
-        map.insert(
-            "gp-link".to_string(),
-            "f30e3bbe-9ff0-11d1-b603-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "acs-max-duration-per-flow".to_string(),
-            "7f56127e-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-tsls-property01".to_string(),
-            "87e53590-971d-4a52-955b-4794d15a84ae".to_string(),
-        );
-        map.insert(
-            "retired-repl-dsa-signatures".to_string(),
-            "7bfdcb7f-4807-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "msmq-encrypt-key".to_string(),
-            "9a0dc331-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-principal-name".to_string(),
-            "564e9325-d057-c143-9e3b-4f9e5ef46f93".to_string(),
-        );
-        map.insert(
-            "governs-id".to_string(),
-            "bf96797d-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "acs-max-aggregate-peak-rate-per-user".to_string(),
-            "f072230c-aef5-11d1-bdcf-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "organizational-unit".to_string(),
-            "bf967aa5-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "cross-ref".to_string(),
-            "bf967a8d-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ts-managingls4".to_string(),
-            "f7a3b6a0-2107-4140-b306-75cb521731e5".to_string(),
-        );
-        map.insert(
-            "required-categories".to_string(),
-            "7d6c0e93-7e20-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-ds-services".to_string(),
-            "2df90d78-009f-11d2-aa4c-00c04fd7d83a".to_string(),
-        );
-        map.insert(
-            "ms-ds-other-settings".to_string(),
-            "79d2f34c-9d7d-42bb-838f-866b3e4400e2".to_string(),
-        );
-        map.insert(
-            "global-address-list".to_string(),
-            "f754c748-06f4-11d2-aa53-00c04fd7d83a".to_string(),
-        );
-        map.insert(
-            "acs-identity-name".to_string(),
-            "dab029b6-ddf7-11d1-90a5-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-ts-managingls3".to_string(),
-            "fad5dcc1-2130-4c87-a118-75322cd67050".to_string(),
-        );
-        map.insert(
-            "reps-to".to_string(),
-            "bf967a1e-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-ds-service".to_string(),
-            "2df90d82-009f-11d2-aa4c-00c04fd7d83a".to_string(),
-        );
-        map.insert(
-            "ms-ds-operations-for-az-task-bl".to_string(),
-            "a637d211-5739-4ed1-89b2-88974548bc59".to_string(),
-        );
-        map.insert(
-            "given-name".to_string(),
-            "f0f8ff8e-1191-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "acs-event-log-level".to_string(),
-            "7f561286-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "organizational-role".to_string(),
-            "a8df74bf-c5ea-11d1-bbcb-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "crl-distribution-point".to_string(),
-            "167758ca-47f3-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ts-managingls2".to_string(),
-            "349f0757-51bd-4fc8-9d66-3eceea8a25be".to_string(),
-        );
-        map.insert(
-            "reps-from".to_string(),
-            "bf967a1d-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-digests-mig".to_string(),
-            "0f71d8e0-da3b-11d1-90a5-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-ds-operations-for-az-task".to_string(),
-            "1aacb436-2e9d-44a9-9298-ce4debeb6ebf".to_string(),
-        );
-        map.insert(
-            "generation-qualifier".to_string(),
-            "16775804-47f3-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "acs-enable-rsvp-message-logging".to_string(),
-            "7f561285-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ts-managingls".to_string(),
-            "f3bcc547-85b0-432c-9ac0-304506bf2c83".to_string(),
-        );
-        map.insert(
-            "repl-interval".to_string(),
-            "45ba9d1a-56fa-11d2-90d0-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "msmq-digests".to_string(),
-            "9a0dc33c-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-operations-for-az-role-bl".to_string(),
-            "f85b6228-3734-4525-b6b7-3f3bb220902c".to_string(),
-        );
-        map.insert(
-            "generated-connection".to_string(),
-            "bf96797a-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "acs-enable-rsvp-accounting".to_string(),
-            "f072230e-aef5-11d1-bdcf-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "organizational-person".to_string(),
-            "bf967aa4-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "country".to_string(),
-            "bf967a8c-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ts-licenseversion4".to_string(),
-            "70ca5d97-2304-490a-8a27-52678c8d2095".to_string(),
-        );
-        map.insert(
-            "reports".to_string(),
-            "bf967a1c-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-dependent-client-services".to_string(),
-            "2df90d76-009f-11d2-aa4c-00c04fd7d83a".to_string(),
-        );
-        map.insert(
-            "ms-ds-operations-for-az-role".to_string(),
-            "93f701be-fa4c-43b6-bc2f-4dbea718ffab".to_string(),
-        );
-        map.insert(
-            "garbage-coll-period".to_string(),
-            "5fd424a1-1262-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "acs-enable-acs-service".to_string(),
-            "7f561287-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ts-licenseversion3".to_string(),
-            "f8ba8f81-4cab-4973-a3c8-3a6da62a5e31".to_string(),
-        );
-        map.insert(
-            "replica-source".to_string(),
-            "bf967a18-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-dependent-client-service".to_string(),
-            "2df90d83-009f-11d2-aa4c-00c04fd7d83a".to_string(),
-        );
-        map.insert(
-            "ms-ds-object-reference-bl".to_string(),
-            "2b702515-c1f7-4b3b-b148-c0e4c6ceecb4".to_string(),
-        );
-        map.insert(
-            "fsmo-role-owner".to_string(),
-            "66171887-8f3c-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "acs-dsbm-refresh".to_string(),
-            "1cb3559f-56d0-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ntfrs-subscriptions".to_string(),
-            "2a132587-9373-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "control-access-right".to_string(),
-            "8297931e-86d3-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-ts-licenseversion2".to_string(),
-            "4b0df103-8d97-45d9-ad69-85c3080ba4e7".to_string(),
-        );
-        map.insert(
-            "repl-uptodate-vector".to_string(),
-            "bf967a16-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-csp-name".to_string(),
-            "9a0dc334-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-object-reference".to_string(),
-            "638ec2e8-22e7-409c-85d2-11b21bee72de".to_string(),
-        );
-        map.insert(
-            "frs-working-path".to_string(),
-            "1be8f173-a9ff-11d0-afe2-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "acs-dsbm-priority".to_string(),
-            "1cb3559e-56d0-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ts-licenseversion".to_string(),
-            "0ae94a89-372f-4df2-ae8a-c64a2bc47278".to_string(),
-        );
-        map.insert(
-            "repl-topology-stay-of-execution".to_string(),
-            "7bfdcb83-4807-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "msmq-cost".to_string(),
-            "9a0dc33a-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-machine-account-quota".to_string(),
-            "d064fb68-1480-11d3-91c1-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "frs-version-guid".to_string(),
-            "26d9736c-6070-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "acs-dsbm-deadtime".to_string(),
-            "1cb355a0-56d0-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ntfrs-subscriber".to_string(),
-            "2a132588-9373-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "container".to_string(),
-            "bf967a8b-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ts-expiredate4".to_string(),
-            "5e11dc43-204a-4faf-a008-6863621c6f5f".to_string(),
-        );
-        map.insert(
-            "repl-property-meta-data".to_string(),
-            "281416c0-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-computer-type-ex".to_string(),
-            "18120de8-f4c4-4341-bd95-32eb5bcf7c80".to_string(),
-        );
-        map.insert(
-            "ms-ds-top-quota-usage".to_string(),
-            "7b7cce4f-f1f5-4bb6-b7eb-23504af19e75".to_string(),
-        );
-        map.insert(
-            "frs-version".to_string(),
-            "2a132585-9373-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "acs-direction".to_string(),
-            "7f56127a-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ts-expiredate3".to_string(),
-            "41bc7f04-be72-4930-bd10-1f3439412387".to_string(),
-        );
-        map.insert(
-            "remote-storage-guid".to_string(),
-            "2a39c5b0-8960-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "msmq-computer-type".to_string(),
-            "9a0dc32e-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-tombstone-quota-factor".to_string(),
-            "461744d7-f3b6-45ba-8753-fb9552a5df32".to_string(),
-        );
-        map.insert(
-            "frs-update-timeout".to_string(),
-            "1be8f172-a9ff-11d0-afe2-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "acs-cache-timeout".to_string(),
-            "1cb355a1-56d0-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ntfrs-settings".to_string(),
-            "f780acc2-56f0-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "person".to_string(),
-            "bf967aa7-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ts-expiredate2".to_string(),
-            "54dfcf71-bc3f-4f0b-9d5a-4b2476bb8925".to_string(),
-        );
-        map.insert(
-            "remote-source-type".to_string(),
-            "bf967a15-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-base-priority".to_string(),
-            "9a0dc323-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-trust-forest-trust-info".to_string(),
-            "29cc866e-49d3-4969-942e-1dbc0925d183".to_string(),
-        );
-        map.insert(
-            "frs-time-last-config-change".to_string(),
-            "2a132584-9373-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "acs-allocable-rsvp-bandwidth".to_string(),
-            "7f561283-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "contact".to_string(),
-            "5cb41ed0-0e4c-11d0-a286-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ts-expiredate".to_string(),
-            "70004ef5-25c3-446a-97c8-996ae8566776".to_string(),
-        );
-        map.insert(
-            "remote-source".to_string(),
-            "bf967a14-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-authenticate".to_string(),
-            "9a0dc326-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-supported-encryption-types".to_string(),
-            "20119867-1d04-4ab7-9371-cfc3d5df0afd".to_string(),
-        );
-        map.insert(
-            "frs-time-last-command".to_string(),
-            "2a132583-9373-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "acs-aggregate-token-rate-per-user".to_string(),
-            "7f56127d-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ntfrs-replica-set".to_string(),
-            "5245803a-ca6a-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "connection-point".to_string(),
-            "5cb41ecf-0e4c-11d0-a286-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ts-property02".to_string(),
-            "3586f6ac-51b7-4978-ab42-f936463198e7".to_string(),
-        );
-        map.insert(
-            "remote-server-name".to_string(),
-            "bf967a12-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msi-script-size".to_string(),
-            "96a7dd63-9118-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfs-link-security-descriptor-v2".to_string(),
-            "57cf87f7-3426-4841-b322-02b3b6e9eba8".to_string(),
-        );
-        map.insert(
-            "roomnumber".to_string(),
-            "81d7f8c2-e327-4a0d-91c6-b42d4009115f".to_string(),
-        );
-        map.insert(
-            "msmq-os-type".to_string(),
-            "9a0dc330-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-repl-attribute-meta-data".to_string(),
-            "d7c53242-724e-4c39-9d4c-2df8c9d66c7a".to_string(),
-        );
-        map.insert(
-            "help-data16".to_string(),
-            "5fd424a7-1262-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "acs-non-reserved-min-policed-size".to_string(),
-            "b6873917-3b90-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "query-policy".to_string(),
-            "83cc7075-cca7-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "dns-node".to_string(),
-            "e0fa1e8c-9b45-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-dfs-link-path-v2".to_string(),
-            "86b021f6-10ab-40a2-a252-1dc0cc3be6a9".to_string(),
-        );
-        map.insert(
-            "role-occupant".to_string(),
-            "a8df7465-c5ea-11d1-bbcb-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "msmq-nt4-stub".to_string(),
-            "6f914be6-d57e-11d1-90a2-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-ds-preferred-gc-site".to_string(),
-            "d921b50a-0ab2-42cd-87f6-09cf83a91854".to_string(),
-        );
-        map.insert(
-            "has-partial-replica-ncs".to_string(),
-            "bf967981-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "acs-non-reserved-max-sdu-size".to_string(),
-            "aec2cfe3-3b90-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-dfs-link-identity-guid-v2".to_string(),
-            "edb027f3-5726-4dee-8d4e-dbf07e1ad1f1".to_string(),
-        );
-        map.insert(
-            "rights-guid".to_string(),
-            "8297931c-86d3-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-nt4-flags".to_string(),
-            "eb38a158-d57f-11d1-90a2-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-ds-per-user-trust-tombstones-quota".to_string(),
-            "8b70a6c6-50f9-4fa3-a71e-1ce03040449b".to_string(),
-        );
-        map.insert(
-            "has-master-ncs".to_string(),
-            "bf967982-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "acs-minimum-policed-size".to_string(),
-            "8d0e7195-3b90-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "print-queue".to_string(),
-            "bf967aa8-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dfs-last-modified-v2".to_string(),
-            "3c095e8a-314e-465b-83f5-ab8277bcf29b".to_string(),
-        );
-        map.insert(
-            "rid-used-pool".to_string(),
-            "6617188b-8f3c-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-name-style".to_string(),
-            "9a0dc333-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-per-user-trust-quota".to_string(),
-            "d161adf0-ca24-4993-a3aa-8b2c981302e8".to_string(),
-        );
-        map.insert(
-            "groups-to-ignore".to_string(),
-            "eea65904-8ac6-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "acs-minimum-latency".to_string(),
-            "9517fefb-3b90-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "display-template".to_string(),
-            "5fd4250c-1262-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-dfs-generation-guid-v2".to_string(),
-            "35b8b3d9-c58f-43d6-930e-5040f2f1a781".to_string(),
-        );
-        map.insert(
-            "rid-set-references".to_string(),
-            "7bfdcb7b-4807-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "msmq-multicast-address".to_string(),
-            "1d2f4412-f10d-4337-9b48-6e5b125cd265".to_string(),
-        );
-        map.insert(
-            "ms-ds-non-security-group-extra-classes".to_string(),
-            "2de144fc-1f52-486f-bdf4-16fcc3084e54".to_string(),
-        );
-        map.insert(
-            "group-type".to_string(),
-            "9a9a021e-4a5b-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "acs-minimum-delay-variation".to_string(),
-            "9c65329b-3b90-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-pki-private-key-recovery-agent".to_string(),
-            "1562a632-44b9-4a7e-a2d3-e426c96a3acc".to_string(),
-        );
-        map.insert(
-            "ms-dfs-comment-v2".to_string(),
-            "b786cec9-61fd-4523-b2c1-5ceb3860bb32".to_string(),
-        );
-        map.insert(
-            "rid-previous-allocation-pool".to_string(),
-            "6617188a-8f3c-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-migrated".to_string(),
-            "9a0dc33f-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-nc-ro-replica-locations-bl".to_string(),
-            "f547511c-5b2a-44cc-8358-992a88258164".to_string(),
-        );
-        map.insert(
-            "group-priority".to_string(),
-            "eea65905-8ac6-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "acs-maximum-sdu-size".to_string(),
-            "87a2d8f9-3b90-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "display-specifier".to_string(),
-            "e0fa1e8a-9b45-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-stagingcleanuptriggerinpercent".to_string(),
-            "d64b9c23-e1fa-467b-b317-6964d744d633".to_string(),
-        );
-        map.insert(
-            "rid-next-rid".to_string(),
-            "6617188c-8f3c-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-long-lived".to_string(),
-            "9a0dc335-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-nc-ro-replica-locations".to_string(),
-            "3df793df-9858-4417-a701-735a1ecebf74".to_string(),
-        );
-        map.insert(
-            "group-membership-sam".to_string(),
-            "bf967980-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "acs-max-token-rate-per-flow".to_string(),
-            "7f56127b-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "pki-enrollment-service".to_string(),
-            "ee4aa692-3bba-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-commonstagingsizeinmb".to_string(),
-            "135eb00e-4846-458b-8ea2-a37559afd405".to_string(),
-        );
-        map.insert(
-            "rid-manager-reference".to_string(),
-            "66171886-8f3c-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-label-ex".to_string(),
-            "4580ad25-d407-48d2-ad24-43e6e56793d7".to_string(),
-        );
-        map.insert(
-            "ms-ds-nc-replica-locations".to_string(),
-            "97de9615-b537-46bc-ac0f-10720f3909f3".to_string(),
-        );
-        map.insert(
-            "group-attributes".to_string(),
-            "bf96797e-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "acs-max-token-bucket-per-flow".to_string(),
-            "81f6e0df-3b90-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "dhcp-class".to_string(),
-            "963d2756-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-commonstagingpath".to_string(),
-            "936eac41-d257-4bb9-bd55-f310a3cf09ad".to_string(),
-        );
-        map.insert(
-            "rid-available-pool".to_string(),
-            "66171888-8f3c-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-label".to_string(),
-            "9a0dc325-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-nc-repl-outbound-neighbors".to_string(),
-            "855f2ef5-a1c5-4cc4-ba6d-32522848b61f".to_string(),
-        );
-        map.insert(
-            "gpc-wql-filter".to_string(),
-            "7bd4c7a6-1add-4436-8c04-3999a880154c".to_string(),
-        );
-        map.insert(
-            "acs-max-size-of-rsvp-log-file".to_string(),
-            "1cb3559d-56d0-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "pki-certificate-template".to_string(),
-            "e5209ca2-3bba-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-options2".to_string(),
-            "11e24318-4ca6-4f49-9afe-e5eb1afa3473".to_string(),
-        );
-        map.insert(
-            "rid-allocation-pool".to_string(),
-            "66171889-8f3c-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-journal-quota".to_string(),
-            "9a0dc324-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-nc-repl-inbound-neighbors".to_string(),
-            "9edba85a-3e9e-431b-9b1a-a5b6e9eda796".to_string(),
-        );
-        map.insert(
-            "gpc-user-extension-names".to_string(),
-            "42a75fc6-783f-11d2-9916-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "acs-max-size-of-rsvp-account-file".to_string(),
-            "f0722311-aef5-11d1-bdcf-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "dfs-configuration".to_string(),
-            "8447f9f2-1027-11d0-a05f-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-ondemandexclusiondirectoryfilter".to_string(),
-            "7d523aff-9012-49b2-9925-f922a0018656".to_string(),
-        );
-        map.insert(
-            "rid".to_string(),
-            "bf967a22-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-journal".to_string(),
-            "9a0dc321-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-nc-repl-cursors".to_string(),
-            "8a167ce4-f9e8-47eb-8d78-f7fe80abb2cc".to_string(),
-        );
-        map.insert(
-            "gpc-machine-extension-names".to_string(),
-            "32ff8ecc-783f-11d2-9916-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "acs-max-peak-bandwidth-per-flow".to_string(),
-            "7f56127c-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "physical-location".to_string(),
-            "b7b13122-b82e-11d0-afee-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-ondemandexclusionfilefilter".to_string(),
-            "a68359dc-a581-4ee6-9015-5382c60f0fb4".to_string(),
-        );
-        map.insert(
-            "revision".to_string(),
-            "bf967a21-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-interval2".to_string(),
-            "99b88f52-3b7b-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-ds-quota-used".to_string(),
-            "b5a84308-615d-4bb7-b05f-2f1746aa439f".to_string(),
-        );
-        map.insert(
-            "gpc-functionality-version".to_string(),
-            "f30e3bc0-9ff0-11d1-b603-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "acs-max-peak-bandwidth".to_string(),
-            "7f561284-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "device".to_string(),
-            "bf967a8e-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-defaultcompressionexclusionfilter".to_string(),
-            "87811bd5-cd8b-45cb-9f5d-980f3a9e0c97".to_string(),
-        );
-        map.insert(
-            "token-groups-no-gc-acceptable".to_string(),
-            "040fc392-33df-11d2-98b2-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "msmq-interval1".to_string(),
-            "8ea825aa-3b7b-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-ds-quota-trustee".to_string(),
-            "16378906-4ea5-49be-a8d1-bfd41dff4f65".to_string(),
-        );
-        map.insert(
-            "gpc-file-sys-path".to_string(),
-            "f30e3bc1-9ff0-11d1-b603-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "acs-max-no-of-log-files".to_string(),
-            "1cb3559c-56d0-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-disablepacketprivacy".to_string(),
-            "6a84ede5-741e-43fd-9dd6-aa0f61578621".to_string(),
-        );
-        map.insert(
-            "token-groups-global-and-universal".to_string(),
-            "46a9b11d-60ae-405a-b7e8-ff8a58d456d2".to_string(),
-        );
-        map.insert(
-            "msmq-in-routing-servers".to_string(),
-            "9a0dc32c-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-quota-effective".to_string(),
-            "6655b152-101c-48b4-b347-e1fcebc60157".to_string(),
-        );
-        map.insert(
-            "gp-options".to_string(),
-            "f30e3bbf-9ff0-11d1-b603-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "acs-max-no-of-account-files".to_string(),
-            "f0722310-aef5-11d1-bdcf-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "package-registration".to_string(),
-            "bf967aa6-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "cross-ref-container".to_string(),
-            "ef9e60e0-56f7-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-tsls-property02".to_string(),
-            "47c77bb0-316e-4e2f-97f1-0d4c48fca9dd".to_string(),
-        );
-        map.insert(
-            "token-groups".to_string(),
-            "b7c69e6d-2cc7-11d2-854e-00a0c983f608".to_string(),
-        );
-        map.insert(
-            "additional-trusted-service-names".to_string(),
-            "032160be-9824-11d1-aec0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ds-ui-settings".to_string(),
-            "09b10f14-6f93-11d2-9905-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-claim-shares-possible-values-with".to_string(),
-            "52c8d13a-ce0b-4f57-892b-18f5a43a2400".to_string(),
-        );
-        map.insert(
-            "sam-domain-updates".to_string(),
-            "04d2d114-f799-4e9b-bcdc-90e8f5ba7ebe".to_string(),
-        );
-        map.insert(
-            "msmq-secured-source".to_string(),
-            "8bf0221b-7a06-4d63-91f0-1499941813d3".to_string(),
-        );
-        map.insert(
-            "ms-ds-tasks-for-az-role-bl".to_string(),
-            "a0dcd536-5158-42fe-8c40-c00a7ad37959".to_string(),
-        );
-        map.insert(
-            "install-ui-level".to_string(),
-            "96a7dd64-9118-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "additional-information".to_string(),
-            "6d05fb41-246b-11d0-a9c8-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "room".to_string(),
-            "7860e5d2-c8b0-4cbb-bd45-d9455beb9206".to_string(),
-        );
-        map.insert(
-            "ms-ds-claim-type-applies-to-class".to_string(),
-            "6afb0e4c-d876-437c-aeb6-c3e41454c272".to_string(),
-        );
-        map.insert(
-            "sam-account-type".to_string(),
-            "6e7b626c-64f2-11d0-afd2-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-routing-services".to_string(),
-            "2df90d77-009f-11d2-aa4c-00c04fd7d83a".to_string(),
-        );
-        map.insert(
-            "ms-ds-tasks-for-az-role".to_string(),
-            "35319082-8c4a-4646-9386-c2949d49894d".to_string(),
-        );
-        map.insert(
-            "initials".to_string(),
-            "f0f8ff90-1191-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "acs-server-list".to_string(),
-            "7cbd59a5-3b90-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "domainrelatedobject".to_string(),
-            "8bfd2d3d-efda-4549-852c-f85e137aedc6".to_string(),
-        );
-        map.insert(
-            "ms-ds-claim-attribute-source".to_string(),
-            "eebc123e-bae6-4166-9e5b-29884a8b76b0".to_string(),
-        );
-        map.insert(
-            "sam-account-name".to_string(),
-            "3e0abfd0-126a-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "msmq-routing-service".to_string(),
-            "2df90d81-009f-11d2-aa4c-00c04fd7d83a".to_string(),
-        );
-        map.insert(
-            "ms-ds-spn-suffixes".to_string(),
-            "789ee1eb-8c8e-4e4c-8cec-79b31b7617b5".to_string(),
-        );
-        map.insert(
-            "initial-auth-outgoing".to_string(),
-            "52458024-ca6a-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "acs-total-no-of-flows".to_string(),
-            "7f561280-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "rid-set".to_string(),
-            "7bfdcb89-4807-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-claim-value-type".to_string(),
-            "c66217b9-e48e-47f7-b7d5-6552b8afd619".to_string(),
-        );
-        map.insert(
-            "rpc-ns-transfer-syntax".to_string(),
-            "29401c4a-7a27-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-recipient-formatname".to_string(),
-            "3bfe6748-b544-485a-b067-1b310c4334bf".to_string(),
-        );
-        map.insert(
-            "ms-ds-site-affinity".to_string(),
-            "c17c5602-bcb7-46f0-9656-6370ca884b72".to_string(),
-        );
-        map.insert(
-            "initial-auth-incoming".to_string(),
-            "52458023-ca6a-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "acs-time-of-day".to_string(),
-            "7f561279-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "domain-policy".to_string(),
-            "bf967a99-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-claim-possible-values".to_string(),
-            "2e28edee-ed7c-453f-afe4-93bd86f2174f".to_string(),
-        );
-        map.insert(
-            "rpc-ns-profile-entry".to_string(),
-            "bf967a28-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-quota".to_string(),
-            "9a0dc322-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-settings".to_string(),
-            "0e1b47d7-40a3-4b48-8d1b-4cac0c1cdf21".to_string(),
-        );
-        map.insert(
-            "indexedscopes".to_string(),
-            "7bfdcb87-4807-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "acs-service-type".to_string(),
-            "7f56127f-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "rid-manager".to_string(),
-            "6617188d-8f3c-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-ds-is-used-as-resource-security-attribute".to_string(),
-            "51c9f89d-4730-468d-a2b5-1d493212d17e".to_string(),
-        );
-        map.insert(
-            "rpc-ns-priority".to_string(),
-            "bf967a27-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-queue-type".to_string(),
-            "9a0dc320-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-security-group-extra-classes".to_string(),
-            "4f146ae8-a4fe-4801-a731-f51848a4f4e4".to_string(),
-        );
-        map.insert(
-            "implemented-categories".to_string(),
-            "7d6c0e92-7e20-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "acs-rsvp-log-files-location".to_string(),
-            "1cb3559b-56d0-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-bridgehead-servers-used".to_string(),
-            "3ced1465-7b71-2541-8780-1e1ea6243a82".to_string(),
-        );
-        map.insert(
-            "rpc-ns-object-id".to_string(),
-            "29401c48-7a27-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-queue-quota".to_string(),
-            "3f6b8e12-d57f-11d1-90a2-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-ds-sd-reference-domain".to_string(),
-            "4c51e316-f628-43a5-b06b-ffb695fcb4f3".to_string(),
-        );
-        map.insert(
-            "icon-path".to_string(),
-            "f0f8ff83-1191-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "acs-rsvp-account-files-location".to_string(),
-            "f072230f-aef5-11d1-bdcf-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "rfc822localpart".to_string(),
-            "b93e3a78-cbae-485e-a07b-5ef4ae505686".to_string(),
-        );
-        map.insert(
-            "domain-dns".to_string(),
-            "19195a5b-6da0-11d0-afd3-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-dfs-ttl-v2".to_string(),
-            "ea944d31-864a-4349-ada5-062e2c614f5e".to_string(),
-        );
-        map.insert(
-            "rpc-ns-interface-id".to_string(),
-            "bf967a25-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-queue-name-ext".to_string(),
-            "2df90d87-009f-11d2-aa4c-00c04fd7d83a".to_string(),
-        );
-        map.insert(
-            "ms-ds-schema-extensions".to_string(),
-            "b39a61be-ed07-4cab-9a4a-4963ed0141e1".to_string(),
-        );
-        map.insert(
-            "host".to_string(),
-            "6043df71-fa48-46cf-ab7c-cbd54644b22d".to_string(),
-        );
-        map.insert(
-            "acs-priority".to_string(),
-            "7f561281-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "domain".to_string(),
-            "19195a5a-6da0-11d0-afd3-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-dfs-target-list-v2".to_string(),
-            "6ab126c6-fa41-4b36-809e-7ca91610d48f".to_string(),
-        );
-        map.insert(
-            "rpc-ns-group".to_string(),
-            "bf967a24-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-queue-journal-quota".to_string(),
-            "8e441266-d57f-11d1-90a2-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-ds-retired-repl-nc-signatures".to_string(),
-            "d5b35506-19d6-4d26-9afb-11357ac99b5e".to_string(),
-        );
-        map.insert(
-            "houseidentifier".to_string(),
-            "a45398b7-c44a-4eb6-82d3-13c10946dbfe".to_string(),
-        );
-        map.insert(
-            "acs-policy-name".to_string(),
-            "1cb3559a-56d0-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "residential-person".to_string(),
-            "a8df74d6-c5ea-11d1-bbcb-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "documentseries".to_string(),
-            "7a2be07c-302f-4b96-bc90-0795d66885f8".to_string(),
-        );
-        map.insert(
-            "ms-dfs-short-name-link-path-v2".to_string(),
-            "2d7826f0-4cf7-42e9-a039-1110e0d9ca99".to_string(),
-        );
-        map.insert(
-            "rpc-ns-entry-flags".to_string(),
-            "80212841-4bdc-11d1-a9c4-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "msmq-qm-id".to_string(),
-            "9a0dc33e-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-replicationepoch".to_string(),
-            "08e3aa79-eb1c-45b5-af7b-8f94246c8e41".to_string(),
-        );
-        map.insert(
-            "home-drive".to_string(),
-            "bf967986-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "acs-permission-bits".to_string(),
-            "7f561282-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfs-schema-minor-version".to_string(),
-            "fef9a725-e8f1-43ab-bd86-6a0115ce9e38".to_string(),
-        );
-        map.insert(
-            "rpc-ns-codeset".to_string(),
-            "7a0ba0e0-8e98-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-privacy-level".to_string(),
-            "9a0dc327-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-replication-notify-subsequent-dsa-delay".to_string(),
-            "d63db385-dd92-4b52-b1d8-0d3ecc0e86b6".to_string(),
-        );
-        map.insert(
-            "home-directory".to_string(),
-            "bf967985-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "acs-non-reserved-tx-size".to_string(),
-            "f072230d-aef5-11d1-bdcf-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "remote-storage-service-point".to_string(),
-            "2a39c5bd-8960-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "document".to_string(),
-            "39bad96d-c2d6-4baf-88ab-7e4207600117".to_string(),
-        );
-        map.insert(
-            "ms-dfs-schema-major-version".to_string(),
-            "ec6d7855-704a-4f61-9aa6-c49a7c1d54c7".to_string(),
-        );
-        map.insert(
-            "rpc-ns-bindings".to_string(),
-            "bf967a23-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-prev-site-gates".to_string(),
-            "2df90d75-009f-11d2-aa4c-00c04fd7d83a".to_string(),
-        );
-        map.insert(
-            "ms-ds-replication-notify-first-dsa-delay".to_string(),
-            "85abd4f4-0a89-4e49-bdec-6f35bb2562ba".to_string(),
-        );
-        map.insert(
-            "hide-from-ab".to_string(),
-            "ec05b750-a977-4efe-8e8d-ba6c1a6e33a8".to_string(),
-        );
-        map.insert(
-            "acs-non-reserved-tx-limit".to_string(),
-            "1cb355a2-56d0-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfs-properties-v2".to_string(),
-            "0c3e5bc5-eb0e-40f5-9b53-334e958dffdb".to_string(),
-        );
-        map.insert(
-            "rpc-ns-annotation".to_string(),
-            "88611bde-8cf4-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-owner-id".to_string(),
-            "9a0dc328-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-replicates-nc-reason".to_string(),
-            "0ea12b84-08b3-11d3-91bc-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "help-file-name".to_string(),
-            "5fd424a9-1262-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "acs-non-reserved-token-size".to_string(),
-            "a916d7c9-3b90-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "remote-mail-recipient".to_string(),
-            "bf967aa9-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "dns-zone".to_string(),
-            "e0fa1e8b-9b45-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-dfs-namespace-identity-guid-v2".to_string(),
-            "200432ce-ec5f-4931-a525-d7f4afe34e68".to_string(),
-        );
-        map.insert(
-            "root-trust".to_string(),
-            "7bfdcb80-4807-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "msmq-out-routing-servers".to_string(),
-            "9a0dc32b-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-repl-value-meta-data".to_string(),
-            "2f5c8145-e1bd-410b-8957-8bfa81d5acfd".to_string(),
-        );
-        map.insert(
-            "help-data32".to_string(),
-            "5fd424a8-1262-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "acs-non-reserved-peak-rate".to_string(),
-            "a331a73f-3b90-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-ds-is-full-replica-for".to_string(),
-            "c8bc72e0-a6b4-48f0-94a5-fd76a88c9987".to_string(),
-        );
-        map.insert(
-            "ipsec-negotiation-policy-type".to_string(),
-            "07383074-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "allowed-attributes".to_string(),
-            "9a7ad940-ca53-11d1-bbd0-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ft-dfs".to_string(),
-            "8447f9f3-1027-11d0-a05f-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-tpm-srk-pub-thumbprint".to_string(),
-            "19d706eb-4d76-44a2-85d6-1c342be3be37".to_string(),
-        );
-        map.insert(
-            "see-also".to_string(),
-            "bf967a31-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-sites".to_string(),
-            "9a0dc32a-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-krbtgt-link-bl".to_string(),
-            "5dd68c41-bfdf-438b-9b5d-39d9618bf260".to_string(),
-        );
-        map.insert(
-            "ipsec-negotiation-policy-reference".to_string(),
-            "b40ff822-427a-11d1-a9c2-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "admin-property-pages".to_string(),
-            "52458038-ca6a-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "rpc-server-element".to_string(),
-            "f29653d0-7ad0-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-spp-issuance-license".to_string(),
-            "1075b3a1-bbaf-49d2-ae8d-c4f25c823303".to_string(),
-        );
-        map.insert(
-            "security-identifier".to_string(),
-            "bf967a2f-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-site-name-ex".to_string(),
-            "422144fa-c17f-4649-94d6-9731ed2784ed".to_string(),
-        );
-        map.insert(
-            "ms-ds-revealed-dsas".to_string(),
-            "94f6f2ac-c76d-4b5e-b71f-f332c3e93c22".to_string(),
-        );
-        map.insert(
-            "ipsec-negotiation-policy-action".to_string(),
-            "07383075-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "admin-multiselect-property-pages".to_string(),
-            "18f9b67d-5ac6-4b3b-97db-d0a406afb7ba".to_string(),
-        );
-        map.insert(
-            "friendlycountry".to_string(),
-            "c498f152-dc6b-474a-9f52-7cdba3d7d351".to_string(),
-        );
-        map.insert(
-            "ms-spp-config-license".to_string(),
-            "0353c4b5-d199-40b0-b3c5-deb32fd9ec06".to_string(),
-        );
-        map.insert(
-            "secretary".to_string(),
-            "01072d9a-98ad-4a53-9744-e83e287278fb".to_string(),
-        );
-        map.insert(
-            "msmq-site-name".to_string(),
-            "ffadb4b2-de39-11d1-90a5-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-ds-secondary-krbtgt-number".to_string(),
-            "aa156612-2396-467e-ad6a-28d23fdb1865".to_string(),
-        );
-        map.insert(
-            "ipsec-name".to_string(),
-            "b40ff81c-427a-11d1-a9c2-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "admin-display-name".to_string(),
-            "bf96791a-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "rpc-server".to_string(),
-            "88611be0-8cf4-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-spp-phone-license".to_string(),
-            "67e4d912-f362-4052-8c79-42f45ba7b221".to_string(),
-        );
-        map.insert(
-            "search-guide".to_string(),
-            "bf967a2e-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-site-id".to_string(),
-            "9a0dc340-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-reveal-ondemand-group".to_string(),
-            "303d9f4a-1dd6-4b38-8fc5-33afe8c988ad".to_string(),
-        );
-        map.insert(
-            "ipsec-isakmp-reference".to_string(),
-            "b40ff820-427a-11d1-a9c2-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "admin-description".to_string(),
-            "bf967919-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "foreign-security-principal".to_string(),
-            "89e31c12-8530-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-spp-online-license".to_string(),
-            "098f368e-4812-48cd-afb7-a136b96807ed".to_string(),
-        );
-        map.insert(
-            "search-flags".to_string(),
-            "bf967a2d-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-site-gates-mig".to_string(),
-            "e2704852-3b7b-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-ds-never-reveal-group".to_string(),
-            "15585999-fd49-4d66-b25d-eeb96aba8174".to_string(),
-        );
-        map.insert(
-            "ipsec-id".to_string(),
-            "b40ff81d-427a-11d1-a9c2-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "admin-count".to_string(),
-            "bf967918-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "rpc-profile-element".to_string(),
-            "f29653cf-7ad0-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-spp-confirmation-id".to_string(),
-            "6e8797c4-acda-4a49-8740-b0bd05a9b831".to_string(),
-        );
-        map.insert(
-            "sd-rights-effective".to_string(),
-            "c3dbafa6-33df-11d2-98b2-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "msmq-site-gates".to_string(),
-            "9a0dc339-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-has-full-replica-ncs".to_string(),
-            "1d3c2d18-42d0-4868-99fe-0eca1e6fa9f3".to_string(),
-        );
-        map.insert(
-            "ipsec-filter-reference".to_string(),
-            "b40ff823-427a-11d1-a9c2-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "admin-context-menu".to_string(),
-            "553fd038-f32e-11d0-b0bc-00c04fd8dca6".to_string(),
-        );
-        map.insert(
-            "file-link-tracking-entry".to_string(),
-            "8e4eb2ed-4712-11d0-a1a0-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-spp-installation-id".to_string(),
-            "69bfb114-407b-4739-a213-c663802b3e37".to_string(),
-        );
-        map.insert(
-            "script-path".to_string(),
-            "bf9679a8-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-site-foreign".to_string(),
-            "fd129d8a-d57e-11d1-90a2-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-ds-revealed-users".to_string(),
-            "185c7821-3749-443a-bd6a-288899071adb".to_string(),
-        );
-        map.insert(
-            "ipsec-data-type".to_string(),
-            "b40ff81e-427a-11d1-a9c2-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "address-type".to_string(),
-            "5fd42464-1262-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "rpc-profile".to_string(),
-            "88611be1-8cf4-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-spp-kms-ids".to_string(),
-            "9b663eda-3542-46d6-9df0-314025af2bac".to_string(),
-        );
-        map.insert(
-            "scope-flags".to_string(),
-            "16f3a4c2-7e79-11d2-9921-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "msmq-site-2".to_string(),
-            "9a0dc338-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-krbtgt-link".to_string(),
-            "778ff5c9-6f4e-4b74-856a-d68383313910".to_string(),
-        );
-        map.insert(
-            "ipsec-data".to_string(),
-            "b40ff81f-427a-11d1-a9c2-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "address-syntax".to_string(),
-            "5fd42463-1262-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "file-link-tracking".to_string(),
-            "dd712229-10e4-11d0-a05f-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-spp-csvlk-sku-id".to_string(),
-            "9684f739-7b78-476d-8d74-31ad7692eef4".to_string(),
-        );
-        map.insert(
-            "schema-version".to_string(),
-            "bf967a2c-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-site-1".to_string(),
-            "9a0dc337-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-source-object-dn".to_string(),
-            "773e93af-d3b4-48d4-b3f9-06457602d3d0".to_string(),
-        );
-        map.insert(
-            "invocation-id".to_string(),
-            "bf96798e-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "address-home".to_string(),
-            "16775781-47f3-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "rpc-group".to_string(),
-            "88611bdf-8cf4-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-spp-csvlk-partial-product-key".to_string(),
-            "a601b091-8652-453a-b386-87ad239b7c08".to_string(),
-        );
-        map.insert(
-            "schema-update".to_string(),
-            "1e2d06b4-ac8f-11d0-afe3-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-sign-key".to_string(),
-            "9a0dc332-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-updatescript".to_string(),
-            "146eb639-bb9f-4fc1-a825-e29e00c77920".to_string(),
-        );
-        map.insert(
-            "international-isdn-number".to_string(),
-            "bf96798d-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "address-entry-display-table-msdos".to_string(),
-            "5fd42462-1262-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "dynamic-object".to_string(),
-            "66d51249-3355-4c1f-b24e-81f252aca23b".to_string(),
-        );
-        map.insert(
-            "ms-spp-csvlk-pid".to_string(),
-            "b47f510d-6b50-47e1-b556-772c79e4ffc4".to_string(),
-        );
-        map.insert(
-            "schema-info".to_string(),
-            "f9fb64ae-93b4-11d2-9945-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "msmq-sign-certificates-mig".to_string(),
-            "3881b8ea-da3b-11d1-90a5-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-ds-user-password-expiry-time-computed".to_string(),
-            "add5cf10-7b09-4449-9ae6-2534148f8a72".to_string(),
-        );
-        map.insert(
-            "inter-site-topology-renew".to_string(),
-            "b7c69e5f-2cc7-11d2-854e-00a0c983f608".to_string(),
-        );
-        map.insert(
-            "address-entry-display-table".to_string(),
-            "5fd42461-1262-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "rpc-entry".to_string(),
-            "bf967aac-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-members-of-resource-property-list-bl".to_string(),
-            "7469b704-edb0-4568-a5a5-59f4862c75a7".to_string(),
-        );
-        map.insert(
-            "schema-id-guid".to_string(),
-            "bf967923-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-sign-certificates".to_string(),
-            "9a0dc33b-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-user-account-control-computed".to_string(),
-            "2cc4b836-b63f-4940-8d23-ea7acf06af56".to_string(),
-        );
-        map.insert(
-            "inter-site-topology-generator".to_string(),
-            "b7c69e5e-2cc7-11d2-854e-00a0c983f608".to_string(),
-        );
-        map.insert(
-            "address-book-roots".to_string(),
-            "f70b6e48-06f4-11d2-aa53-00c04fd7d83a".to_string(),
-        );
-        map.insert(
-            "dsa".to_string(),
-            "3fdfee52-47f4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-members-of-resource-property-list".to_string(),
-            "4d371c11-4cad-4c41-8ad2-b180ab2bd13c".to_string(),
-        );
-        map.insert(
-            "schema-flags-ex".to_string(),
-            "bf967a2b-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-services".to_string(),
-            "9a0dc33d-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-tasks-for-az-task-bl".to_string(),
-            "df446e52-b5fa-4ca2-a42f-13f98a526c8f".to_string(),
-        );
-        map.insert(
-            "inter-site-topology-failover".to_string(),
-            "b7c69e60-2cc7-11d2-854e-00a0c983f608".to_string(),
-        );
-        map.insert(
-            "address".to_string(),
-            "f0f8ff84-1191-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "rpc-container".to_string(),
-            "80212842-4bdc-11d1-a9c4-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-claim-shares-possible-values-with-bl".to_string(),
-            "54d522db-ec95-48f5-9bbd-1880ebbb2180".to_string(),
-        );
-        map.insert(
-            "schedule".to_string(),
-            "dd712224-10e4-11d0-a05f-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "msmq-service-type".to_string(),
-            "9a0dc32d-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-tasks-for-az-task".to_string(),
-            "b11c8ee2-5fcd-46a7-95f0-f38333f096cf".to_string(),
-        );
-        map.insert(
-            "instance-type".to_string(),
-            "bf96798c-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "must-contain".to_string(),
-            "bf9679d3-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-token-group-names".to_string(),
-            "65650576-4699-4fc9-8d18-26e0cd0137a6".to_string(),
-        );
-        map.insert(
-            "keywords".to_string(),
-            "bf967993-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "attributecertificateattribute".to_string(),
-            "fa4693bb-7bc2-4cb9-81a8-c99c43b7905e".to_string(),
-        );
-        map.insert(
-            "ms-dns-dnskey-record-set-ttl".to_string(),
-            "8f4e317f-28d7-442c-a6df-1f491f97b326".to_string(),
-        );
-        map.insert(
-            "service-instance-version".to_string(),
-            "bf967a37-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msrassavedframedroute".to_string(),
-            "db0c90c7-c1f2-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-optional-feature-flags".to_string(),
-            "8a0560c1-97b9-4811-9db7-dc061598965b".to_string(),
-        );
-        map.insert(
-            "jpegphoto".to_string(),
-            "bac80572-09c4-4fa9-9ae6-7628d7adbe0e".to_string(),
-        );
-        map.insert(
-            "associatedname".to_string(),
-            "f7fbfc45-85ab-42a4-a435-780e62f7858b".to_string(),
-        );
-        map.insert(
-            "security-object".to_string(),
-            "bf967aaf-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "infrastructure-update".to_string(),
-            "2df90d89-009f-11d2-aa4c-00c04fd7d83a".to_string(),
-        );
-        map.insert(
-            "ms-dns-nsec3-iterations".to_string(),
-            "80b70aab-8959-4ec0-8e93-126e76df3aca".to_string(),
-        );
-        map.insert(
-            "service-dns-name-type".to_string(),
-            "28630eba-41d5-11d1-a9c1-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "msrassavedframedipaddress".to_string(),
-            "db0c90c6-c1f2-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-value-type-reference-bl".to_string(),
-            "ab5543ad-23a1-3b45-b937-9b313d5474a8".to_string(),
-        );
-        map.insert(
-            "is-single-valued".to_string(),
-            "bf967992-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "associateddomain".to_string(),
-            "3320fc38-c379-4c17-a510-1bdf6133c5da".to_string(),
-        );
-        map.insert(
-            "ms-dns-nsec3-random-salt-length".to_string(),
-            "13361665-916c-4de7-a59d-b1ebbd0de129".to_string(),
-        );
-        map.insert(
-            "service-dns-name".to_string(),
-            "28630eb8-41d5-11d1-a9c1-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "msrassavedcallbacknumber".to_string(),
-            "db0c90c5-c1f2-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-value-type-reference".to_string(),
-            "78fc5d84-c1dc-3148-8984-58f792d41d3e".to_string(),
-        );
-        map.insert(
-            "is-recycled".to_string(),
-            "8fb59256-55f1-444b-aacb-f5b482fe3459".to_string(),
-        );
-        map.insert(
-            "assoc-nt-account".to_string(),
-            "398f63c0-ca60-11d1-bbd1-0000f81f10c0".to_string(),
-        );
-        map.insert(
-            "secret".to_string(),
-            "bf967aae-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "inetorgperson".to_string(),
-            "4828cc14-1437-45bc-9b07-ad6f015e5f28".to_string(),
-        );
-        map.insert(
-            "ms-dns-nsec3-hash-algorithm".to_string(),
-            "ff9e5552-7db7-4138-8888-05ce320a0323".to_string(),
-        );
-        map.insert(
-            "service-class-name".to_string(),
-            "b7b1311d-b82e-11d0-afee-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "msradiusservicetype".to_string(),
-            "db0c90b6-c1f2-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-usn-last-sync-success".to_string(),
-            "31f7b8b6-c9f8-4f2d-a37b-58a823030331".to_string(),
-        );
-        map.insert(
-            "is-privilege-holder".to_string(),
-            "19405b9c-3cfa-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "assistant".to_string(),
-            "0296c11c-40da-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "index-server-catalog".to_string(),
-            "7bfdcb8a-4807-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dns-rfc5011-key-rollovers".to_string(),
-            "27d93c40-065a-43c0-bdd8-cdf2c7d120aa".to_string(),
-        );
-        map.insert(
-            "service-class-info".to_string(),
-            "bf967a36-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msradiusframedroute".to_string(),
-            "db0c90a9-c1f2-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-failed-interactive-logon-count-at-last-successful-logon".to_string(),
-            "c5d234e5-644a-4403-a665-e26e0aef5e98".to_string(),
-        );
-        map.insert(
-            "is-member-of-partial-attribute-set".to_string(),
-            "19405b9d-3cfa-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "asset-number".to_string(),
-            "ba305f75-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "sam-server".to_string(),
-            "bf967aad-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dns-ds-record-algorithms".to_string(),
-            "5c5b7ad2-20fa-44bb-beb3-34b9c0f65579".to_string(),
-        );
-        map.insert(
-            "service-class-id".to_string(),
-            "bf967a35-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msradiusframedipaddress".to_string(),
-            "db0c90a4-c1f2-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-failed-interactive-logon-count".to_string(),
-            "dc3ca86f-70ad-4960-8425-a4d6313d93dd".to_string(),
-        );
-        map.insert(
-            "is-member-of-dl".to_string(),
-            "bf967991-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "applies-to".to_string(),
-            "8297931d-86d3-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "group-policy-container".to_string(),
-            "f30e3bc2-9ff0-11d1-b603-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dns-maintain-trust-anchor".to_string(),
-            "0dc063c1-52d9-4456-9e15-9c2434aafd94".to_string(),
-        );
-        map.insert(
-            "service-binding-information".to_string(),
-            "b7b1311c-b82e-11d0-afee-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "msradiuscallbacknumber".to_string(),
-            "db0c909c-c1f2-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-last-failed-interactive-logon-time".to_string(),
-            "c7e7dafa-10c3-4b8b-9acd-54f11063742e".to_string(),
-        );
-        map.insert(
-            "is-ephemeral".to_string(),
-            "f4c453f0-c5f1-11d1-bbcb-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "application-name".to_string(),
-            "dd712226-10e4-11d0-a05f-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "sam-domain-base".to_string(),
-            "bf967a91-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dns-nsec3-optout".to_string(),
-            "7bea2088-8ce2-423c-b191-66ec506b1595".to_string(),
-        );
-        map.insert(
-            "server-state".to_string(),
-            "bf967a34-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msnpsavedcallingstationid".to_string(),
-            "db0c908e-c1f2-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-last-successful-interactive-logon-time".to_string(),
-            "011929e6-8b5d-4258-b64a-00b0b4949747".to_string(),
-        );
-        map.insert(
-            "is-deleted".to_string(),
-            "bf96798f-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "app-schema-version".to_string(),
-            "96a7dd65-9118-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "groupofuniquenames".to_string(),
-            "0310a911-93a3-4e21-a7a3-55d85ab2c48b".to_string(),
-        );
-        map.insert(
-            "ms-dns-sign-with-nsec3".to_string(),
-            "c79f2199-6da1-46ff-923c-1f3f800c721e".to_string(),
-        );
-        map.insert(
-            "server-role".to_string(),
-            "bf967a33-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msnpcallingstationid".to_string(),
-            "db0c908a-c1f2-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-revealed-list-bl".to_string(),
-            "aa1c88fd-b0f6-429f-b2ca-9d902266e808".to_string(),
-        );
-        map.insert(
-            "is-defunct".to_string(),
-            "28630ebe-41d5-11d1-a9c1-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "anr".to_string(),
-            "45b01500-c419-11d1-bbc9-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "sam-domain".to_string(),
-            "bf967a90-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dns-is-signed".to_string(),
-            "aa12854c-d8fc-4d5e-91ca-368b8d829bee".to_string(),
-        );
-        map.insert(
-            "server-reference-bl".to_string(),
-            "26d9736e-6070-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "msnpcalledstationid".to_string(),
-            "db0c9089-c1f2-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-revealed-list".to_string(),
-            "cbdad11c-7fec-387b-6219-3a0627d9af81".to_string(),
-        );
-        map.insert(
-            "is-critical-system-object".to_string(),
-            "00fbf30d-91fe-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "alt-security-identities".to_string(),
-            "00fbf30c-91fe-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "group-of-names".to_string(),
-            "bf967a9d-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dns-keymaster-zones".to_string(),
-            "0be0dd3b-041a-418c-ace9-2f17d23e9d42".to_string(),
-        );
-        map.insert(
-            "server-reference".to_string(),
-            "26d9736d-6070-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "msnpallowdialin".to_string(),
-            "db0c9085-c1f2-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-is-user-cachable-at-rodc".to_string(),
-            "fe01245a-341f-4556-951f-48c033a89050".to_string(),
-        );
-        map.insert(
-            "ipsec-policy-reference".to_string(),
-            "b7b13118-b82e-11d0-afee-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "allowed-child-classes-effective".to_string(),
-            "9a7ad943-ca53-11d1-bbd0-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "rras-administration-dictionary".to_string(),
-            "f39b98ae-938d-11d1-aebd-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-tpm-tpm-information-for-computer-bl".to_string(),
-            "14fa84c9-8ecd-4348-bc91-6d3ced472ab7".to_string(),
-        );
-        map.insert(
-            "server-name".to_string(),
-            "09dcb7a0-165f-11d0-a064-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "msmq-version".to_string(),
-            "9a0dc336-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-is-partial-replica-for".to_string(),
-            "37c94ff6-c6d4-498f-b2f9-c6f7f8647809".to_string(),
-        );
-        map.insert(
-            "ipsec-owners-reference".to_string(),
-            "b40ff824-427a-11d1-a9c2-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "allowed-child-classes".to_string(),
-            "9a7ad942-ca53-11d1-bbd0-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "group".to_string(),
-            "bf967a9c-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-tpm-tpm-information-for-computer".to_string(),
-            "ea1b7b93-5e48-46d5-bc6c-4df4fda78a35".to_string(),
-        );
-        map.insert(
-            "serial-number".to_string(),
-            "bf967a32-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "msmq-user-sid".to_string(),
-            "c58aae32-56f9-11d2-90d0-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-ds-is-domain-for".to_string(),
-            "ff155a2a-44e5-4de0-8318-13a58988de4f".to_string(),
-        );
-        map.insert(
-            "ipsec-nfa-reference".to_string(),
-            "b40ff821-427a-11d1-a9c2-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "allowed-attributes-effective".to_string(),
-            "9a7ad941-ca53-11d1-bbd0-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "rras-administration-connection-point".to_string(),
-            "2a39c5be-8960-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-tpm-owner-information-temp".to_string(),
-            "c894809d-b513-4ff8-8811-f4f43f5ac7bc".to_string(),
-        );
-        map.insert(
-            "seq-notification".to_string(),
-            "ddac0cf2-af8f-11d0-afeb-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-transactional".to_string(),
-            "9a0dc329-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ipsec-negotiation-policy".to_string(),
-            "b40ff827-427a-11d1-a9c2-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-authz-central-access-policy-id".to_string(),
-            "62f29b60-be74-4630-9456-2f6691993a86".to_string(),
-        );
-        map.insert(
-            "site-server".to_string(),
-            "1be8f17c-a9ff-11d0-afe2-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "netboot-machine-file-path".to_string(),
-            "3e978923-8c01-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-stagingsizeinmb".to_string(),
-            "250a8f20-f6fc-4559-ae65-e4b24c67aebe".to_string(),
-        );
-        map.insert(
-            "legacy-exchange-dn".to_string(),
-            "28630ebc-41d5-11d1-a9c1-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "bridgehead-server-list-bl".to_string(),
-            "d50c2cdb-8951-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-authz-resource-condition".to_string(),
-            "80997877-f874-4c68-864d-6e508a83bdbd".to_string(),
-        );
-        map.insert(
-            "site-object-bl".to_string(),
-            "3e10944d-c354-11d0-aff8-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "netboot-locally-installed-oses".to_string(),
-            "07383080-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-stagingpath".to_string(),
-            "86b9a69e-f0a6-405d-99bb-77d977992c2a".to_string(),
-        );
-        map.insert(
-            "ldap-ipdeny-list".to_string(),
-            "7359a353-90f7-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "birth-location".to_string(),
-            "1f0075f9-7e40-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "service-instance".to_string(),
-            "bf967ab2-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ipsec-isakmp-policy".to_string(),
-            "b40ff828-427a-11d1-a9c2-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-authz-last-effective-security-policy".to_string(),
-            "8e1685c6-3e2f-48a2-a58d-5af0ea789fa0".to_string(),
-        );
-        map.insert(
-            "site-object".to_string(),
-            "3e10944c-c354-11d0-aff8-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "netboot-limit-clients".to_string(),
-            "07383077-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-rootsizeinmb".to_string(),
-            "90b769ac-4413-43cf-ad7a-867142e740a3".to_string(),
-        );
-        map.insert(
-            "ldap-display-name".to_string(),
-            "bf96799a-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "bad-pwd-count".to_string(),
-            "bf96792e-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-authz-proposed-security-policy".to_string(),
-            "b946bece-09b5-4b6a-b25a-4b63a330e80e".to_string(),
-        );
-        map.insert(
-            "site-list".to_string(),
-            "d50c2cdc-8951-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "netboot-intellimirror-oses".to_string(),
-            "0738307e-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-rootpath".to_string(),
-            "d7d5e8c1-e61f-464f-9fcf-20bbe0a2ec54".to_string(),
-        );
-        map.insert(
-            "ldap-admin-limits".to_string(),
-            "7359a352-90f7-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "bad-password-time".to_string(),
-            "bf96792d-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "service-connection-point".to_string(),
-            "28630ec1-41d5-11d1-a9c1-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ipsec-filter".to_string(),
-            "b40ff826-427a-11d1-a9c2-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-authz-effective-security-policy".to_string(),
-            "07831919-8f94-4fb6-8a42-91545dccdad3".to_string(),
-        );
-        map.insert(
-            "site-link-list".to_string(),
-            "d50c2cdd-8951-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "netboot-initialization".to_string(),
-            "3e978920-8c01-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-extension".to_string(),
-            "78f011ec-a766-4b19-adcf-7b81ed781a4d".to_string(),
-        );
-        map.insert(
-            "last-update-sequence".to_string(),
-            "7d6c0e9c-7e20-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "auxiliary-class".to_string(),
-            "bf96792c-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dns-nsec3-current-salt".to_string(),
-            "387d9432-a6d1-4474-82cd-0a89aae084ae".to_string(),
-        );
-        map.insert(
-            "site-guid".to_string(),
-            "3e978924-8c01-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "netboot-duid".to_string(),
-            "532570bd-3d77-424f-822f-0d636dc6daad".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-version".to_string(),
-            "1a861408-38c3-49ea-ba75-85481a77c655".to_string(),
-        );
-        map.insert(
-            "last-set-time".to_string(),
-            "bf967998-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "authority-revocation-list".to_string(),
-            "1677578d-47f3-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "service-class".to_string(),
-            "bf967ab1-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ipsec-base".to_string(),
-            "b40ff825-427a-11d1-a9c2-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dns-nsec3-user-salt".to_string(),
-            "aff16770-9622-4fbc-a128-3088777605b9".to_string(),
-        );
-        map.insert(
-            "signature-algorithms".to_string(),
-            "2a39c5b2-8960-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "netboot-guid".to_string(),
-            "3e978921-8c01-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-frs-topology-pref".to_string(),
-            "92aa27e0-5c50-402d-9ec1-ee847def9788".to_string(),
-        );
-        map.insert(
-            "last-logon-timestamp".to_string(),
-            "c0e20a04-0e5a-4ff3-9482-5efeaecd7060".to_string(),
-        );
-        map.insert(
-            "authentication-options".to_string(),
-            "bf967928-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dns-propagation-time".to_string(),
-            "ba340d47-2181-4ca0-a2f6-fae4479dab2a".to_string(),
-        );
-        map.insert(
-            "sid-history".to_string(),
-            "17eb4278-d167-11d0-b002-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "netboot-current-client-count".to_string(),
-            "07383079-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-frs-hub-member".to_string(),
-            "5643ff81-35b6-4ca9-9512-baf0bd0a2772".to_string(),
-        );
-        map.insert(
-            "last-logon".to_string(),
-            "bf967997-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "auditing-policy".to_string(),
-            "6da8a4fe-0e52-11d0-a286-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "service-administration-point".to_string(),
-            "b7b13123-b82e-11d0-afee-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "inter-site-transport-container".to_string(),
-            "26d97375-6070-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dns-parent-has-secure-delegation".to_string(),
-            "285c6964-c11a-499e-96d8-bf7c75a223c6".to_string(),
-        );
-        map.insert(
-            "show-in-advanced-view-only".to_string(),
-            "bf967984-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "netboot-answer-requests".to_string(),
-            "0738307a-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-exch-owner-bl".to_string(),
-            "bf9679f4-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "last-logoff".to_string(),
-            "bf967996-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "audio".to_string(),
-            "d0e1d224-e1a0-42ce-a2da-793ba5244f35".to_string(),
-        );
-        map.insert(
-            "ms-dns-dnskey-records".to_string(),
-            "28c458f5-602d-4ac9-a77c-b3f1be503a7e".to_string(),
-        );
-        map.insert(
-            "show-in-address-book".to_string(),
-            "3e74f60e-3e73-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "netboot-answer-only-valid-clients".to_string(),
-            "0738307b-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-exch-labeleduri".to_string(),
-            "16775820-47f3-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "last-known-parent".to_string(),
-            "52ab8670-5709-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "attribute-types".to_string(),
-            "9a7ad944-ca53-11d1-bbd0-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "servers-container".to_string(),
-            "f780acc0-56f0-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "inter-site-transport".to_string(),
-            "26d97376-6070-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dns-signing-keys".to_string(),
-            "b7673e6d-cad9-4e9e-b31a-63e8098fdd63".to_string(),
-        );
-        map.insert(
-            "short-server-name".to_string(),
-            "45b01501-c419-11d1-bbc9-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "netboot-allow-new-clients".to_string(),
-            "07383076-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-exch-house-identifier".to_string(),
-            "a8df7407-c5ea-11d1-bbcb-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "last-content-indexed".to_string(),
-            "bf967995-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "attribute-syntax".to_string(),
-            "bf967925-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dns-signing-key-descriptors".to_string(),
-            "3443d8cd-e5b6-4f3b-b098-659a0214a079".to_string(),
-        );
-        map.insert(
-            "shell-property-pages".to_string(),
-            "52458039-ca6a-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "netbios-name".to_string(),
-            "bf9679d8-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-exch-assistant-name".to_string(),
-            "a8df7394-c5ea-11d1-bbcb-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "last-backup-restoration-time".to_string(),
-            "1fbb0be8-ba63-11d0-afef-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "attribute-security-guid".to_string(),
-            "bf967924-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "server".to_string(),
-            "bf967a92-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "intellimirror-scp".to_string(),
-            "07383085-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dns-secure-delegation-polling-period".to_string(),
-            "f6b0f0be-a8e4-4468-8fd9-c3c47b8722f9".to_string(),
-        );
-        map.insert(
-            "shell-context-menu".to_string(),
-            "553fd039-f32e-11d0-b0bc-00c04fd8dca6".to_string(),
-        );
-        map.insert(
-            "nc-name".to_string(),
-            "bf9679d6-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-token-group-names-no-gc-acceptable".to_string(),
-            "523fc6c8-9af4-4a02-9cd7-3dea129eeb27".to_string(),
-        );
-        map.insert(
-            "labeleduri".to_string(),
-            "c569bb46-c680-44bc-a273-e6c227d71b45".to_string(),
-        );
-        map.insert(
-            "attribute-id".to_string(),
-            "bf967922-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dns-signature-inception-offset".to_string(),
-            "03d4c32e-e217-4a61-9699-7bbc4729a026".to_string(),
-        );
-        map.insert(
-            "setup-command".to_string(),
-            "7d6c0e97-7e20-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "name-service-flags".to_string(),
-            "80212840-4bdc-11d1-a9c4-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-token-group-names-global-and-universal".to_string(),
-            "fa06d1f4-7922-4aad-b79c-b2201f54417c".to_string(),
-        );
-        map.insert(
-            "knowledge-information".to_string(),
-            "1677581f-47f3-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "attribute-display-names".to_string(),
-            "cb843f80-48d9-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "security-principal".to_string(),
-            "bf967ab0-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "intellimirror-group".to_string(),
-            "07383086-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dns-ds-record-set-ttl".to_string(),
-            "29869b7c-64c4-42fe-97d5-fbc2fa124160".to_string(),
-        );
-        map.insert(
-            "catalogs".to_string(),
-            "7bfdcb81-4807-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "subnet-container".to_string(),
-            "b7b13125-b82e-11d0-afee-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "link-track-vol-entry".to_string(),
-            "ddac0cf6-af8f-11d0-afeb-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-kds-publickey-length".to_string(),
-            "e338f470-39cd-4549-ab5b-f69f9e583fe0".to_string(),
-        );
-        map.insert(
-            "surname".to_string(),
-            "bf967a41-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "notification-list".to_string(),
-            "19195a56-6da0-11d0-afd3-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-rdcminfilesizeinkb".to_string(),
-            "f402a330-ace5-4dc1-8cc9-74d900bf8ae0".to_string(),
-        );
-        map.insert(
-            "lockout-time".to_string(),
-            "28630ebf-41d5-11d1-a9c1-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "carlicense".to_string(),
-            "d4159c92-957d-4a87-8a67-8d2934e01649".to_string(),
-        );
-        map.insert(
-            "ms-kds-secretagreement-param".to_string(),
-            "30b099d9-edfe-7549-b807-eba444da79e9".to_string(),
-        );
-        map.insert(
-            "supported-application-context".to_string(),
-            "1677588f-47f3-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "non-security-member-bl".to_string(),
-            "52458019-ca6a-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-rdcenabled".to_string(),
-            "e3b44e05-f4a7-4078-a730-f48670a743f8".to_string(),
-        );
-        map.insert(
-            "lockout-threshold".to_string(),
-            "bf9679a6-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "canonical-name".to_string(),
-            "9a7ad945-ca53-11d1-bbd0-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "subnet".to_string(),
-            "b7b13124-b82e-11d0-afee-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "link-track-omt-entry".to_string(),
-            "ddac0cf7-af8f-11d0-afeb-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-kds-secretagreement-algorithmid".to_string(),
-            "1702975d-225e-cb4a-b15d-0daea8b5e990".to_string(),
-        );
-        map.insert(
-            "supplemental-credentials".to_string(),
-            "bf967a3f-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "non-security-member".to_string(),
-            "52458018-ca6a-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-contentsetguid".to_string(),
-            "1035a8e1-67a8-4c21-b7bb-031cdf99d7a0".to_string(),
-        );
-        map.insert(
-            "lockout-duration".to_string(),
-            "bf9679a5-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "can-upgrade-script".to_string(),
-            "d9e18314-8939-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-kds-kdf-param".to_string(),
-            "8a800772-f4b8-154f-b41c-2e4271eff7a7".to_string(),
-        );
-        map.insert(
-            "superior-dns-root".to_string(),
-            "5245801d-ca6a-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "next-rid".to_string(),
-            "bf9679db-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-options".to_string(),
-            "d6d67084-c720-417d-8647-b696237a114c".to_string(),
-        );
-        map.insert(
-            "lock-out-observation-window".to_string(),
-            "bf9679a4-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ca-web-url".to_string(),
-            "963d2736-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "storage".to_string(),
-            "bf967ab5-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "link-track-object-move-table".to_string(),
-            "ddac0cf5-af8f-11d0-afeb-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-kds-kdf-algorithmid".to_string(),
-            "db2c48b2-d14d-ec4e-9f58-ad579d8b440e".to_string(),
-        );
-        map.insert(
-            "super-scopes".to_string(),
-            "963d274b-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "next-level-store".to_string(),
-            "bf9679da-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-flags".to_string(),
-            "fe515695-3f61-45c8-9bfa-19c148c57b09".to_string(),
-        );
-        map.insert(
-            "location".to_string(),
-            "09dcb79f-165f-11d0-a064-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ca-usages".to_string(),
-            "963d2738-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-is-primary-computer-for".to_string(),
-            "998c06ac-3f87-444e-a5df-11b03dc8a50c".to_string(),
-        );
-        map.insert(
-            "super-scope-description".to_string(),
-            "963d274c-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "network-address".to_string(),
-            "bf9679d9-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-keywords".to_string(),
-            "048b4692-6227-4b67-a074-c4437083e14b".to_string(),
-        );
-        map.insert(
-            "localization-display-id".to_string(),
-            "a746f0d1-78d0-11d2-9916-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ca-connect".to_string(),
-            "963d2735-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "sites-container".to_string(),
-            "7a4117da-cd67-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "licensing-site-settings".to_string(),
-            "1be8f17d-a9ff-11d0-afe2-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-ds-primary-computer".to_string(),
-            "a13df4e2-dbb0-4ceb-828b-8b2e143e9e81".to_string(),
-        );
-        map.insert(
-            "subschemasubentry".to_string(),
-            "9a7ad94d-ca53-11d1-bbd0-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "netboot-tools".to_string(),
-            "0738307f-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-schedule".to_string(),
-            "4699f15f-a71f-48e2-9ff5-5897c0759205".to_string(),
-        );
-        map.insert(
-            "localized-description".to_string(),
-            "d9e18316-8939-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ca-certificate-dn".to_string(),
-            "963d2740-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-generation-id".to_string(),
-            "1e5d393d-8cb7-4b4f-840a-973b36cc09c3".to_string(),
-        );
-        map.insert(
-            "sub-refs".to_string(),
-            "bf967a3c-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "netboot-sif-file".to_string(),
-            "2df90d84-009f-11d2-aa4c-00c04fd7d83a".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-directoryfilter".to_string(),
-            "93c7b477-1f2e-4b40-b7bf-007e8d038ccf".to_string(),
-        );
-        map.insert(
-            "locality-name".to_string(),
-            "bf9679a2-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ca-certificate".to_string(),
-            "bf967932-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "site-link-bridge".to_string(),
-            "d50c2cdf-8951-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "leaf".to_string(),
-            "bf967a9e-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-claim-is-single-valued".to_string(),
-            "cd789fb9-96b4-4648-8219-ca378161af38".to_string(),
-        );
-        map.insert(
-            "sub-class-of".to_string(),
-            "bf967a3b-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "netboot-server".to_string(),
-            "07383081-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-filefilter".to_string(),
-            "d68270ac-a5dc-4841-a6ac-cd68be38c181".to_string(),
-        );
-        map.insert(
-            "locale-id".to_string(),
-            "bf9679a1-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "bytes-per-minute".to_string(),
-            "ba305f76-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-ds-claim-is-value-space-restricted".to_string(),
-            "0c2ce4c7-f1c3-4482-8578-c60d4bb74422".to_string(),
-        );
-        map.insert(
-            "structural-object-class".to_string(),
-            "3860949f-f6a8-4b38-9950-81ecb6bc2982".to_string(),
-        );
-        map.insert(
-            "netboot-scp-bl".to_string(),
-            "07383082-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-tombstoneexpiryinmin".to_string(),
-            "23e35d4c-e324-4861-a22f-e199140dae00".to_string(),
-        );
-        map.insert(
-            "local-policy-reference".to_string(),
-            "80a67e4d-9f22-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "business-category".to_string(),
-            "bf967931-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "site-link".to_string(),
-            "d50c2cde-8951-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ipsec-policy".to_string(),
-            "b7b13121-b82e-11d0-afee-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-claim-source-type".to_string(),
-            "92f19c05-8dfa-4222-bbd1-2c4f01487754".to_string(),
-        );
-        map.insert(
-            "street-address".to_string(),
-            "bf967a3a-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "netboot-new-machine-ou".to_string(),
-            "0738307d-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-replicationgrouptype".to_string(),
-            "eeed0fc8-1001-45ed-80cc-bbf744930720".to_string(),
-        );
-        map.insert(
-            "local-policy-flags".to_string(),
-            "bf96799e-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "builtin-modified-count".to_string(),
-            "bf967930-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-claim-source".to_string(),
-            "fa32f2a6-f28b-47d0-bf91-663e8f910a72".to_string(),
-        );
-        map.insert(
-            "state-or-province-name".to_string(),
-            "bf967a39-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "netboot-new-machine-naming-policy".to_string(),
-            "0738307c-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-enabled".to_string(),
-            "03726ae7-8e7d-4446-8aae-a91657c00993".to_string(),
-        );
-        map.insert(
-            "lm-pwd-history".to_string(),
-            "bf96799d-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "builtin-creation-time".to_string(),
-            "bf96792f-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "site".to_string(),
-            "bf967ab3-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ipsec-nfa".to_string(),
-            "b40ff829-427a-11d1-a9c2-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-authz-member-rules-in-central-access-policy-bl".to_string(),
-            "516e67cf-fedd-4494-bb3a-bc506a948891".to_string(),
-        );
-        map.insert(
-            "spn-mappings".to_string(),
-            "2ab0e76c-7041-11d2-9905-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "netboot-mirror-data-file".to_string(),
-            "2df90d85-009f-11d2-aa4c-00c04fd7d83a".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-conflictsizeinmb".to_string(),
-            "9ad33fc9-aacf-4299-bb3e-d1fc6ea88e49".to_string(),
-        );
-        map.insert(
-            "link-track-secret".to_string(),
-            "2ae80fe2-47b4-11d0-a1a4-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "buildingname".to_string(),
-            "f87fa54b-b2c5-4fd7-88c0-daccb21d93c5".to_string(),
-        );
-        map.insert(
-            "ms-authz-member-rules-in-central-access-policy".to_string(),
-            "57f22f7a-377e-42c3-9872-cec6f21d2e3e".to_string(),
-        );
-        map.insert(
-            "smtp-mail-address".to_string(),
-            "26d9736f-6070-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "netboot-max-clients".to_string(),
-            "07383078-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-conflictpath".to_string(),
-            "5cf0bcc8-60f7-4bff-bda6-aea0344eb151".to_string(),
-        );
-        map.insert(
-            "link-id".to_string(),
-            "bf96799b-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "bridgehead-transport-list".to_string(),
-            "d50c2cda-8951-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "simplesecurityobject".to_string(),
-            "5fe69b0b-e146-4f15-b0ab-c1e5d488e094".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-maxageincacheinmin".to_string(),
-            "2ab0e48d-ac4e-4afc-83e5-a34240db6198".to_string(),
-        );
-        map.insert(
-            "marshalled-interface".to_string(),
-            "bf9679b9-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "com-typelib-id".to_string(),
-            "281416de-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "shadowaccount".to_string(),
-            "5b6d8467-1a18-4174-b350-9cc6e7b4ac8d".to_string(),
-        );
-        map.insert(
-            "ms-com-partitionset".to_string(),
-            "250464ab-c417-497a-975a-9e0d459a7ca1".to_string(),
-        );
-        map.insert(
-            "ms-ds-groupmsamembership".to_string(),
-            "888eedd6-ce04-df40-b462-b8a50e41ba38".to_string(),
-        );
-        map.insert(
-            "telex-primary".to_string(),
-            "0296c121-40da-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "oem-information".to_string(),
-            "bf9679ea-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-mindurationcacheinmin".to_string(),
-            "4c5d607a-ce49-444a-9862-82a95f5d1fcc".to_string(),
-        );
-        map.insert(
-            "mapi-id".to_string(),
-            "bf9679b7-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "com-treat-as-class-id".to_string(),
-            "281416db-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-managedpasswordinterval".to_string(),
-            "f8758ef7-ac76-8843-a2ee-a26b4dcaf409".to_string(),
-        );
-        map.insert(
-            "telex-number".to_string(),
-            "bf967a4b-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "object-version".to_string(),
-            "16775848-47f3-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-cachepolicy".to_string(),
-            "db7a08e7-fc76-4569-a45f-f5ecb66a88b5".to_string(),
-        );
-        map.insert(
-            "manager".to_string(),
-            "bf9679b5-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "com-progid".to_string(),
-            "bf96793d-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "posixaccount".to_string(),
-            "ad44bb41-67d5-4d88-b575-7b20674e76d8".to_string(),
-        );
-        map.insert(
-            "ms-com-partition".to_string(),
-            "c9010e74-4e58-49f7-8a89-5e3e2340fcf8".to_string(),
-        );
-        map.insert(
-            "ms-ds-managedpasswordpreviousid".to_string(),
-            "d0d62131-2d4a-d04f-99d9-1c63646229a4".to_string(),
-        );
-        map.insert(
-            "teletex-terminal-identifier".to_string(),
-            "bf967a4a-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "object-sid".to_string(),
-            "bf9679e8-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-readonly".to_string(),
-            "5ac48021-e447-46e7-9d23-92c0c6a90dfb".to_string(),
-        );
-        map.insert(
-            "managed-objects".to_string(),
-            "0296c124-40da-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "com-other-prog-id".to_string(),
-            "281416dd-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-managedpasswordid".to_string(),
-            "0e78295a-c6d3-0a40-b491-d62251ffa0a6".to_string(),
-        );
-        map.insert(
-            "telephone-number".to_string(),
-            "bf967a49-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "object-guid".to_string(),
-            "bf9679e7-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-deletedsizeinmb".to_string(),
-            "53ed9ad1-9975-41f4-83f5-0c061a12553a".to_string(),
-        );
-        map.insert(
-            "managed-by".to_string(),
-            "0296c120-40da-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "com-interfaceid".to_string(),
-            "bf96793c-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "volume".to_string(),
-            "bf967abb-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "meeting".to_string(),
-            "11b6cc94-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-managedpassword".to_string(),
-            "e362ed86-b728-0842-b27d-2dea7a9df218".to_string(),
-        );
-        map.insert(
-            "system-poss-superiors".to_string(),
-            "bf967a47-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "object-count".to_string(),
-            "34aaa216-b699-11d0-afee-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-deletedpath".to_string(),
-            "817cf0b8-db95-4914-b833-5a079ef65764".to_string(),
-        );
-        map.insert(
-            "machine-wide-policy".to_string(),
-            "80a67e4f-9f22-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "com-clsid".to_string(),
-            "281416d9-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-allowed-to-act-on-behalf-of-other-identity".to_string(),
-            "3f78c3e5-f79a-46bd-a0b8-9d18116ddc79".to_string(),
-        );
-        map.insert(
-            "system-only".to_string(),
-            "bf967a46-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "object-classes".to_string(),
-            "9a7ad94b-ca53-11d1-bbd0-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-priority".to_string(),
-            "eb20e7d6-32ad-42de-b141-16ad2631b01b".to_string(),
-        );
-        map.insert(
-            "machine-role".to_string(),
-            "bf9679b2-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "com-classid".to_string(),
-            "bf96793b-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "user".to_string(),
-            "bf967aba-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "mail-recipient".to_string(),
-            "bf967aa1-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-imaging-hash-algorithm".to_string(),
-            "8ae70db5-6406-4196-92fe-f3bb557520a7".to_string(),
-        );
-        map.insert(
-            "system-must-contain".to_string(),
-            "bf967a45-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "object-class-category".to_string(),
-            "bf9679e6-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-computerreferencebl".to_string(),
-            "5eb526d7-d71b-44ae-8cc6-95460052e6ac".to_string(),
-        );
-        map.insert(
-            "machine-password-change-interval".to_string(),
-            "c9b6358e-bb38-11d0-afef-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "code-page".to_string(),
-            "bf967938-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "type-library".to_string(),
-            "281416e2-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-imaging-thumbprint-hash".to_string(),
-            "9cdfdbc5-0304-4569-95f6-c4f663fe5ae6".to_string(),
-        );
-        map.insert(
-            "system-may-contain".to_string(),
-            "bf967a44-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "object-class".to_string(),
-            "bf9679e5-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-memberreferencebl".to_string(),
-            "adde62c6-1880-41ed-bd3c-30b7d25e14f0".to_string(),
-        );
-        map.insert(
-            "machine-architecture".to_string(),
-            "bf9679af-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "class-display-name".to_string(),
-            "548e1c22-dea6-11d0-b010-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "lost-and-found".to_string(),
-            "52ab8671-5709-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-kds-createtime".to_string(),
-            "ae18119f-6390-0045-b32d-97dbc701aef7".to_string(),
-        );
-        map.insert(
-            "system-flags".to_string(),
-            "e0fa1e62-9b45-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "object-category".to_string(),
-            "26d97369-6070-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-computerreference".to_string(),
-            "6c7b5785-3d21-41bf-8a8a-627941544d5a".to_string(),
-        );
-        map.insert(
-            "lsa-modified-count".to_string(),
-            "bf9679ae-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "certificate-templates".to_string(),
-            "2a39c5b1-8960-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "trusted-domain".to_string(),
-            "bf967ab8-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-kds-usestarttime".to_string(),
-            "6cdc047f-f522-b74a-9a9c-d95ac8cdfda2".to_string(),
-        );
-        map.insert(
-            "system-auxiliary-class".to_string(),
-            "bf967a43-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "obj-dist-name".to_string(),
-            "bf9679e4-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-memberreference".to_string(),
-            "261337aa-f1c3-44b2-bbea-c88d49e6f0c7".to_string(),
-        );
-        map.insert(
-            "lsa-creation-time".to_string(),
-            "bf9679ad-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "certificate-revocation-list".to_string(),
-            "1677579f-47f3-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "locality".to_string(),
-            "bf967aa0-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-kds-domainid".to_string(),
-            "96400482-cf07-e94c-90e8-f2efc4f0495e".to_string(),
-        );
-        map.insert(
-            "sync-with-sid".to_string(),
-            "037651e5-441d-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "nt-security-descriptor".to_string(),
-            "bf9679e3-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-dfslinktarget".to_string(),
-            "f7b85ba9-3bf9-428f-aab4-2eee6d56f063".to_string(),
-        );
-        map.insert(
-            "logon-workstation".to_string(),
-            "bf9679ac-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "certificate-authority-object".to_string(),
-            "963d2732-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "top".to_string(),
-            "bf967ab7-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-kds-version".to_string(),
-            "d5f07340-e6b0-1e4a-97be-0d3318bd9db1".to_string(),
-        );
-        map.insert(
-            "sync-with-object".to_string(),
-            "037651e2-441d-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "nt-pwd-history".to_string(),
-            "bf9679e2-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-replicationgroupguid".to_string(),
-            "2dad8796-7619-4ff8-966e-0a5cc67b287f".to_string(),
-        );
-        map.insert(
-            "logon-hours".to_string(),
-            "bf9679ab-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "category-id".to_string(),
-            "7d6c0e94-7e20-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "link-track-volume-table".to_string(),
-            "ddac0cf4-af8f-11d0-afeb-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-kds-rootkeydata".to_string(),
-            "26627c27-08a2-0a40-a1b1-8dce85b42993".to_string(),
-        );
-        map.insert(
-            "sync-membership".to_string(),
-            "037651e3-441d-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "nt-mixed-domain".to_string(),
-            "3e97891f-8c01-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-rootfence".to_string(),
-            "51928e94-2cd8-4abe-b552-e50412444370".to_string(),
-        );
-        map.insert(
-            "logon-count".to_string(),
-            "bf9679aa-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "categories".to_string(),
-            "7bfdcb7e-4807-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-kds-privatekey-length".to_string(),
-            "615f42a1-37e7-1148-a0dd-3007e09cfc81".to_string(),
-        );
-        map.insert(
-            "sync-attributes".to_string(),
-            "037651e4-441d-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "nt-group-members".to_string(),
-            "bf9679df-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-dfspath".to_string(),
-            "2cc903e2-398c-443b-ac86-ff6b01eac7ba".to_string(),
-        );
-        map.insert(
-            "logo".to_string(),
-            "bf9679a9-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "trust-auth-incoming".to_string(),
-            "bf967a59-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "organizationalstatus".to_string(),
-            "28596019-7349-4d2f-adff-5a629961f942".to_string(),
-        );
-        map.insert(
-            "ms-net-ieee-80211-gp-policydata".to_string(),
-            "9c1495a5-4d76-468e-991e-1433b0a67855".to_string(),
-        );
-        map.insert(
-            "meetingid".to_string(),
-            "11b6cc7c-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "creation-time".to_string(),
-            "bf967946-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "nisnetgroup".to_string(),
-            "72efbf84-6e7b-4a5c-a8db-8a75a7cad254".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-scope".to_string(),
-            "4feae054-ce55-47bb-860e-5b12063a51de".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute3".to_string(),
-            "82f6c81a-fada-4a0d-b0f7-706d46838eb5".to_string(),
-        );
-        map.insert(
-            "trust-attributes".to_string(),
-            "80a67e5a-9f22-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "organizational-unit-name".to_string(),
-            "bf9679f0-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-net-ieee-80211-gp-policyguid".to_string(),
-            "35697062-1eaf-448b-ac1e-388e0be4fdee".to_string(),
-        );
-        map.insert(
-            "meetingendtime".to_string(),
-            "11b6cc91-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "create-wizard-ext".to_string(),
-            "2b09958b-8931-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute2".to_string(),
-            "f34ee0ac-c0c1-4ba9-82c9-1a90752f16a5".to_string(),
-        );
-        map.insert(
-            "tree-name".to_string(),
-            "28630ebd-41d5-11d1-a9c1-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "organization-name".to_string(),
-            "bf9679ef-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-imaging-psp-string".to_string(),
-            "7b6760ae-d6ed-44a6-b6be-9de62c09ec67".to_string(),
-        );
-        map.insert(
-            "meetingdescription".to_string(),
-            "11b6cc7e-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "create-time-stamp".to_string(),
-            "2df90d73-009f-11d2-aa4c-00c04fd7d83a".to_string(),
-        );
-        map.insert(
-            "ipnetwork".to_string(),
-            "d95836c3-143e-43fb-992a-b057f1ecadf9".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-role".to_string(),
-            "8213eac9-9d55-44dc-925c-e9a52b927644".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute1".to_string(),
-            "9709eaaf-49da-4db2-908a-0446e5eab844".to_string(),
-        );
-        map.insert(
-            "treat-as-leaf".to_string(),
-            "8fd044e3-771f-11d1-aeae-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "options-location".to_string(),
-            "963d274e-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-imaging-psp-identifier".to_string(),
-            "51583ce9-94fa-4b12-b990-304c35b18595".to_string(),
-        );
-        map.insert(
-            "meetingcontactinfo".to_string(),
-            "11b6cc87-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "create-dialog".to_string(),
-            "2b09958a-8931-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-rid-pool-allocation-enabled".to_string(),
-            "24977c8c-c1b7-3340-b4f6-2b375eb711d7".to_string(),
-        );
-        map.insert(
-            "transport-type".to_string(),
-            "26d97374-6070-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "options".to_string(),
-            "19195a53-6da0-11d0-afd3-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-iis-ftp-root".to_string(),
-            "2a7827a4-1483-49a5-9d84-52e3812156b4".to_string(),
-        );
-        map.insert(
-            "meetingblob".to_string(),
-            "11b6cc93-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "country-name".to_string(),
-            "bf967945-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "iphost".to_string(),
-            "ab911646-8827-4f95-8780-5a8f008eb68f".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-operation".to_string(),
-            "860abe37-9a9b-4fa4-b3d2-b8ace5df9ec5".to_string(),
-        );
-        map.insert(
-            "ms-ds-applies-to-resource-types".to_string(),
-            "693f2006-5764-3d4a-8439-58f04aab4b59".to_string(),
-        );
-        map.insert(
-            "transport-dll-name".to_string(),
-            "26d97372-6070-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "option-description".to_string(),
-            "963d274d-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-iis-ftp-dir".to_string(),
-            "8a5c99e9-2230-46eb-b8e8-e59d712eb9ee".to_string(),
-        );
-        map.insert(
-            "meetingbandwidth".to_string(),
-            "11b6cc92-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "country-code".to_string(),
-            "5fd42471-1262-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-ds-transformation-rules-compiled".to_string(),
-            "0bb49a10-536b-bc4d-a273-0bab0dd4bd10".to_string(),
-        );
-        map.insert(
-            "transport-address-attribute".to_string(),
-            "c1dc867c-a261-11d1-b606-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "operator-count".to_string(),
-            "bf9679ee-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ieee-80211-id".to_string(),
-            "7f73ef75-14c9-4c23-81de-dd07a06f9e8b".to_string(),
-        );
-        map.insert(
-            "meetingapplication".to_string(),
-            "11b6cc83-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "cost".to_string(),
-            "bf967944-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "oncrpc".to_string(),
-            "cadd1e5e-fefc-4f3f-b5a9-70e994204303".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-application".to_string(),
-            "ddf8de9b-cba5-4e12-842e-28d8b66f75ec".to_string(),
-        );
-        map.insert(
-            "ms-ds-tdo-ingress-bl".to_string(),
-            "5a5661a1-97c6-544b-8056-e430fe7bc554".to_string(),
-        );
-        map.insert(
-            "tombstone-lifetime".to_string(),
-            "16c3a860-1273-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "operating-system-version".to_string(),
-            "3e978926-8c01-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-ieee-80211-data-type".to_string(),
-            "6558b180-35da-4efe-beed-521f8f48cafb".to_string(),
-        );
-        map.insert(
-            "meetingadvertisescope".to_string(),
-            "11b6cc8b-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "control-access-rights".to_string(),
-            "6da8a4fc-0e52-11d0-a286-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-tdo-egress-bl".to_string(),
-            "d5006229-9913-2242-8b17-83761d1e0e5b".to_string(),
-        );
-        map.insert(
-            "title".to_string(),
-            "bf967a55-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "operating-system-service-pack".to_string(),
-            "3e978927-8c01-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-ieee-80211-data".to_string(),
-            "0e0d0938-2658-4580-a9f6-7a0ac7b566cb".to_string(),
-        );
-        map.insert(
-            "may-contain".to_string(),
-            "bf9679bf-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "context-menu".to_string(),
-            "4d8601ee-ac85-11d0-afe3-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ipprotocol".to_string(),
-            "9c2dcbd2-fbf0-4dc7-ace0-8356dcd0f013".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-admin-manager".to_string(),
-            "cfee1051-5f28-4bae-a863-5d0cc18a8ed1".to_string(),
-        );
-        map.insert(
-            "ms-ds-egress-claims-transformation-policy".to_string(),
-            "c137427e-9a73-b040-9190-1b095bb43288".to_string(),
-        );
-        map.insert(
-            "time-vol-change".to_string(),
-            "ddac0cf0-af8f-11d0-afeb-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "operating-system-hotfix".to_string(),
-            "bd951b3c-9c96-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-tpm-ownerinformation".to_string(),
-            "aa4e1a6d-550d-4e05-8c35-4afcb917a9fe".to_string(),
-        );
-        map.insert(
-            "max-ticket-age".to_string(),
-            "bf9679be-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "content-indexing-allowed".to_string(),
-            "bf967943-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-ingress-claims-transformation-policy".to_string(),
-            "86284c08-0c6e-1540-8b15-75147d23d20d".to_string(),
-        );
-        map.insert(
-            "time-refresh".to_string(),
-            "ddac0cf1-af8f-11d0-afeb-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "operating-system".to_string(),
-            "3e978925-8c01-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-fve-recoveryguid".to_string(),
-            "f76909bc-e678-47a0-b0b3-f86a0044c06d".to_string(),
-        );
-        map.insert(
-            "max-storage".to_string(),
-            "bf9679bd-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "company".to_string(),
-            "f0f8ff88-1191-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ipservice".to_string(),
-            "2517fadf-fa97-48ad-9de6-79ac5721f864".to_string(),
-        );
-        map.insert(
-            "ms-ds-app-data".to_string(),
-            "9e67d761-e327-4d55-bc95-682f875e2f8e".to_string(),
-        );
-        map.insert(
-            "ms-ds-transformation-rules".to_string(),
-            "55872b71-c4b2-3b48-ae51-4095f91ec600".to_string(),
-        );
-        map.insert(
-            "text-encoded-or-address".to_string(),
-            "a8df7489-c5ea-11d1-bbcb-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "omt-indx-guid".to_string(),
-            "1f0075fa-7e40-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-fve-keypackage".to_string(),
-            "1fd55ea8-88a7-47dc-8129-0daa97186a54".to_string(),
-        );
-        map.insert(
-            "max-renew-age".to_string(),
-            "bf9679bc-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "common-name".to_string(),
-            "bf96793f-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-geocoordinates-longitude".to_string(),
-            "94c42110-bae4-4cea-8577-af813af5da25".to_string(),
-        );
-        map.insert(
-            "text-country".to_string(),
-            "f0f8ffa7-1191-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "omt-guid".to_string(),
-            "ddac0cf3-af8f-11d0-afeb-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-fve-volumeguid".to_string(),
-            "85e5a5cf-dcee-4075-9cfd-ac9db6a2f245".to_string(),
-        );
-        map.insert(
-            "max-pwd-age".to_string(),
-            "bf9679bb-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "comment".to_string(),
-            "bf96793e-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "posixgroup".to_string(),
-            "2a9350b8-062c-4ed0-9903-dde10d06deba".to_string(),
-        );
-        map.insert(
-            "ms-ds-app-configuration".to_string(),
-            "90df3c3e-1854-4455-a5d7-cad40d56657a".to_string(),
-        );
-        map.insert(
-            "ms-ds-geocoordinates-latitude".to_string(),
-            "dc66d44e-3d43-40f5-85c5-3c12e169927e".to_string(),
-        );
-        map.insert(
-            "terminal-server".to_string(),
-            "6db69a1c-9422-11d1-aebd-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "om-syntax".to_string(),
-            "bf9679ed-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-fve-recoverypassword".to_string(),
-            "43061ac1-c8ad-4ccc-b785-2bfac20fc60a".to_string(),
-        );
-        map.insert(
-            "mastered-by".to_string(),
-            "e48e64e0-12c9-11d3-9102-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "com-unique-libid".to_string(),
-            "281416da-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-geocoordinates-altitude".to_string(),
-            "a11703b7-5641-4d9c-863e-5fb3325e74e0".to_string(),
-        );
-        map.insert(
-            "template-roots".to_string(),
-            "ed9de9a0-7041-11d2-9905-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "om-object-class".to_string(),
-            "bf9679ec-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "default-object-category".to_string(),
-            "26d97367-6070-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute18".to_string(),
-            "88e73b34-0aa6-4469-9842-6eb01b32a5b5".to_string(),
-        );
-        map.insert(
-            "unstructuredname".to_string(),
-            "9c8ef177-41cf-45c9-9673-7716c0c8901b".to_string(),
-        );
-        map.insert(
-            "partial-attribute-deletion-list".to_string(),
-            "28630ec0-41d5-11d1-a9c1-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-pki-oid-cps".to_string(),
-            "5f49940e-a79f-4a51-bb6f-3d446a54dc6b".to_string(),
-        );
-        map.insert(
-            "meetingstarttime".to_string(),
-            "11b6cc90-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "default-local-policy-object".to_string(),
-            "bf96799f-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "mssfu-30-domain-info".to_string(),
-            "36297dce-656b-4423-ab65-dabb2770819e".to_string(),
-        );
-        map.insert(
-            "ms-ds-managed-service-account".to_string(),
-            "ce206244-5827-4a86-ba1c-1c0c386c1b64".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute17".to_string(),
-            "3d3c6dda-6be8-4229-967e-2ff5bb93b4ce".to_string(),
-        );
-        map.insert(
-            "unstructuredaddress".to_string(),
-            "50950839-cc4c-4491-863a-fcf942d684b7".to_string(),
-        );
-        map.insert(
-            "parent-guid".to_string(),
-            "2df90d74-009f-11d2-aa4c-00c04fd7d83a".to_string(),
-        );
-        map.insert(
-            "ms-pki-oid-attribute".to_string(),
-            "8c9e1288-5028-4f4f-a704-76d026f246ef".to_string(),
-        );
-        map.insert(
-            "meetingscope".to_string(),
-            "11b6cc8a-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "default-hiding-value".to_string(),
-            "b7b13116-b82e-11d0-afee-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute16".to_string(),
-            "9581215b-5196-4053-a11e-6ffcafc62c4d".to_string(),
-        );
-        map.insert(
-            "uniquemember".to_string(),
-            "8f888726-f80a-44d7-b1ee-cb9df21392c8".to_string(),
-        );
-        map.insert(
-            "parent-ca-certificate-chain".to_string(),
-            "963d2733-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-pki-minimal-key-size".to_string(),
-            "e96a63f5-417f-46d3-be52-db7703c503df".to_string(),
-        );
-        map.insert(
-            "meetingrecurrence".to_string(),
-            "11b6cc8f-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "default-group".to_string(),
-            "720bc4e2-a54a-11d0-afdf-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "mssfu-30-net-id".to_string(),
-            "e263192c-2a02-48df-9792-94f2328781a0".to_string(),
-        );
-        map.insert(
-            "ms-ds-quota-control".to_string(),
-            "de91fc26-bd02-4b52-ae26-795999e96fc7".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute15".to_string(),
-            "aae4d537-8af0-4daa-9cc6-62eadb84ff03".to_string(),
-        );
-        map.insert(
-            "uniqueidentifier".to_string(),
-            "ba0184c7-38c5-4bed-a526-75421470580c".to_string(),
-        );
-        map.insert(
-            "parent-ca".to_string(),
-            "5245801b-ca6a-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-pki-enrollment-servers".to_string(),
-            "f22bd38f-a1d0-4832-8b28-0331438886a6".to_string(),
-        );
-        map.insert(
-            "meetingrating".to_string(),
-            "11b6cc8d-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "default-class-store".to_string(),
-            "bf967948-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute14".to_string(),
-            "cebcb6ba-6e80-4927-8560-98feca086a9f".to_string(),
-        );
-        map.insert(
-            "unicode-pwd".to_string(),
-            "bf9679e1-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "package-type".to_string(),
-            "7d6c0e96-7e20-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-pki-enrollment-flag".to_string(),
-            "d15ef7d8-f226-46db-ae79-b34e560bd12c".to_string(),
-        );
-        map.insert(
-            "meetingprotocol".to_string(),
-            "11b6cc81-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "dbcs-pwd".to_string(),
-            "bf96799c-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "mssfu-30-mail-aliases".to_string(),
-            "d6710785-86ff-44b7-85b5-f1f8689522ce".to_string(),
-        );
-        map.insert(
-            "ms-ds-quota-container".to_string(),
-            "da83fc4f-076f-4aea-b4dc-8f4dab9b5993".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute13".to_string(),
-            "28be464b-ab90-4b79-a6b0-df437431d036".to_string(),
-        );
-        map.insert(
-            "unc-name".to_string(),
-            "bf967a64-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "package-name".to_string(),
-            "7d6c0e98-7e20-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-pki-credential-roaming-tokens".to_string(),
-            "b7ff5a38-0818-42b0-8110-d3d154c97f24".to_string(),
-        );
-        map.insert(
-            "meetingowner".to_string(),
-            "11b6cc88-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "current-value".to_string(),
-            "bf967947-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute12".to_string(),
-            "3c01c43d-e10b-4fca-92b2-4cf615d5b09a".to_string(),
-        );
-        map.insert(
-            "uid".to_string(),
-            "0bb0fca0-1e89-429f-901a-1413894d9f59".to_string(),
-        );
-        map.insert(
-            "package-flags".to_string(),
-            "7d6c0e99-7e20-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-pki-certificate-policy".to_string(),
-            "38942346-cc5b-424b-a7d8-6ffd12029c5f".to_string(),
-        );
-        map.insert(
-            "meetingoriginator".to_string(),
-            "11b6cc86-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "current-parent-ca".to_string(),
-            "963d273f-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "bootabledevice".to_string(),
-            "4bcb2477-4bb3-4545-a9fc-fb66e136b435".to_string(),
-        );
-        map.insert(
-            "ms-ds-password-settings-container".to_string(),
-            "5b06b06a-4cf3-44c0-bd16-43bc10a987da".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute11".to_string(),
-            "9e9ebbc8-7da5-42a6-8925-244e12a56e24".to_string(),
-        );
-        map.insert(
-            "uas-compat".to_string(),
-            "bf967a61-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "owner".to_string(),
-            "bf9679f3-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-pki-certificate-name-flag".to_string(),
-            "ea1dddc4-60ff-416e-8cc0-17cee534bce7".to_string(),
-        );
-        map.insert(
-            "meetingname".to_string(),
-            "11b6cc7d-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "current-location".to_string(),
-            "1f0075fc-7e40-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute10".to_string(),
-            "670afcb3-13bd-47fc-90b3-0a527ed81ab7".to_string(),
-        );
-        map.insert(
-            "trust-type".to_string(),
-            "bf967a60-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "other-well-known-objects".to_string(),
-            "1ea64e5d-ac0f-11d2-90df-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-pki-certificate-application-policy".to_string(),
-            "dbd90548-aa37-4202-9966-8c537ba5ce32".to_string(),
-        );
-        map.insert(
-            "meetingmaxparticipants".to_string(),
-            "11b6cc85-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "curr-machine-id".to_string(),
-            "1f0075fe-7e40-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ieee802device".to_string(),
-            "a699e529-a637-4b7d-a0fb-5dc466a0b8a7".to_string(),
-        );
-        map.insert(
-            "ms-ds-password-settings".to_string(),
-            "3bcd9db8-f84b-451c-952f-6c52b81f9ec6".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute9".to_string(),
-            "0a63e12c-3040-4441-ae26-cd95af0d247e".to_string(),
-        );
-        map.insert(
-            "trust-posix-offset".to_string(),
-            "bf967a5e-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "other-name".to_string(),
-            "bf9679f2-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-pki-cert-template-oid".to_string(),
-            "3164c36a-ba26-468c-8bda-c1e5cc256728".to_string(),
-        );
-        map.insert(
-            "meetinglocation".to_string(),
-            "11b6cc80-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "cross-certificate-pair".to_string(),
-            "167757b2-47f3-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute8".to_string(),
-            "3cd1c514-8449-44ca-81c0-021781800d2a".to_string(),
-        );
-        map.insert(
-            "trust-partner".to_string(),
-            "bf967a5d-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "other-mailbox".to_string(),
-            "0296c123-40da-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-net-ieee-8023-gp-policyreserved".to_string(),
-            "d3c527c7-2606-4deb-8cfd-18426feec8ce".to_string(),
-        );
-        map.insert(
-            "meetinglanguage".to_string(),
-            "11b6cc84-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "crl-partitioned-revocation-list".to_string(),
-            "963d2731-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "nisobject".to_string(),
-            "904f8a93-4954-4c5f-b1e1-53c097a31e13".to_string(),
-        );
-        map.insert(
-            "ms-ds-optional-feature".to_string(),
-            "44f00041-35af-468b-b20a-6ce8737c580b".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute7".to_string(),
-            "4a7c1319-e34e-40c2-9d00-60ff7890f207".to_string(),
-        );
-        map.insert(
-            "trust-parent".to_string(),
-            "b000ea7a-a086-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "other-login-workstations".to_string(),
-            "bf9679f1-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-net-ieee-8023-gp-policydata".to_string(),
-            "8398948b-7457-4d91-bd4d-8d7ed669c9f7".to_string(),
-        );
-        map.insert(
-            "meetingkeyword".to_string(),
-            "11b6cc7f-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "crl-object".to_string(),
-            "963d2737-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute6".to_string(),
-            "60452679-28e1-4bec-ace3-712833361456".to_string(),
-        );
-        map.insert(
-            "trust-direction".to_string(),
-            "bf967a5c-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "original-display-table-msdos".to_string(),
-            "5fd424cf-1262-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-net-ieee-8023-gp-policyguid".to_string(),
-            "94a7b05a-b8b2-4f59-9c25-39e69baa1684".to_string(),
-        );
-        map.insert(
-            "meetingisencrypted".to_string(),
-            "11b6cc8e-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "creator".to_string(),
-            "7bfdcb85-4807-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "nismap".to_string(),
-            "7672666c-02c1-4f33-9ecf-f649c1dd9b7c".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-task".to_string(),
-            "1ed3a473-9b1b-418a-bfa0-3a37b95a5306".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute5".to_string(),
-            "2915e85b-e347-4852-aabb-22e5a651c864".to_string(),
-        );
-        map.insert(
-            "trust-auth-outgoing".to_string(),
-            "bf967a5f-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "original-display-table".to_string(),
-            "5fd424ce-1262-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-net-ieee-80211-gp-policyreserved".to_string(),
-            "0f69c62e-088e-4ff5-a53a-e923cec07c0a".to_string(),
-        );
-        map.insert(
-            "meetingip".to_string(),
-            "11b6cc89-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "creation-wizard".to_string(),
-            "4d8601ed-ac85-11d0-afe3-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute4".to_string(),
-            "9cbf3437-4e6e-485b-b291-22b02554273f".to_string(),
-        );
-        map.insert(
-            "dhcp-obj-description".to_string(),
-            "963d2744-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-device-id".to_string(),
-            "c30181c7-6342-41fb-b279-f7c566cbe0a7".to_string(),
-        );
-        map.insert(
-            "user-workstations".to_string(),
-            "bf9679d7-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "phone-isdn-primary".to_string(),
-            "0296c11f-40da-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-rras-attribute".to_string(),
-            "f39b98ad-938d-11d1-aebd-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-com-defaultpartitionlink".to_string(),
-            "998b10f7-aa1a-4364-b867-753d197fe670".to_string(),
-        );
-        map.insert(
-            "dhcp-maxkey".to_string(),
-            "963d2754-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfs-link-v2".to_string(),
-            "7769fb7a-1159-4e96-9ccd-68bc487073eb".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-content".to_string(),
-            "64759b35-d3a1-42e4-b5f1-a3de162109b3".to_string(),
-        );
-        map.insert(
-            "ms-ds-device-physical-ids".to_string(),
-            "90615414-a2a0-4447-a993-53409599b74e".to_string(),
-        );
-        map.insert(
-            "user-smime-certificate".to_string(),
-            "e16a9db2-403c-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "phone-ip-primary".to_string(),
-            "4d146e4a-48d4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-pki-accountcredentials".to_string(),
-            "b8dfa744-31dc-4ef1-ac7c-84baf7ef9da7".to_string(),
-        );
-        map.insert(
-            "move-tree-state".to_string(),
-            "1f2ac2c8-3b71-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "dhcp-mask".to_string(),
-            "963d2747-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-device-os-version".to_string(),
-            "70fb8c63-5fab-4504-ab9d-14b329a8a7f8".to_string(),
-        );
-        map.insert(
-            "user-shared-folder-other".to_string(),
-            "9a9a0220-4a5b-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "phone-ip-other".to_string(),
-            "4d146e4b-48d4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-pki-dpapimasterkeys".to_string(),
-            "b3f93023-9239-4f7c-b99c-6745d87adbc2".to_string(),
-        );
-        map.insert(
-            "moniker-display-name".to_string(),
-            "bf9679c8-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "dhcp-identification".to_string(),
-            "963d2742-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfs-deleted-link-v2".to_string(),
-            "25173408-04ca-40e8-865e-3f9ce9bf1bd3".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-replicationgroup".to_string(),
-            "1c332fe0-0c2a-4f32-afca-23c5e45a9e77".to_string(),
-        );
-        map.insert(
-            "ms-ds-device-os-type".to_string(),
-            "100e454d-f3bb-4dcb-845f-8d5edc471c59".to_string(),
-        );
-        map.insert(
-            "user-shared-folder".to_string(),
-            "9a9a021f-4a5b-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "phone-home-primary".to_string(),
-            "f0f8ffa1-1191-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-pki-roamingtimestamp".to_string(),
-            "6617e4ac-a2f1-43ab-b60c-11fbd1facf05".to_string(),
-        );
-        map.insert(
-            "moniker".to_string(),
-            "bf9679c7-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "dhcp-flags".to_string(),
-            "963d2741-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-is-enabled".to_string(),
-            "22a95c0e-1f83-4c82-94ce-bea688cfc871".to_string(),
-        );
-        map.insert(
-            "user-principal-name".to_string(),
-            "28630ebb-41d5-11d1-a9c1-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "phone-home-other".to_string(),
-            "f0f8ffa2-1191-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-pki-ra-signature".to_string(),
-            "fe17e04b-937d-4f7e-8e0e-9292c8d5683e".to_string(),
-        );
-        map.insert(
-            "modify-time-stamp".to_string(),
-            "9a7ad94a-ca53-11d1-bbd0-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "dhcp-classes".to_string(),
-            "963d2750-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-fve-recoveryinformation".to_string(),
-            "ea715d30-8f53-40d0-bd1e-6109186d782c".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-globalsettings".to_string(),
-            "7b35dbad-b3ec-486a-aad4-2fec9d6ea6f6".to_string(),
-        );
-        map.insert(
-            "ms-ds-approximate-last-logon-time-stamp".to_string(),
-            "a34f983b-84c6-4f0c-9050-a3a14a1d35a4".to_string(),
-        );
-        map.insert(
-            "userpkcs12".to_string(),
-            "23998ab5-70f8-4007-a4c1-a84a38311f9a".to_string(),
-        );
-        map.insert(
-            "phone-fax-other".to_string(),
-            "0296c11d-40da-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-pki-ra-policies".to_string(),
-            "d546ae22-0951-4d47-817e-1c9f96faad46".to_string(),
-        );
-        map.insert(
-            "modified-count-at-last-prom".to_string(),
-            "bf9679c6-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "destination-indicator".to_string(),
-            "bf967951-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-registered-users".to_string(),
-            "0449160c-5a8e-4fc8-b052-01c0f6e48f02".to_string(),
-        );
-        map.insert(
-            "userclass".to_string(),
-            "11732a8a-e14d-4cc5-b92f-d93f51c6d8e4".to_string(),
-        );
-        map.insert(
-            "personal-title".to_string(),
-            "16775858-47f3-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-pki-ra-application-policies".to_string(),
-            "3c91fbbf-4773-4ccd-a87b-85d53e7bcf6a".to_string(),
-        );
-        map.insert(
-            "modified-count".to_string(),
-            "bf9679c5-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "desktop-profile".to_string(),
-            "eea65906-8ac6-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-net-ieee-8023-grouppolicy".to_string(),
-            "99a03a6a-ab19-4446-9350-0cb878ed2d9b".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-subscription".to_string(),
-            "67212414-7bcc-4609-87e0-088dad8abdee".to_string(),
-        );
-        map.insert(
-            "ms-ds-registered-owner".to_string(),
-            "617626e9-01eb-42cf-991f-ce617982237e".to_string(),
-        );
-        map.insert(
-            "user-password".to_string(),
-            "bf967a6e-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "per-recip-dialog-display-table".to_string(),
-            "5fd424d4-1262-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-pki-template-schema-version".to_string(),
-            "0c15e9f5-491d-4594-918f-32813a091da9".to_string(),
-        );
-        map.insert(
-            "min-ticket-age".to_string(),
-            "bf9679c4-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "description".to_string(),
-            "bf967950-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-device-location".to_string(),
-            "e3fb56c8-5de8-45f5-b1b1-d2b6cd31e762".to_string(),
-        );
-        map.insert(
-            "user-parameters".to_string(),
-            "bf967a6d-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "per-msg-dialog-display-table".to_string(),
-            "5fd424d3-1262-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-pki-template-minor-revision".to_string(),
-            "13f5236c-1884-46b1-b5d0-484e38990d58".to_string(),
-        );
-        map.insert(
-            "min-pwd-length".to_string(),
-            "bf9679c3-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "departmentnumber".to_string(),
-            "be9ef6ee-cbc7-4f22-b27b-96967e7ee585".to_string(),
-        );
-        map.insert(
-            "ms-net-ieee-80211-grouppolicy".to_string(),
-            "1cb81863-b822-4379-9ea2-5ff7bdc6386d".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-subscriber".to_string(),
-            "e11505d7-92c4-43e7-bf5c-295832ffc896".to_string(),
-        );
-        map.insert(
-            "ms-ds-maximum-registration-inactivity-period".to_string(),
-            "0a5caa39-05e6-49ca-b808-025b936610e7".to_string(),
-        );
-        map.insert(
-            "user-comment".to_string(),
-            "bf967a6a-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "pending-parent-ca".to_string(),
-            "963d273e-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-pki-supersede-templates".to_string(),
-            "9de8ae7d-7a5b-421d-b5e4-061f79dfd5d7".to_string(),
-        );
-        map.insert(
-            "min-pwd-age".to_string(),
-            "bf9679c2-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "department".to_string(),
-            "bf96794f-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-registration-quota".to_string(),
-            "ca3286c2-1f64-4079-96bc-e62b610e730f".to_string(),
-        );
-        map.insert(
-            "user-cert".to_string(),
-            "bf967a69-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "pending-ca-certificates".to_string(),
-            "963d273c-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-pki-site-name".to_string(),
-            "0cd8711f-0afc-4926-a4b1-09b08d3d436c".to_string(),
-        );
-        map.insert(
-            "mhs-or-address".to_string(),
-            "0296c122-40da-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "delta-revocation-list".to_string(),
-            "167757b5-47f3-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "mssfu-30-nis-map-config".to_string(),
-            "faf733d0-f8eb-4dcf-8d75-f1753af6a50b".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-localsettings".to_string(),
-            "fa85c591-197f-477e-83bd-ea5a43df2239".to_string(),
-        );
-        map.insert(
-            "ms-ds-issuer-certificates".to_string(),
-            "6b3d6fda-0893-43c4-89fb-1fb52a6616a9".to_string(),
-        );
-        map.insert(
-            "user-account-control".to_string(),
-            "bf967a68-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "pek-list".to_string(),
-            "07383083-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-pki-private-key-flag".to_string(),
-            "bab04ac2-0435-4709-9307-28380e7c7001".to_string(),
-        );
-        map.insert(
-            "member".to_string(),
-            "bf9679c0-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "default-security-descriptor".to_string(),
-            "807a6d30-1669-11d0-a064-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute20".to_string(),
-            "f5446328-8b6e-498d-95a8-211748d5acdc".to_string(),
-        );
-        map.insert(
-            "upn-suffixes".to_string(),
-            "032160bf-9824-11d1-aec0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "pek-key-change-interval".to_string(),
-            "07383084-91df-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-pki-oid-user-notice".to_string(),
-            "04c4da7a-e114-4e69-88de-e293f2d3b395".to_string(),
-        );
-        map.insert(
-            "meetingurl".to_string(),
-            "11b6cc8c-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "default-priority".to_string(),
-            "281416c8-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "mssfu-30-network-user".to_string(),
-            "e15334a3-0bf0-4427-b672-11f5d84acc92".to_string(),
-        );
-        map.insert(
-            "ms-exch-configuration-container".to_string(),
-            "d03d6858-06f4-11d2-aa53-00c04fd7d83a".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloudextensionattribute19".to_string(),
-            "0975fe99-9607-468a-8e18-c800d3387395".to_string(),
-        );
-        map.insert(
-            "upgrade-product-code".to_string(),
-            "d9e18312-8939-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "partial-attribute-set".to_string(),
-            "19405b9e-3cfa-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-pki-oid-localizedname".to_string(),
-            "7d59a816-bb05-4a72-971f-5c1331f67559".to_string(),
-        );
-        map.insert(
-            "meetingtype".to_string(),
-            "11b6cc82-48c4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "display-name-printable".to_string(),
-            "bf967954-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-claim-type".to_string(),
-            "81a3857c-5469-4d8f-aae6-c27699762604".to_string(),
-        );
-        map.insert(
-            "ms-ds-user-allowed-to-authenticate-to".to_string(),
-            "de0caa7f-724e-4286-b179-192671efc664".to_string(),
-        );
-        map.insert(
-            "volume-count".to_string(),
-            "34aaa217-b699-11d0-afee-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "pki-expiration-period".to_string(),
-            "041570d2-3b9e-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-sql-serviceaccount".to_string(),
-            "64933a3e-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-authenticatedat-dc".to_string(),
-            "3e1ee99c-6604-4489-89d9-84798a89515a".to_string(),
-        );
-        map.insert(
-            "display-name".to_string(),
-            "bf967953-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-imaging-postscanprocess".to_string(),
-            "1f7c257c-b8a3-4525-82f8-11ccc7bee36e".to_string(),
-        );
-        map.insert(
-            "ms-ds-syncserverurl".to_string(),
-            "b7acc3d2-2a74-4fa4-ac25-e63fe8b61218".to_string(),
-        );
-        map.insert(
-            "vol-table-idx-guid".to_string(),
-            "1f0075fb-7e40-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "pki-enrollment-access".to_string(),
-            "926be278-56f9-11d2-90d0-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-sql-build".to_string(),
-            "603e94c4-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-approx-immed-subordinates".to_string(),
-            "e185d243-f6ce-4adb-b496-b0c005d7823c".to_string(),
-        );
-        map.insert(
-            "dhcp-update-time".to_string(),
-            "963d2755-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-resource-properties".to_string(),
-            "7a4a4584-b350-478f-acd6-b4b852d82cc0".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloud-isenabled".to_string(),
-            "89848328-7c4e-4f6f-a013-28ce3ad282dc".to_string(),
-        );
-        map.insert(
-            "vol-table-guid".to_string(),
-            "1f0075fd-7e40-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "pki-default-key-spec".to_string(),
-            "426cae6e-3b9d-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-sql-memory".to_string(),
-            "5b5d448c-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-auxiliary-classes".to_string(),
-            "c4af1073-ee50-4be0-b8c0-89a41fe99abe".to_string(),
-        );
-        map.insert(
-            "dhcp-unique-key".to_string(),
-            "963d273a-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-imaging-psps".to_string(),
-            "a0ed2ac1-970c-4777-848e-ec63a0ec44fc".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloud-issuer-public-certificates".to_string(),
-            "a1e8b54f-4bd6-4fd2-98e2-bcee92a55497".to_string(),
-        );
-        map.insert(
-            "version-number-lo".to_string(),
-            "7d6c0e9b-7e20-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "pki-default-csps".to_string(),
-            "1ef6336e-3b9e-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-sql-location".to_string(),
-            "561c9644-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-allowed-to-delegate-to".to_string(),
-            "800d94d7-b7a1-42a1-b14d-7cae1423d07f".to_string(),
-        );
-        map.insert(
-            "dhcp-type".to_string(),
-            "963d273b-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-claim-types".to_string(),
-            "36093235-c715-4821-ab6a-b56fb2805a58".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloud-anchor".to_string(),
-            "78565e80-03d4-4fe3-afac-8c3bca2f3653".to_string(),
-        );
-        map.insert(
-            "version-number-hi".to_string(),
-            "7d6c0e9a-7e20-11d0-afd6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "pki-critical-extensions".to_string(),
-            "fc5a9106-3b9d-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-sql-contact".to_string(),
-            "4f6cbdd8-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-allowed-dns-suffixes".to_string(),
-            "8469441b-9ac4-4e45-8205-bd219dbf672d".to_string(),
-        );
-        map.insert(
-            "dhcp-subnets".to_string(),
-            "963d2746-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ieee-80211-policy".to_string(),
-            "7b9a2d92-b7eb-4382-9772-c3e0f9baaf94".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloud-ismanaged".to_string(),
-            "5315ba8e-958f-4b52-bd38-1349a304dd63".to_string(),
-        );
-        map.insert(
-            "version-number".to_string(),
-            "bf967a76-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "picture".to_string(),
-            "8d3bca50-1d7e-11d0-a081-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-sql-registeredowner".to_string(),
-            "48fd44ea-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-all-users-trust-quota".to_string(),
-            "d3aa4a5c-4e03-4810-97aa-2b339e7a434b".to_string(),
-        );
-        map.insert(
-            "dhcp-state".to_string(),
-            "963d2752-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-claim-type-property-base".to_string(),
-            "b8442f58-c490-4487-8a9d-d80b883271ad".to_string(),
-        );
-        map.insert(
-            "ms-ds-ismanaged".to_string(),
-            "60686ace-6c27-43de-a4e5-f00c2f8d3309".to_string(),
-        );
-        map.insert(
-            "vendor".to_string(),
-            "281416df-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "physical-location-object".to_string(),
-            "b7b13119-b82e-11d0-afee-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-sql-name".to_string(),
-            "3532dfd8-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-additional-sam-account-name".to_string(),
-            "975571df-a4d5-429a-9f59-cdc6581d91e6".to_string(),
-        );
-        map.insert(
-            "dhcp-sites".to_string(),
-            "963d2749-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-connection".to_string(),
-            "e58f972e-64b5-46ef-8d8b-bbc3e1897eab".to_string(),
-        );
-        map.insert(
-            "ms-ds-issuer-public-certificates".to_string(),
-            "b5f1edfe-b4d2-4076-ab0f-6148342b0bf6".to_string(),
-        );
-        map.insert(
-            "valid-accesses".to_string(),
-            "4d2fa380-7f54-11d2-992a-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "physical-delivery-office-name".to_string(),
-            "bf9679f7-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-radius-savedframedipv6route".to_string(),
-            "9666bb5c-df9d-4d41-b437-2eec7e27c9b3".to_string(),
-        );
-        map.insert(
-            "ms-ds-additional-dns-host-name".to_string(),
-            "80863791-dbe9-4eb8-837e-7f0ab55d9ac7".to_string(),
-        );
-        map.insert(
-            "dhcp-servers".to_string(),
-            "963d2745-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "template-roots2".to_string(),
-            "b1cba91a-0682-4362-a659-153e201ef069".to_string(),
-        );
-        map.insert(
-            "ms-ds-drs-farm-id".to_string(),
-            "6055f766-202e-49cd-a8be-e52bb159edfb".to_string(),
-        );
-        map.insert(
-            "usn-source".to_string(),
-            "167758ad-47f3-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "photo".to_string(),
-            "9c979768-ba1a-4c08-9632-c6a5c1ed649a".to_string(),
-        );
-        map.insert(
-            "ms-radius-framedipv6route".to_string(),
-            "5a5aa804-3083-4863-94e5-018a79a22ec0".to_string(),
-        );
-        map.insert(
-            "ms-drm-identity-certificate".to_string(),
-            "e85e1204-3434-41ad-9b56-e2901228fff0".to_string(),
-        );
-        map.insert(
-            "dhcp-reservations".to_string(),
-            "963d274a-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "global-address-list2".to_string(),
-            "4898f63d-4112-477c-8826-3ca00bd8277d".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-member".to_string(),
-            "4229c897-c211-437c-a5ae-dbf705b696e5".to_string(),
-        );
-        map.insert(
-            "ms-ds-repl-value-meta-data-ext".to_string(),
-            "1e02d2ef-44ad-46b2-a67d-9fd18d780bca".to_string(),
-        );
-        map.insert(
-            "usn-last-obj-rem".to_string(),
-            "bf967a73-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "phone-pager-primary".to_string(),
-            "f0f8ffa6-1191-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-radius-savedframedipv6prefix".to_string(),
-            "0965a062-b1e1-403b-b48d-5c0eb0e952cc".to_string(),
-        );
-        map.insert(
-            "ms-com-userpartitionsetlink".to_string(),
-            "8e940c8a-e477-4367-b08d-ff2ff942dcd7".to_string(),
-        );
-        map.insert(
-            "dhcp-ranges".to_string(),
-            "963d2748-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "address-book-roots2".to_string(),
-            "508ca374-a511-4e4e-9f4f-856f61a6b7e4".to_string(),
-        );
-        map.insert(
-            "ms-ds-parent-dist-name".to_string(),
-            "b918fe7d-971a-f404-9e21-9261abec970b".to_string(),
-        );
-        map.insert(
-            "usn-intersite".to_string(),
-            "a8df7498-c5ea-11d1-bbcb-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "phone-pager-other".to_string(),
-            "f0f8ffa4-1191-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-radius-framedipv6prefix".to_string(),
-            "f63ed610-d67c-494d-87be-cd1e24359a38".to_string(),
-        );
-        map.insert(
-            "ms-com-userlink".to_string(),
-            "9e6f3a4d-242c-4f37-b068-36b57f9fc852".to_string(),
-        );
-        map.insert(
-            "dhcp-properties".to_string(),
-            "963d2753-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfs-namespace-v2".to_string(),
-            "21cb8628-f3c3-4bbf-bff6-060b2d8f299a".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-topology".to_string(),
-            "04828aa9-6e42-4e80-b962-e2fe00754d17".to_string(),
-        );
-        map.insert(
-            "ms-ds-member-transitive".to_string(),
-            "e215395b-9104-44d9-b894-399ec9e21dfc".to_string(),
-        );
-        map.insert(
-            "usn-dsa-last-obj-removed".to_string(),
-            "bf967a71-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "phone-office-other".to_string(),
-            "f0f8ffa5-1191-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-radius-savedframedinterfaceid".to_string(),
-            "a4da7289-92a3-42e5-b6b6-dad16d280ac9".to_string(),
-        );
-        map.insert(
-            "ms-com-partitionsetlink".to_string(),
-            "67f121dc-7d02-4c7d-82f5-9ad4c950ac34".to_string(),
-        );
-        map.insert(
-            "dhcp-options".to_string(),
-            "963d274f-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-is-member-of-dl-transitive".to_string(),
-            "862166b6-c941-4727-9565-48bfff2941de".to_string(),
-        );
-        map.insert(
-            "usn-created".to_string(),
-            "bf967a70-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "phone-mobile-primary".to_string(),
-            "f0f8ffa3-1191-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-radius-framedinterfaceid".to_string(),
-            "a6f24a23-d65c-4d65-a64f-35fb6873c2b9".to_string(),
-        );
-        map.insert(
-            "ms-com-partitionlink".to_string(),
-            "09abac62-043f-4702-ac2b-6ca15eee5754".to_string(),
-        );
-        map.insert(
-            "dhcp-obj-name".to_string(),
-            "963d2743-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-dfs-namespace-anchor".to_string(),
-            "da73a085-6e64-4d61-b064-015d04164795".to_string(),
-        );
-        map.insert(
-            "ms-dfsr-contentset".to_string(),
-            "4937f40d-a6dc-4d48-97ca-06e5fbfd3f16".to_string(),
-        );
-        map.insert(
-            "ms-ds-device-object-version".to_string(),
-            "ef65695a-f179-4e6a-93de-b01e06681cfb".to_string(),
-        );
-        map.insert(
-            "usn-changed".to_string(),
-            "bf967a6f-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "phone-mobile-other".to_string(),
-            "0296c11e-40da-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-rras-vendor-attribute-entry".to_string(),
-            "f39b98ac-938d-11d1-aebd-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-com-objectid".to_string(),
-            "430f678b-889f-41f2-9843-203b5a65572f".to_string(),
-        );
-        map.insert(
-            "ms-sql-publicationurl".to_string(),
-            "ae0c11b8-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-scope-name".to_string(),
-            "515a6b06-2617-4173-8099-d5605df043c6".to_string(),
-        );
-        map.insert(
-            "dns-tombstoned".to_string(),
-            "d5eb2eb7-be4e-463b-a214-634a44d7392e".to_string(),
-        );
-        map.insert(
-            "ms-dns-server-settings".to_string(),
-            "ef2fc3ed-6e18-415b-99e4-3114a8cb124b".to_string(),
-        );
-        map.insert(
-            "ms-ds-computer-authn-policy".to_string(),
-            "afb863c9-bea3-440f-a9f3-6153cc668929".to_string(),
-        );
-        map.insert(
-            "gecos".to_string(),
-            "a3e03f1f-1d55-4253-a0af-30c2a784e46e".to_string(),
-        );
-        map.insert(
-            "preferred-delivery-method".to_string(),
-            "bf9679fe-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-connectionurl".to_string(),
-            "a92d23da-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-operation-id".to_string(),
-            "a5f3b553-5d76-4cbe-ba3f-4312152cab18".to_string(),
-        );
-        map.insert(
-            "dns-secure-secondaries".to_string(),
-            "e0fa1e67-9b45-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-sql-sqlpublication".to_string(),
-            "17c2f64e-ccef-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-user-authn-policy-bl".to_string(),
-            "2f17faa9-5d47-4b1f-977e-aa52fabe65c8".to_string(),
-        );
-        map.insert(
-            "gidnumber".to_string(),
-            "c5b95f0c-ec9e-41c4-849c-b46597ed6696".to_string(),
-        );
-        map.insert(
-            "postal-code".to_string(),
-            "bf9679fd-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-informationurl".to_string(),
-            "a42cd510-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-minor-version".to_string(),
-            "ee85ed93-b209-4788-8165-e702f51bfbf3".to_string(),
-        );
-        map.insert(
-            "dns-root".to_string(),
-            "bf967959-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-tpm-information-object".to_string(),
-            "85045b6a-47a6-4243-a7cc-6890701f662c".to_string(),
-        );
-        map.insert(
-            "ms-ds-user-authn-policy".to_string(),
-            "cd26b9f3-d415-442a-8f78-7c61523ee95b".to_string(),
-        );
-        map.insert(
-            "uidnumber".to_string(),
-            "850fcc8f-9c6b-47e1-b671-7c654be4d5b3".to_string(),
-        );
-        map.insert(
-            "postal-address".to_string(),
-            "bf9679fc-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-lastupdateddate".to_string(),
-            "9fcc43d4-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-major-version".to_string(),
-            "cfb9adb7-c4b7-4059-9568-1ed9db6b7248".to_string(),
-        );
-        map.insert(
-            "dns-record".to_string(),
-            "e0fa1e69-9b45-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-sql-sqlrepository".to_string(),
-            "11d43c5c-ccef-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-authn-policy-silo-members-bl".to_string(),
-            "11fccbc7-fbe4-4951-b4b7-addf6f9efd44".to_string(),
-        );
-        map.insert(
-            "unixuserpassword".to_string(),
-            "612cb747-c0e8-4f92-9221-fdd5f15b550d".to_string(),
-        );
-        map.insert(
-            "post-office-box".to_string(),
-            "bf9679fb-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-status".to_string(),
-            "9a7d4770-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-ldap-query".to_string(),
-            "5e53368b-fc94-45c8-9d7d-daf31ee7112d".to_string(),
-        );
-        map.insert(
-            "dns-property".to_string(),
-            "675a15fe-3b70-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-tpm-information-objects-container".to_string(),
-            "e027a8bd-6456-45de-90a3-38593877ee74".to_string(),
-        );
-        map.insert(
-            "ms-ds-authn-policy-silo-members".to_string(),
-            "164d1e05-48a6-4886-a8e9-77a2006e3c77".to_string(),
-        );
-        map.insert(
-            "x509-cert".to_string(),
-            "bf967a7f-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "possible-inferiors".to_string(),
-            "9a7ad94c-ca53-11d1-bbd0-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-sql-vines".to_string(),
-            "94c56394-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-last-imported-biz-rule-path".to_string(),
-            "665acb5c-bb92-4dbc-8c59-b3638eab09b3".to_string(),
-        );
-        map.insert(
-            "dns-notify-secondaries".to_string(),
-            "e0fa1e68-9b45-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-sql-olapserver".to_string(),
-            "0c7e18ea-ccef-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-assigned-authn-policy-silo-bl".to_string(),
-            "33140514-f57a-47d2-8ec4-04c4666600c7".to_string(),
-        );
-        map.insert(
-            "x500uniqueidentifier".to_string(),
-            "d07da11f-8a3d-42b6-b0aa-76c962be719a".to_string(),
-        );
-        map.insert(
-            "poss-superiors".to_string(),
-            "bf9679fa-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-appletalk".to_string(),
-            "8fda89f4-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-generate-audits".to_string(),
-            "f90abab0-186c-4418-bb85-88447c87222a".to_string(),
-        );
-        map.insert(
-            "dns-host-name".to_string(),
-            "72e39547-7b18-11d1-adef-00c04fd8d5cd".to_string(),
-        );
-        map.insert(
-            "ms-spp-activation-object".to_string(),
-            "51a0e68c-0dc5-43ca-935d-c1c911bf2ee5".to_string(),
-        );
-        map.insert(
-            "ms-ds-assigned-authn-policy-silo".to_string(),
-            "b23fc141-0df5-4aea-b33d-6cf493077b3f".to_string(),
-        );
-        map.insert(
-            "x121-address".to_string(),
-            "bf967a7b-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "port-name".to_string(),
-            "281416c4-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-tcpip".to_string(),
-            "8ac263a6-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-domain-timeout".to_string(),
-            "6448f56a-ca70-4e2e-b0af-d20e4ce653d0".to_string(),
-        );
-        map.insert(
-            "dns-allow-xfr".to_string(),
-            "e0fa1e66-9b45-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-sql-sqlserver".to_string(),
-            "05f6c878-ccef-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-service-tgt-lifetime".to_string(),
-            "5dfe3c20-ca29-407d-9bab-8421e55eb75c".to_string(),
-        );
-        map.insert(
-            "www-page-other".to_string(),
-            "9a9a0221-4a5b-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "policy-replication-flags".to_string(),
-            "19405b96-3cfa-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-sql-spx".to_string(),
-            "86b08004-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-class-id".to_string(),
-            "013a7277-5c2d-49ef-a7de-b765b36a3f6f".to_string(),
-        );
-        map.insert(
-            "dns-allow-dynamic".to_string(),
-            "e0fa1e65-9b45-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-spp-activation-objects-container".to_string(),
-            "b72f862b-bb25-4d5d-aa51-62c59bdf90ae".to_string(),
-        );
-        map.insert(
-            "ms-ds-service-allowed-to-authenticate-from".to_string(),
-            "97da709a-3716-4966-b1d1-838ba53c3d89".to_string(),
-        );
-        map.insert(
-            "www-home-page".to_string(),
-            "bf967a7a-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "pkt-guid".to_string(),
-            "8447f9f0-1027-11d0-a05f-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-sql-multiprotocol".to_string(),
-            "8157fa38-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-biz-rule-language".to_string(),
-            "52994b56-0e6c-4e07-aa5c-ef9d7f5a0e25".to_string(),
-        );
-        map.insert(
-            "dn-reference-update".to_string(),
-            "2df90d86-009f-11d2-aa4c-00c04fd7d83a".to_string(),
-        );
-        map.insert(
-            "ms-pki-key-recovery-agent".to_string(),
-            "26ccf238-a08e-4b86-9a82-a8c9ac7ee5cb".to_string(),
-        );
-        map.insert(
-            "ms-ds-service-allowed-to-authenticate-to".to_string(),
-            "f2973131-9b4d-4820-b4de-0474ef3b849f".to_string(),
-        );
-        map.insert(
-            "winsock-addresses".to_string(),
-            "bf967a79-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "pkt".to_string(),
-            "8447f9f1-1027-11d0-a05f-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-sql-namedpipe".to_string(),
-            "7b91c840-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-biz-rule".to_string(),
-            "33d41ea8-c0c9-4c92-9494-f104878413fd".to_string(),
-        );
-        map.insert(
-            "dmd-name".to_string(),
-            "167757b9-47f3-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-resource-property-list".to_string(),
-            "72e3d47a-b342-4d45-8f56-baff803cabf9".to_string(),
-        );
-        map.insert(
-            "ms-ds-computer-tgt-lifetime".to_string(),
-            "2e937524-dfb9-4cac-a436-a5b7da64fd66".to_string(),
-        );
-        map.insert(
-            "when-created".to_string(),
-            "bf967a78-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "pki-overlap-period".to_string(),
-            "1219a3ec-3b9e-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-sql-clustered".to_string(),
-            "7778bd90-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-application-version".to_string(),
-            "7184a120-3ac4-47ae-848f-fe0ab20784d4".to_string(),
-        );
-        map.insert(
-            "dmd-location".to_string(),
-            "f0f8ff8b-1191-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-pki-enterprise-oid".to_string(),
-            "37cfd85c-6719-4ad8-8f9e-8678ba627563".to_string(),
-        );
-        map.insert(
-            "ms-ds-computer-allowed-to-authenticate-to".to_string(),
-            "105babe9-077e-4793-b974-ef0410b62573".to_string(),
-        );
-        map.insert(
-            "when-changed".to_string(),
-            "bf967a77-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "pki-max-issuing-depth".to_string(),
-            "f0bfdefa-3b9d-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-sql-unicodesortorder".to_string(),
-            "72dc918a-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-application-name".to_string(),
-            "db5b0728-6208-4876-83b7-95d3e5695275".to_string(),
-        );
-        map.insert(
-            "division".to_string(),
-            "fe6136a0-2073-11d0-a9c2-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-ds-resource-property".to_string(),
-            "5b283d5e-8404-4195-9339-8450188c501a".to_string(),
-        );
-        map.insert(
-            "ms-ds-user-tgt-lifetime".to_string(),
-            "8521c983-f599-420f-b9ab-b1222bdf95c1".to_string(),
-        );
-        map.insert(
-            "well-known-objects".to_string(),
-            "05308983-7688-11d1-aded-00c04fd8d5cd".to_string(),
-        );
-        map.insert(
-            "pki-key-usage".to_string(),
-            "e9b0a87e-3b9d-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-sql-sortorder".to_string(),
-            "6ddc42c0-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-application-data".to_string(),
-            "503fc3e8-1cc6-461a-99a3-9eee04f402a7".to_string(),
-        );
-        map.insert(
-            "dit-content-rules".to_string(),
-            "9a7ad946-ca53-11d1-bbd0-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-print-connectionpolicy".to_string(),
-            "a16f33c7-7fd6-4828-9364-435138fda08d".to_string(),
-        );
-        map.insert(
-            "ms-ds-user-allowed-to-authenticate-from".to_string(),
-            "2c4c9600-b0e1-447d-8dda-74902257bdb5".to_string(),
-        );
-        map.insert(
-            "wbem-path".to_string(),
-            "244b2970-5abd-11d0-afd2-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "pki-extended-key-usage".to_string(),
-            "18976af6-3b9e-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-sql-characterset".to_string(),
-            "696177a6-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-authenticatedto-accountlist".to_string(),
-            "e8b2c971-a6df-47bc-8d6f-62770d527aa5".to_string(),
-        );
-        map.insert(
-            "ipprotocolnumber".to_string(),
-            "ebf5c6eb-0e2d-4415-9670-1081993b4211".to_string(),
-        );
-        map.insert(
-            "print-form-name".to_string(),
-            "281416cb-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-lastbackupdate".to_string(),
-            "f2b6abca-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-default-quota".to_string(),
-            "6818f726-674b-441b-8a3a-f40596374cea".to_string(),
-        );
-        map.insert(
-            "domain-replica".to_string(),
-            "bf96795e-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-group-managed-service-account".to_string(),
-            "7b8b558a-93a5-4af7-adca-c017e67f1057".to_string(),
-        );
-        map.insert(
-            "ms-ds-key-principal".to_string(),
-            "bd61253b-9401-4139-a693-356fc400f3ea".to_string(),
-        );
-        map.insert(
-            "ipserviceprotocol".to_string(),
-            "cd96ec0b-1ed6-43b4-b26b-f170b645883f".to_string(),
-        );
-        map.insert(
-            "print-end-time".to_string(),
-            "281416ca-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-creationdate".to_string(),
-            "ede14754-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-date-time".to_string(),
-            "234fcbd8-fb52-4908-a328-fd9f6e58e403".to_string(),
-        );
-        map.insert(
-            "domain-policy-reference".to_string(),
-            "80a67e2a-9f22-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-wmi-intsetparam".to_string(),
-            "292f0d9a-cf76-42b0-841f-b650f331df62".to_string(),
-        );
-        map.insert(
-            "ms-ds-key-usage".to_string(),
-            "de71b44c-29ba-4597-9eca-c3348ace1917".to_string(),
-        );
-        map.insert(
-            "ipserviceport".to_string(),
-            "ff2daebf-f463-495a-8405-3e483641eaa2".to_string(),
-        );
-        map.insert(
-            "print-duplex-supported".to_string(),
-            "281416cc-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-size".to_string(),
-            "e9098084-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-creator-sid".to_string(),
-            "c5e60132-1480-11d3-91c1-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "domain-policy-object".to_string(),
-            "bf96795d-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-kds-prov-rootkey".to_string(),
-            "aa02fd41-17e0-4f18-8687-b2239649736b".to_string(),
-        );
-        map.insert(
-            "ms-ds-key-material".to_string(),
-            "a12e0e9f-dedb-4f31-8f21-1311b958182f".to_string(),
-        );
-        map.insert(
-            "nisnetgrouptriple".to_string(),
-            "a8032e74-30ef-4ff5-affc-0fc217783fec".to_string(),
-        );
-        map.insert(
-            "print-color".to_string(),
-            "281416d3-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-alias".to_string(),
-            "e0c6baae-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-consistency-child-count".to_string(),
-            "178b7bc2-b63a-11d2-90e1-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "domain-identifier".to_string(),
-            "7f561278-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-wmi-intrangeparam".to_string(),
-            "50ca5d7d-5c8b-4ef3-b9df-5b66d491e526".to_string(),
-        );
-        map.insert(
-            "ms-ds-key-id".to_string(),
-            "c294f84b-2fad-4b71-be4c-9fc5701f60ba".to_string(),
-        );
-        map.insert(
-            "membernisnetgroup".to_string(),
-            "0f6a17dc-53e5-4be8-9442-8f3ce2f9012a".to_string(),
-        );
-        map.insert(
-            "print-collate".to_string(),
-            "281416d2-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-allowanonymoussubscription".to_string(),
-            "db77be4a-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-consistency-guid".to_string(),
-            "23773dc2-b63a-11d2-90e1-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "domain-id".to_string(),
-            "963d2734-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-kds-prov-serverconfiguration".to_string(),
-            "5ef243a8-2a25-45a6-8b73-08a71ae677ce".to_string(),
-        );
-        map.insert(
-            "ms-ds-is-compliant".to_string(),
-            "59527d0f-b7c0-4ce2-a1dd-71cef6963292".to_string(),
-        );
-        map.insert(
-            "memberuid".to_string(),
-            "03dab236-672e-4f61-ab64-f77d2dc2ffab".to_string(),
-        );
-        map.insert(
-            "print-bin-names".to_string(),
-            "281416cd-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-database".to_string(),
-            "d5a0dbdc-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-cached-membership-time-stamp".to_string(),
-            "3566bf1f-beee-4dcb-8abe-ef89fcfec6c1".to_string(),
-        );
-        map.insert(
-            "domain-cross-ref".to_string(),
-            "b000ea7b-a086-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-tapi-rt-person".to_string(),
-            "53ea1cb5-b704-4df9-818f-5cb4ec86cac1".to_string(),
-        );
-        map.insert(
-            "ms-ds-external-directory-object-id".to_string(),
-            "bd29bf90-66ad-40e1-887b-10df070419a6".to_string(),
-        );
-        map.insert(
-            "shadowflag".to_string(),
-            "8dfeb70d-c5db-46b6-b15e-a4389e6cee9b".to_string(),
-        );
-        map.insert(
-            "print-attributes".to_string(),
-            "281416d7-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-informationdirectory".to_string(),
-            "d0aedb2e-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-cached-membership".to_string(),
-            "69cab008-cdd4-4bc9-bab8-0ff37efe1b20".to_string(),
-        );
-        map.insert(
-            "domain-component".to_string(),
-            "19195a55-6da0-11d0-afd3-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-authz-central-access-policy".to_string(),
-            "a5679cb0-6f9d-432c-8b75-1e3e834f02aa".to_string(),
-        );
-        map.insert(
-            "ms-ds-device-mdmstatus".to_string(),
-            "f60a8f96-57c4-422c-a3ad-9e2fa09ce6f7".to_string(),
-        );
-        map.insert(
-            "shadowexpire".to_string(),
-            "75159a00-1fff-4cf4-8bff-4ef2695cf643".to_string(),
-        );
-        map.insert(
-            "primary-group-token".to_string(),
-            "c0ed8738-7efd-4481-84d9-66d2db8be369".to_string(),
-        );
-        map.insert(
-            "ms-sql-type".to_string(),
-            "ca48eba8-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-byte-array".to_string(),
-            "f0d8972e-dd5b-40e5-a51d-044c7c17ece7".to_string(),
-        );
-        map.insert(
-            "domain-certificate-authorities".to_string(),
-            "7bfdcb7a-4807-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-tapi-rt-conference".to_string(),
-            "ca7b9735-4b2a-4e49-89c3-99025334dc94".to_string(),
-        );
-        map.insert(
-            "ms-ds-authn-policy-silo-enforced".to_string(),
-            "f2f51102-6be0-493d-8726-1546cdbc8771".to_string(),
-        );
-        map.insert(
-            "shadowinactive".to_string(),
-            "86871d1f-3310-4312-8efd-af49dcfb2671".to_string(),
-        );
-        map.insert(
-            "primary-group-id".to_string(),
-            "bf967a00-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-description".to_string(),
-            "8386603c-ccef-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-behavior-version".to_string(),
-            "d31a8757-2447-4545-8081-3bb610cacbf2".to_string(),
-        );
-        map.insert(
-            "documentversion".to_string(),
-            "94b3a8a9-d613-4cec-9aad-5fbcc1046b43".to_string(),
-        );
-        map.insert(
-            "ms-authz-central-access-rule".to_string(),
-            "5b4a06dc-251c-4edb-8813-0bdd71327226".to_string(),
-        );
-        map.insert(
-            "ms-ds-authn-policy-enforced".to_string(),
-            "7a560cc2-ec45-44ba-b2d7-21236ad59fd5".to_string(),
-        );
-        map.insert(
-            "shadowwarning".to_string(),
-            "7ae89c9c-2976-4a46-bb8a-340f88560117".to_string(),
-        );
-        map.insert(
-            "previous-parent-ca".to_string(),
-            "963d273d-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-sql-language".to_string(),
-            "c57f72f4-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-generic-data".to_string(),
-            "b5f7e349-7a5b-407c-a334-a31c3f538b98".to_string(),
-        );
-        map.insert(
-            "documenttitle".to_string(),
-            "de265a9c-ff2c-47b9-91dc-6e6fe2c43062".to_string(),
-        );
-        map.insert(
-            "ms-sql-olapcube".to_string(),
-            "09f0506a-cd28-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-assigned-authn-policy-bl".to_string(),
-            "2d131b3c-d39f-4aee-815e-8db4bc1ce7ac".to_string(),
-        );
-        map.insert(
-            "shadowmax".to_string(),
-            "f285c952-50dd-449e-9160-3b880d99988d".to_string(),
-        );
-        map.insert(
-            "previous-ca-certificates".to_string(),
-            "963d2739-48be-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-sql-version".to_string(),
-            "c07cc1d0-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-object-guid".to_string(),
-            "8491e548-6c38-4365-a732-af041569b02c".to_string(),
-        );
-        map.insert(
-            "documentpublisher".to_string(),
-            "170f09d7-eb69-448a-9a30-f1afecfd32d7".to_string(),
-        );
-        map.insert(
-            "ms-authz-central-access-rules".to_string(),
-            "99bb1b7a-606d-4f8b-800e-e15be554ca8d".to_string(),
-        );
-        map.insert(
-            "ms-ds-assigned-authn-policy".to_string(),
-            "b87a0ad8-54f7-49c1-84a0-e64d12853588".to_string(),
-        );
-        map.insert(
-            "shadowmin".to_string(),
-            "a76b8737-e5a1-4568-b057-dc12e04be4b2".to_string(),
-        );
-        map.insert(
-            "presentation-address".to_string(),
-            "a8df744b-c5ea-11d1-bbcb-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-sql-gpsheight".to_string(),
-            "bcdd4f0e-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-task-is-role-definition".to_string(),
-            "7b078544-6c82-4fe9-872f-ff48ad2b2e26".to_string(),
-        );
-        map.insert(
-            "documentlocation".to_string(),
-            "b958b14e-ac6d-4ec4-8892-be70b69f7281".to_string(),
-        );
-        map.insert(
-            "ms-sql-olapdatabase".to_string(),
-            "20af031a-ccef-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-service-authn-policy-bl".to_string(),
-            "2c1128ec-5aa2-42a3-b32d-f0979ca9fcd2".to_string(),
-        );
-        map.insert(
-            "shadowlastchange".to_string(),
-            "f8f2689c-29e8-4843-8177-e8b98e15eeac".to_string(),
-        );
-        map.insert(
-            "prefix-map".to_string(),
-            "52458022-ca6a-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-sql-gpslongitude".to_string(),
-            "b7577c94-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-script-timeout".to_string(),
-            "87d0fb41-2c8b-41f6-b972-11fdfd50d6b0".to_string(),
-        );
-        map.insert(
-            "documentidentifier".to_string(),
-            "0b21ce82-ff63-46d9-90fb-c8b9f24e97b9".to_string(),
-        );
-        map.insert(
-            "ms-authz-central-access-policies".to_string(),
-            "555c21c3-a136-455a-9397-796bbd358e25".to_string(),
-        );
-        map.insert(
-            "ms-ds-service-authn-policy".to_string(),
-            "2a6a6d95-28ce-49ee-bb24-6d1fc01e3111".to_string(),
-        );
-        map.insert(
-            "loginshell".to_string(),
-            "a553d12c-3231-4c5e-8adf-8d189697721e".to_string(),
-        );
-        map.insert(
-            "preferred-ou".to_string(),
-            "bf9679ff-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-gpslatitude".to_string(),
-            "b222ba0e-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-az-script-engine-cache-max".to_string(),
-            "2629f66a-1f95-4bf3-a296-8e9d7b9e30c8".to_string(),
-        );
-        map.insert(
-            "documentauthor".to_string(),
-            "f18a8e19-af5f-4478-b096-6f35c27eb83f".to_string(),
-        );
-        map.insert(
-            "ms-sql-sqldatabase".to_string(),
-            "1d08694a-ccef-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-computer-authn-policy-bl".to_string(),
-            "2bef6232-30a1-457e-8604-7af6dbf131b8".to_string(),
-        );
-        map.insert(
-            "unixhomedirectory".to_string(),
-            "bc2dba12-000f-464d-bf1d-0808465d8843".to_string(),
-        );
-        map.insert(
-            "preferredlanguage".to_string(),
-            "856be0d0-18e7-46e1-8f5f-7ee4d9020e0d".to_string(),
-        );
-        map.insert(
-            "ms-wmi-shadowobject".to_string(),
-            "f1e44bdf-8dd3-4235-9c86-f91f31f5b569".to_string(),
-        );
-        map.insert(
-            "ms-ds-object-soa".to_string(),
-            "34f6bdf5-2e79-4c3b-8e14-3d93b75aab89".to_string(),
-        );
-        map.insert(
-            "mssfu-30-search-attributes".to_string(),
-            "ef9a2df0-2e57-48c8-8950-0cc674004733".to_string(),
-        );
-        map.insert(
-            "print-notify".to_string(),
-            "ba305f6a-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-wmi-author".to_string(),
-            "6366c0c1-6972-4e66-b3a5-1d52ad0c0547".to_string(),
-        );
-        map.insert(
-            "ms-ds-host-service-account".to_string(),
-            "80641043-15a2-40e1-92a2-8ca866f70776".to_string(),
-        );
-        map.insert(
-            "employee-id".to_string(),
-            "bf967962-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-device-container".to_string(),
-            "7c9e8c58-901b-4ea8-b6ec-4eb9e9fc0e11".to_string(),
-        );
-        map.insert(
-            "ms-ds-source-anchor".to_string(),
-            "b002f407-1340-41eb-bca0-bd7d938e25a9".to_string(),
-        );
-        map.insert(
-            "mssfu-30-intra-field-separator".to_string(),
-            "95b2aef0-27e4-4cb9-880a-a2d9a9ea23b8".to_string(),
-        );
-        map.insert(
-            "print-network-address".to_string(),
-            "ba305f79-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-tapi-unique-identifier".to_string(),
-            "70a4e7ea-b3b9-4643-8918-e6dd2471bfd4".to_string(),
-        );
-        map.insert(
-            "ms-ds-has-master-ncs".to_string(),
-            "ae2de0e2-59d7-4d47-8d47-ed4dfe4357ad".to_string(),
-        );
-        map.insert(
-            "efspolicy".to_string(),
-            "8e4eb2ec-4712-11d0-a1a0-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-wmi-rule".to_string(),
-            "3c7e6f83-dd0e-481b-a0c2-74cd96ef2a66".to_string(),
-        );
-        map.insert(
-            "ms-ds-strong-ntlm-policy".to_string(),
-            "aacd2170-482a-44c6-b66e-42c2f66a285c".to_string(),
-        );
-        map.insert(
-            "mssfu-30-field-separator".to_string(),
-            "a2e11a42-e781-4ca1-a7fa-ec307f62b6a1".to_string(),
-        );
-        map.insert(
-            "print-min-y-extent".to_string(),
-            "ba305f72-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-tapi-protocol-id".to_string(),
-            "89c1ebcf-7a5f-41fd-99ca-c900b32299ab".to_string(),
-        );
-        map.insert(
-            "ms-ds-has-domain-ncs".to_string(),
-            "6f17e347-a842-4498-b8b3-15e007da4fed".to_string(),
-        );
-        map.insert(
-            "e-mail-addresses".to_string(),
-            "bf967961-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-device-registration-service".to_string(),
-            "96bc3a1a-e3d2-49d3-af11-7b0df79d67f5".to_string(),
-        );
-        map.insert(
-            "ms-ds-service-allowed-ntlm-network-authentication".to_string(),
-            "278947b9-5222-435e-96b7-1503858c2b48".to_string(),
-        );
-        map.insert(
-            "mssfu-30-key-attributes".to_string(),
-            "32ecd698-ce9e-4894-a134-7ad76b082e83".to_string(),
-        );
-        map.insert(
-            "print-min-x-extent".to_string(),
-            "ba305f71-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-tapi-ip-address".to_string(),
-            "efd7d7f7-178e-4767-87fa-f8a16b840544".to_string(),
-        );
-        map.insert(
-            "ms-ds-has-instantiated-ncs".to_string(),
-            "11e9a5bc-4517-4049-af9c-51554fb0fc09".to_string(),
-        );
-        map.insert(
-            "dynamic-ldap-server".to_string(),
-            "52458021-ca6a-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-wmi-realrangeparam".to_string(),
-            "6afe8fe2-70bc-4cce-b166-a96f7359c514".to_string(),
-        );
-        map.insert(
-            "ms-ds-user-allowed-ntlm-network-authentication".to_string(),
-            "7ece040f-9327-4cdc-aad3-037adfe62639".to_string(),
-        );
-        map.insert(
-            "mssfu-30-search-container".to_string(),
-            "27eebfa2-fbeb-4f8e-aad6-c50247994291".to_string(),
-        );
-        map.insert(
-            "print-memory".to_string(),
-            "ba305f74-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-tapi-conference-blob".to_string(),
-            "4cc4601e-7201-4141-abc8-3e529ae88863".to_string(),
-        );
-        map.insert(
-            "ms-ds-filter-containers".to_string(),
-            "fb00dcdf-ac37-483a-9c12-ac53a6603033".to_string(),
-        );
-        map.insert(
-            "dsa-signature".to_string(),
-            "167757bc-47f3-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-ds-device-registration-service-container".to_string(),
-            "310b55ce-3dcd-4392-a96d-c9e35397c24f".to_string(),
-        );
-        map.insert(
-            "ms-ds-expire-passwords-on-smart-card-only-accounts".to_string(),
-            "3417ab48-df24-4fb1-80b0-0fcb367e25e3".to_string(),
-        );
-        map.insert(
-            "nismapentry".to_string(),
-            "4a95216e-fcc0-402e-b57f-5971626148a9".to_string(),
-        );
-        map.insert(
-            "print-media-supported".to_string(),
-            "244b296f-5abd-11d0-afd2-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-sql-thirdparty".to_string(),
-            "c4e311fc-d34b-11d2-999a-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-optional-feature-guid".to_string(),
-            "9b88bda8-dd82-4998-a91d-5f2d2baf1927".to_string(),
-        );
-        map.insert(
-            "ds-ui-shell-maximum".to_string(),
-            "fcca766a-6f91-11d2-9905-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-wmi-rangeparam".to_string(),
-            "45fb5a57-5018-4d0f-9056-997c8c9122d9".to_string(),
-        );
-        map.insert(
-            "ms-ds-key-credential-link-bl".to_string(),
-            "938ad788-225f-4eee-93b9-ad24a159e1db".to_string(),
-        );
-        map.insert(
-            "nismapname".to_string(),
-            "969d3c79-0e9a-4d95-b0ac-bdde7ff8f3a1".to_string(),
-        );
-        map.insert(
-            "print-media-ready".to_string(),
-            "3bcbfcf5-4d3d-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-sql-allowsnapshotfilesftpdownloading".to_string(),
-            "c49b8be8-d34b-11d2-999a-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-external-store".to_string(),
-            "604877cd-9cdb-47c7-b03d-3daadb044910".to_string(),
-        );
-        map.insert(
-            "ds-ui-admin-notification".to_string(),
-            "f6ea0a94-6f91-11d2-9905-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-cloud-extensions".to_string(),
-            "641e87a4-8326-4771-ba2d-c706df35e35a".to_string(),
-        );
-        map.insert(
-            "bootfile".to_string(),
-            "e3f3cb4e-0f20-42eb-9703-d2ff26e52667".to_string(),
-        );
-        map.insert(
-            "print-max-y-extent".to_string(),
-            "ba305f70-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-sql-allowqueuedupdatingsubscription".to_string(),
-            "c458ca80-d34b-11d2-999a-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-external-key".to_string(),
-            "b92fd528-38ac-40d4-818d-0433380837c1".to_string(),
-        );
-        map.insert(
-            "ds-ui-admin-maximum".to_string(),
-            "ee8d0ae0-6f91-11d2-9905-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-wmi-policytype".to_string(),
-            "595b2613-4109-4e77-9013-a3bb4ef277c7".to_string(),
-        );
-        map.insert(
-            "ms-ds-shadow-principal-sid".to_string(),
-            "1dcc0722-aab0-4fef-956f-276fe19de107".to_string(),
-        );
-        map.insert(
-            "bootparameter".to_string(),
-            "d72a0750-8c7c-416e-8714-e65f11e908be".to_string(),
-        );
-        map.insert(
-            "print-max-x-extent".to_string(),
-            "ba305f6f-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-sql-allowimmediateupdatingsubscription".to_string(),
-            "c4186b6e-d34b-11d2-999a-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-executescriptpassword".to_string(),
-            "9d054a5a-d187-46c1-9d85-42dfc44a56dd".to_string(),
-        );
-        map.insert(
-            "ds-heuristics".to_string(),
-            "f0f8ff86-1191-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-ds-claims-transformation-policies".to_string(),
-            "c8fca9b1-7d88-bb4f-827a-448927710762".to_string(),
-        );
-        map.insert(
-            "ms-ds-device-trust-type".to_string(),
-            "c4a46807-6adc-4bbb-97de-6bed181a1bfe".to_string(),
-        );
-        map.insert(
-            "macaddress".to_string(),
-            "e6a522dd-9770-43e1-89de-1de5044328f7".to_string(),
-        );
-        map.insert(
-            "print-max-resolution-supported".to_string(),
-            "281416cf-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-allowknownpullsubscription".to_string(),
-            "c3bb7054-d34b-11d2-999a-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-entry-time-to-die".to_string(),
-            "e1e9bad7-c6dd-4101-a843-794cec85b038".to_string(),
-        );
-        map.insert(
-            "ds-core-propagation-data".to_string(),
-            "d167aa4b-8b08-11d2-9939-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-wmi-policytemplate".to_string(),
-            "e2bc80f1-244a-4d59-acc6-ca5c4f82e6e1".to_string(),
-        );
-        map.insert(
-            "ms-ds-key-approximate-last-logon-time-stamp".to_string(),
-            "649ac98d-9b9a-4d41-af6b-f616f2a62e4a".to_string(),
-        );
-        map.insert(
-            "ipnetmasknumber".to_string(),
-            "6ff64fcd-462e-4f62-b44a-9a5347659eb9".to_string(),
-        );
-        map.insert(
-            "print-max-copies".to_string(),
-            "281416d1-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-publisher".to_string(),
-            "c1676858-d34b-11d2-999a-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-enabled-feature-bl".to_string(),
-            "ce5b01bc-17c6-44b8-9dc1-a9668b00901b".to_string(),
-        );
-        map.insert(
-            "driver-version".to_string(),
-            "ba305f6e-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-ds-claims-transformation-policy-type".to_string(),
-            "2eeb62b3-1373-fe45-8101-387f1676edc7".to_string(),
-        );
-        map.insert(
-            "ms-ds-custom-key-information".to_string(),
-            "b6e5e988-e5e4-4c86-a2ae-0dacb970a0e1".to_string(),
-        );
-        map.insert(
-            "ipnetworknumber".to_string(),
-            "4e3854f4-3087-42a4-a813-bb0c528958d3".to_string(),
-        );
-        map.insert(
-            "print-mac-address".to_string(),
-            "ba305f7a-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-sql-keywords".to_string(),
-            "01e9a98a-ccef-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-enabled-feature".to_string(),
-            "5706aeaf-b940-4fb2-bcfc-5268683ad9fe".to_string(),
-        );
-        map.insert(
-            "driver-name".to_string(),
-            "281416c5-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-wmi-objectencoding".to_string(),
-            "55dd81c9-c312-41f9-a84d-c6adbdf1e8e1".to_string(),
-        );
-        map.insert(
-            "ms-ds-computer-sid".to_string(),
-            "dffbd720-0872-402e-9940-fcd78db049ba".to_string(),
-        );
-        map.insert(
-            "iphostnumber".to_string(),
-            "de8bb721-85dc-4fde-b687-9657688e667e".to_string(),
-        );
-        map.insert(
-            "print-language".to_string(),
-            "281416d6-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-sql-applications".to_string(),
-            "fbcda2ea-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-dnsrootalias".to_string(),
-            "2143acca-eead-4d29-b591-85fa49ce9173".to_string(),
-        );
-        map.insert(
-            "drink".to_string(),
-            "1a1aa5b5-262e-4df6-af04-2cf6b0d80048".to_string(),
-        );
-        map.insert(
-            "ms-ds-value-type".to_string(),
-            "e3c27fdf-b01d-4f4e-87e7-056eef0eb922".to_string(),
-        );
-        map.insert(
-            "ms-ds-device-dn".to_string(),
-            "642c1129-3899-4721-8e21-4839e3988ce5".to_string(),
-        );
-        map.insert(
-            "oncrpcnumber".to_string(),
-            "966825f5-01d9-4a5c-a011-d15ae84efa55".to_string(),
-        );
-        map.insert(
-            "print-keep-printed-jobs".to_string(),
-            "ba305f6d-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-sql-lastdiagnosticdate".to_string(),
-            "f6d6dd88-ccee-11d2-9993-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "ms-ds-deleted-object-lifetime".to_string(),
-            "a9b38cb6-189a-4def-8a70-0fcfa158148e".to_string(),
-        );
-        map.insert(
-            "domain-wide-policy".to_string(),
-            "80a67e29-9f22-11d0-afdd-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-wmi-mergeablepolicytemplate".to_string(),
-            "07502414-fdca-4851-b04a-13645b11d226".to_string(),
-        );
-        map.insert(
-            "ms-ds-key-principal-bl".to_string(),
-            "d1328fbc-8574-4150-881d-0b1088827878".to_string(),
-        );
-        map.insert(
-            "ms-ds-password-history-length".to_string(),
-            "fed81bb7-768c-4c2f-9641-2245de34794d".to_string(),
-        );
-        map.insert(
-            "force-logoff".to_string(),
-            "bf967977-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-shadow-principal".to_string(),
-            "770f4cb3-1643-469c-b766-edd77aa75e14".to_string(),
-        );
-        map.insert(
-            "application-entity".to_string(),
-            "3fdfee4f-47f4-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "mssfu-30-posix-member-of".to_string(),
-            "7bd76b92-3244-438a-ada6-24f5ea34381e".to_string(),
-        );
-        map.insert(
-            "prior-value".to_string(),
-            "bf967a02-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-wmi-int8default".to_string(),
-            "f4d8085a-8c5b-4785-959b-dc585566e445".to_string(),
-        );
-        map.insert(
-            "ms-ds-oidtogroup-link-bl".to_string(),
-            "1a3d0d20-5844-4199-ad25-0f5039a76ada".to_string(),
-        );
-        map.insert(
-            "flat-name".to_string(),
-            "b7b13117-b82e-11d0-afee-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-wmi-wmigpo".to_string(),
-            "05630000-3927-4ede-bf27-ca91f275c26f".to_string(),
-        );
-        map.insert(
-            "mssfu-30-posix-member".to_string(),
-            "c875d82d-2848-4cec-bb50-3c5486d09d57".to_string(),
-        );
-        map.insert(
-            "prior-set-time".to_string(),
-            "bf967a01-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-wmi-intvalidvalues".to_string(),
-            "6af565f6-a749-4b72-9634-3c5d47e6b4e0".to_string(),
-        );
-        map.insert(
-            "ms-ds-oidtogroup-link".to_string(),
-            "f9c9a57c-3941-438d-bebf-0edaf2aca187".to_string(),
-        );
-        map.insert(
-            "flags".to_string(),
-            "bf967976-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-shadow-principal-container".to_string(),
-            "11f95545-d712-4c50-b847-d2781537c633".to_string(),
-        );
-        map.insert(
-            "address-template".to_string(),
-            "5fd4250a-1262-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "mssfu-30-nsmap-field-position".to_string(),
-            "585c9d5e-f599-4f07-9cf9-4373af4b89d3".to_string(),
-        );
-        map.insert(
-            "printer-name".to_string(),
-            "244b296e-5abd-11d0-afd2-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-wmi-intmin".to_string(),
-            "68c2e3ba-9837-4c70-98e0-f0c33695d023".to_string(),
-        );
-        map.insert(
-            "ms-ds-minimum-password-length".to_string(),
-            "b21b3439-4c3a-441c-bb5f-08f20e9b315e".to_string(),
-        );
-        map.insert(
-            "file-ext-priority".to_string(),
-            "d9e18315-8939-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-wmi-unknownrangeparam".to_string(),
-            "b82ac26b-c6db-4098-92c6-49c18a3336e1".to_string(),
-        );
-        map.insert(
-            "mssfu-30-max-uid-number".to_string(),
-            "ec998437-d944-4a28-8500-217588adfc75".to_string(),
-        );
-        map.insert(
-            "print-status".to_string(),
-            "ba305f6b-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-wmi-intmax".to_string(),
-            "fb920c2c-f294-4426-8ac1-d24b42aa2bce".to_string(),
-        );
-        map.insert(
-            "ms-ds-minimum-password-age".to_string(),
-            "2a74f878-4d9c-49f9-97b3-6767d1cbd9a3".to_string(),
-        );
-        map.insert(
-            "facsimile-telephone-number".to_string(),
-            "bf967974-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-key-credential".to_string(),
-            "ee1f5543-7c2e-476a-8b3f-e11f4af6c498".to_string(),
-        );
-        map.insert(
-            "address-book-container".to_string(),
-            "3e74f60f-3e73-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "mssfu-30-max-gid-number".to_string(),
-            "04ee6aa6-f83b-469a-bf5a-3c00d3634669".to_string(),
-        );
-        map.insert(
-            "print-start-time".to_string(),
-            "281416c9-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-wmi-intflags4".to_string(),
-            "bd74a7ac-c493-4c9c-bdfa-5c7b119ca6b2".to_string(),
-        );
-        map.insert(
-            "ms-ds-maximum-password-age".to_string(),
-            "fdd337f5-4999-4fce-b252-8ff9c9b43875".to_string(),
-        );
-        map.insert(
-            "extra-columns".to_string(),
-            "d24e2846-1dd9-4bcf-99d7-a6227cc86da7".to_string(),
-        );
-        map.insert(
-            "ms-wmi-uintsetparam".to_string(),
-            "8f4beb31-4e19-46f5-932e-5fa03c339b1d".to_string(),
-        );
-        map.insert(
-            "mssfu-30-yp-servers".to_string(),
-            "084a944b-e150-4bfe-9345-40e1aedaebba".to_string(),
-        );
-        map.insert(
-            "print-stapling-supported".to_string(),
-            "ba305f73-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-wmi-intflags3".to_string(),
-            "f29fa736-de09-4be4-b23a-e734c124bacc".to_string(),
-        );
-        map.insert(
-            "ms-ds-mastered-by".to_string(),
-            "60234769-4819-4615-a1b2-49d2f119acb5".to_string(),
-        );
-        map.insert(
-            "extension-name".to_string(),
-            "bf967972-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-authn-policy".to_string(),
-            "ab6a1156-4dc7-40f5-9180-8e4ce42fe5cd".to_string(),
-        );
-        map.insert(
-            "acs-subnet".to_string(),
-            "7f561289-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "mssfu-30-domains".to_string(),
-            "93095ed3-6f30-4bdd-b734-65d569f5f7c9".to_string(),
-        );
-        map.insert(
-            "print-spooling".to_string(),
-            "ba305f6c-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-wmi-intflags2".to_string(),
-            "075a42c9-c55a-45b1-ac93-eb086b31f610".to_string(),
-        );
-        map.insert(
-            "ms-ds-logon-time-sync-interval".to_string(),
-            "ad7940f8-e43a-4a42-83bc-d688e59ea605".to_string(),
-        );
-        map.insert(
-            "extended-class-info".to_string(),
-            "9a7ad948-ca53-11d1-bbd0-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-wmi-uintrangeparam".to_string(),
-            "d9a799b2-cef3-48b3-b5ad-fb85f8dd3214".to_string(),
-        );
-        map.insert(
-            "mssfu-30-nis-domain".to_string(),
-            "9ee3b2e3-c7f3-45f8-8c9f-1382be4984d2".to_string(),
-        );
-        map.insert(
-            "print-share-name".to_string(),
-            "ba305f68-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-wmi-intflags1".to_string(),
-            "18e006b9-6445-48e3-9dcf-b5ecfbc4df8e".to_string(),
-        );
-        map.insert(
-            "ms-ds-keyversionnumber".to_string(),
-            "c523e9c0-33b5-4ac8-8923-b57b927f42f6".to_string(),
-        );
-        map.insert(
-            "extended-chars-allowed".to_string(),
-            "bf967966-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-authn-policy-silo".to_string(),
-            "f9f0461e-697d-4689-9299-37e61d617b0d".to_string(),
-        );
-        map.insert(
-            "acs-resource-limits".to_string(),
-            "2e899b04-2834-11d3-91d4-0000f87a57d4".to_string(),
-        );
-        map.insert(
-            "mssfu-30-key-values".to_string(),
-            "37830235-e5e9-46f2-922b-d8d44f03e7ae".to_string(),
-        );
-        map.insert(
-            "print-separator-file".to_string(),
-            "281416c6-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-wmi-intdefault".to_string(),
-            "1b0c07f8-76dd-4060-a1e1-70084619dc90".to_string(),
-        );
-        map.insert(
-            "ms-ds-last-known-rdn".to_string(),
-            "8ab15858-683e-466d-877f-d640e1f9a611".to_string(),
-        );
-        map.insert(
-            "extended-attribute-info".to_string(),
-            "9a7ad947-ca53-11d1-bbd0-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-wmi-stringsetparam".to_string(),
-            "0bc579a2-1da7-4cea-b699-807f3b9d63a4".to_string(),
-        );
-        map.insert(
-            "mssfu-30-aliases".to_string(),
-            "20ebf171-c69a-4c31-b29d-dcb837d8912d".to_string(),
-        );
-        map.insert(
-            "print-rate-unit".to_string(),
-            "ba305f78-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-wmi-id".to_string(),
-            "9339a803-94b8-47f7-9123-a853b9ff7e45".to_string(),
-        );
-        map.insert(
-            "ms-ds-isrodc".to_string(),
-            "a8e8aa23-3e67-4af1-9d7a-2f1a1d633ac9".to_string(),
-        );
-        map.insert(
-            "entry-ttl".to_string(),
-            "d213decc-d81a-4384-aac2-dcfcfd631cf8".to_string(),
-        );
-        map.insert(
-            "ms-ds-authn-policies".to_string(),
-            "3a9adf5d-7b97-4f7e-abb4-e5b55c1c06b4".to_string(),
-        );
-        map.insert(
-            "acs-policy".to_string(),
-            "7f561288-5301-11d1-a9c5-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "mssfu-30-name".to_string(),
-            "16c5d1d3-35c2-4061-a870-a5cefda804f0".to_string(),
-        );
-        map.insert(
-            "print-rate".to_string(),
-            "ba305f77-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-wmi-genus".to_string(),
-            "50c8673a-8f56-4614-9308-9e1340fb9af3".to_string(),
-        );
-        map.insert(
-            "ms-ds-isgc".to_string(),
-            "1df5cf33-0fe5-499e-90e1-e94b42718a46".to_string(),
-        );
-        map.insert(
-            "enrollment-providers".to_string(),
-            "2a39c5b3-8960-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-wmi-som".to_string(),
-            "ab857078-0142-4406-945b-34c9b6b13372".to_string(),
-        );
-        map.insert(
-            "mssfu-30-order-number".to_string(),
-            "02625f05-d1ee-4f9f-b366-55266becb95c".to_string(),
-        );
-        map.insert(
-            "print-pages-per-minute".to_string(),
-            "19405b97-3cfa-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-wmi-creationdate".to_string(),
-            "748b0a2e-3351-4b3f-b171-2f17414ea779".to_string(),
-        );
-        map.insert(
-            "ms-ds-is-possible-values-present".to_string(),
-            "6fabdcda-8c53-204f-b1a4-9df0c67c1eb4".to_string(),
-        );
-        map.insert(
-            "enabled-connection".to_string(),
-            "bf967963-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ds-authn-policy-silos".to_string(),
-            "d2b1470a-8f84-491e-a752-b401ee00fe5c".to_string(),
-        );
-        map.insert(
-            "class-schema".to_string(),
-            "bf967a83-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "mssfu-30-master-server-name".to_string(),
-            "4cc908a2-9e18-410e-8459-f17cc422020a".to_string(),
-        );
-        map.insert(
-            "print-owner".to_string(),
-            "ba305f69-47e3-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-wmi-classdefinition".to_string(),
-            "2b9c0ebc-c272-45cb-99d2-4d0e691632e0".to_string(),
-        );
-        map.insert(
-            "ms-ds-intid".to_string(),
-            "bc60096a-1b47-4b30-8877-602c93f56532".to_string(),
-        );
-        map.insert(
-            "enabled".to_string(),
-            "a8df73f2-c5ea-11d1-bbcb-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-wmi-simplepolicytemplate".to_string(),
-            "6cc8b2b5-12df-44f6-8307-e74f5cdee369".to_string(),
-        );
-        map.insert(
-            "account".to_string(),
-            "2628a46a-a6ad-4ae0-b854-2b12d9fe6f9e".to_string(),
-        );
-        map.insert(
-            "mssfu-30-map-filter".to_string(),
-            "b7b16e01-024f-4e23-ad0d-71f1a406b684".to_string(),
-        );
-        map.insert(
-            "print-orientations-supported".to_string(),
-            "281416d0-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-wmi-class".to_string(),
-            "90c1925f-4a24-4b07-b202-be32eb3c8b74".to_string(),
-        );
-        map.insert(
-            "ms-ds-integer".to_string(),
-            "7bc64cea-c04e-4318-b102-3e0729371a65".to_string(),
-        );
-        map.insert(
-            "employee-type".to_string(),
-            "a8df73f0-c5ea-11d1-bbcb-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ds-device".to_string(),
-            "5df2b673-6d41-4774-b3e8-d52e8ee9ff99".to_string(),
-        );
-        map.insert(
-            "mssfu-30-result-attributes".to_string(),
-            "e167b0b6-4045-4433-ac35-53f972d45cba".to_string(),
-        );
-        map.insert(
-            "print-number-up".to_string(),
-            "3bcbfcf4-4d3d-11d0-a1a6-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-wmi-changedate".to_string(),
-            "f9cdf7a0-ec44-4937-a79b-cd91522b3aa8".to_string(),
-        );
-        map.insert(
-            "ms-ds-host-service-account-bl".to_string(),
-            "79abe4eb-88f3-48e7-89d6-f4bc7e98c331".to_string(),
-        );
-        map.insert(
-            "employee-number".to_string(),
-            "a8df73ef-c5ea-11d1-bbcb-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ts-max-idle-time".to_string(),
-            "ff739e9c-6bb7-460e-b221-e250f3de0f95".to_string(),
-        );
-        map.insert(
-            "proxy-lifetime".to_string(),
-            "bf967a07-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-wmi-query".to_string(),
-            "65fff93e-35e3-45a3-85ae-876c6718297f".to_string(),
-        );
-        map.insert(
-            "ms-ds-required-forest-behavior-version".to_string(),
-            "4beca2e8-a653-41b2-8fee-721575474bec".to_string(),
-        );
-        map.insert(
-            "frs-ds-poll".to_string(),
-            "1be8f177-a9ff-11d0-afe2-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-queue".to_string(),
-            "9a0dc343-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "builtin-domain".to_string(),
-            "bf967a81-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-ts-max-connection-time".to_string(),
-            "1d960ee2-6464-4e95-a781-e3b5cd5f9588".to_string(),
-        );
-        map.insert(
-            "proxy-generation-enabled".to_string(),
-            "5fd424d6-1262-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "ms-wmi-propertyname".to_string(),
-            "ab920883-e7f8-4d72-b4a0-c0449897509d".to_string(),
-        );
-        map.insert(
-            "ms-ds-required-domain-behavior-version".to_string(),
-            "eadd3dfe-ae0e-4cc2-b9b9-5fe5b6ed2dd2".to_string(),
-        );
-        map.insert(
-            "frs-directory-filter".to_string(),
-            "1be8f171-a9ff-11d0-afe2-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-ts-max-disconnection-time".to_string(),
-            "326f7089-53d8-4784-b814-46d8535110d2".to_string(),
-        );
-        map.insert(
-            "proxy-addresses".to_string(),
-            "bf967a06-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-wmi-parm4".to_string(),
-            "3800d5a3-f1ce-4b82-a59a-1528ea795f59".to_string(),
-        );
-        map.insert(
-            "ms-ds-pso-applied".to_string(),
-            "5e6cf031-bda8-43c8-aca4-8fee4127005b".to_string(),
-        );
-        map.insert(
-            "frs-control-outbound-backlog".to_string(),
-            "2a13257c-9373-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "msmq-migrated-user".to_string(),
-            "50776997-3c3d-11d2-90cc-00c04fd91ab1".to_string(),
-        );
-        map.insert(
-            "ms-ts-remote-control".to_string(),
-            "15177226-8642-468b-8c48-03ddfd004982".to_string(),
-        );
-        map.insert(
-            "proxied-object-name".to_string(),
-            "e1aea402-cd5b-11d0-afff-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-wmi-parm3".to_string(),
-            "45958fb6-52bd-48ce-9f9f-c2712d9f2bfc".to_string(),
-        );
-        map.insert(
-            "ms-ds-pso-applies-to".to_string(),
-            "64c80f48-cdd2-4881-a86d-4e97b6f561fc".to_string(),
-        );
-        map.insert(
-            "frs-control-inbound-backlog".to_string(),
-            "2a13257b-9373-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "application-version".to_string(),
-            "ddc790ac-af4d-442a-8f0f-a1d4caa7dd92".to_string(),
-        );
-        map.insert(
-            "ms-ts-allow-logon".to_string(),
-            "3a0cd464-bc54-40e7-93ae-a646a6ecc4b4".to_string(),
-        );
-        map.insert(
-            "profile-path".to_string(),
-            "bf967a05-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-wmi-parm2".to_string(),
-            "0003508e-9c42-4a76-a8f4-38bf64bab0de".to_string(),
-        );
-        map.insert(
-            "ms-ds-lockout-threshold".to_string(),
-            "b8c8c35e-4a19-4a95-99d0-69fe4446286f".to_string(),
-        );
-        map.insert(
-            "frs-control-data-creation".to_string(),
-            "2a13257a-9373-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "msmq-group".to_string(),
-            "46b27aac-aafa-4ffb-b773-e5bf621ee87b".to_string(),
-        );
-        map.insert(
-            "ms-ts-home-drive".to_string(),
-            "5f0a24d9-dffa-4cd9-acbf-a0680c03731e".to_string(),
-        );
-        map.insert(
-            "product-code".to_string(),
-            "d9e18317-8939-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-wmi-parm1".to_string(),
-            "27e81485-b1b0-4a8b-bedd-ce19a837e26e".to_string(),
-        );
-        map.insert(
-            "ms-ds-lockout-duration".to_string(),
-            "421f889a-472e-4fe4-8eb9-e1d0bc6071b2".to_string(),
-        );
-        map.insert(
-            "frs-computer-reference-bl".to_string(),
-            "2a132579-9373-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "application-site-settings".to_string(),
-            "19195a5c-6da0-11d0-afd3-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "ms-ts-home-directory".to_string(),
-            "5d3510f0-c4e7-4122-b91f-a20add90e246".to_string(),
-        );
-        map.insert(
-            "privilege-value".to_string(),
-            "19405b99-3cfa-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-wmi-normalizedclass".to_string(),
-            "eaba628f-eb8e-4fe9-83fc-693be695559b".to_string(),
-        );
-        map.insert(
-            "ms-ds-lockout-observation-window".to_string(),
-            "b05bda89-76af-468a-b892-1be55558ecc8".to_string(),
-        );
-        map.insert(
-            "frs-computer-reference".to_string(),
-            "2a132578-9373-11d1-aebc-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "msmq-enterprise-settings".to_string(),
-            "9a0dc345-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "ms-ts-profile-path".to_string(),
-            "e65c30db-316c-4060-a3a0-387b083f09cd".to_string(),
-        );
-        map.insert(
-            "privilege-holder".to_string(),
-            "19405b9b-3cfa-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-wmi-name".to_string(),
-            "c6c8ace5-7e81-42af-ad72-77412c5941c4".to_string(),
-        );
-        map.insert(
-            "ms-ds-local-effective-recycle-time".to_string(),
-            "4ad6016b-b0d2-4c9b-93b6-5964b17b968c".to_string(),
-        );
-        map.insert(
-            "from-server".to_string(),
-            "bf967979-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "dns-zone-scope".to_string(),
-            "696f8a61-2d3f-40ce-a4b3-e275dfcc49c5".to_string(),
-        );
-        map.insert(
-            "application-settings".to_string(),
-            "f780acc1-56f0-11d1-a9c6-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "mssfu-30-crypt-method".to_string(),
-            "4503d2a3-3d70-41b8-b077-dff123c15865".to_string(),
-        );
-        map.insert(
-            "privilege-display-name".to_string(),
-            "19405b98-3cfa-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-wmi-mof".to_string(),
-            "6736809f-2064-443e-a145-81262b1f1366".to_string(),
-        );
-        map.insert(
-            "ms-ds-local-effective-deletion-time".to_string(),
-            "94f2800c-531f-4aeb-975d-48ac39fd8ca4".to_string(),
-        );
-        map.insert(
-            "from-entry".to_string(),
-            "9a7ad949-ca53-11d1-bbd0-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "msmq-custom-recipient".to_string(),
-            "876d6817-35cc-436c-acea-5ef7174dd9be".to_string(),
-        );
-        map.insert(
-            "mssfu-30-is-valid-container".to_string(),
-            "0dea42f5-278d-4157-b4a7-49b59664915b".to_string(),
-        );
-        map.insert(
-            "privilege-attributes".to_string(),
-            "19405b9a-3cfa-11d1-a9c0-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "ms-wmi-int8validvalues".to_string(),
-            "103519a9-c002-441b-981a-b0b3e012c803".to_string(),
-        );
-        map.insert(
-            "ms-ds-password-reversible-encryption-enabled".to_string(),
-            "75ccdd8f-af6c-4487-bb4b-69e4d38a959c".to_string(),
-        );
-        map.insert(
-            "friendly-names".to_string(),
-            "7bfdcb88-4807-11d1-a9c3-0000f80367c1".to_string(),
-        );
-        map.insert(
-            "dns-zone-scope-container".to_string(),
-            "f2699093-f25a-4220-9deb-03df4cc4a9c5".to_string(),
-        );
-        map.insert(
-            "application-process".to_string(),
-            "5fd4250b-1262-11d0-a060-00aa006c33ed".to_string(),
-        );
-        map.insert(
-            "mssfu-30-netgroup-user-at-domain".to_string(),
-            "a9e84eed-e630-4b67-b4b3-cad2a82d345e".to_string(),
-        );
-        map.insert(
-            "private-key".to_string(),
-            "bf967a03-0de6-11d0-a285-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-wmi-int8min".to_string(),
-            "ed1489d1-54cc-4066-b368-a00daa2664f1".to_string(),
-        );
-        map.insert(
-            "ms-ds-password-complexity-enabled".to_string(),
-            "db68054b-c9c3-4bf0-b15b-0fb52552a610".to_string(),
-        );
-        map.insert(
-            "foreign-identifier".to_string(),
-            "3e97891e-8c01-11d0-afda-00c04fd930c9".to_string(),
-        );
-        map.insert(
-            "msmq-configuration".to_string(),
-            "9a0dc344-c100-11d1-bbc5-0080c76670c0".to_string(),
-        );
-        map.insert(
-            "mssfu-30-netgroup-host-at-domain".to_string(),
-            "97d2bf65-0466-4852-a25a-ec20f57ee36c".to_string(),
-        );
-        map.insert(
-            "priority".to_string(),
-            "281416c7-1968-11d0-a28f-00aa003049e2".to_string(),
-        );
-        map.insert(
-            "ms-wmi-int8max".to_string(),
-            "e3d8b547-003d-4946-a32b-dc7cedc96b74".to_string(),
-        );
-        map
+        let values = [
+            ("ms-mcs-admpwdexpirationtime", "2bb09a7b-9acd-4082-9b51-104bb7f6a01e"),
+            ("ms-mcs-admpwd", "a740f691-b206-4baa-9ab1-559f8985523f"),
+            ("ms-ds-key-credential-link", "5b47d60f-6090-40b2-9f37-2a4de88f3063"),
+            ("service-principal-name", "f3a64788-5306-11d1-a9c5-0000f80367c1"),
+            ("ms-ds-sitename", "98a7f36d-3595-448a-9e6f-6b8965baed9c"),
+            ("frs-staging-path", "1be8f175-a9ff-11d0-afe2-00c04fd930c9"),
+            ("account-name-history", "031952ec-3b72-11d2-90cc-00c04fd91ab1"),
+            ("ms-ts-property01", "faaea977-9655-49d7-853d-f27bb7aaca0f"),
+            ("registered-address", "bf967a10-0de6-11d0-a285-00aa003049e2"),
+            ("msi-script-path", "bf967937-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-promotion-settings", "c881b4e2-43c0-4ebe-b9bb-5250aa9b434c"),
+            ("frs-service-command-status", "2a132582-9373-11d1-aebc-0000f80367c1"),
+            ("attribute-schema", "bf967a80-0de6-11d0-a285-00aa003049e2"),
+            ("ntfrs-member", "2a132586-9373-11d1-aebc-0000f80367c1"),
+            ("configuration", "bf967a87-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ts-secondary-desktop-bl", "34b107af-a00a-455a-b139-dd1a1b12d8af"),
+            ("rdn-att-id", "bf967a0f-0de6-11d0-a285-00aa003049e2"),
+            ("msi-script-name", "96a7dd62-9118-11d1-aebc-0000f80367c1"),
+            ("ms-ds-hab-seniority-index", "def449f1-fd3b-4045-98cf-d9658da788b5"),
+            ("frs-service-command", "ddac0cee-af8f-11d0-afeb-00c04fd930c9"),
+            ("account-expires", "bf967915-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ts-primary-desktop-bl", "9daadc18-40d1-4ed1-a2bf-6b9bf47d3daa"),
+            ("rdn", "bf967a0e-0de6-11d0-a285-00aa003049e2"),
+            ("msi-script", "d9e18313-8939-11d1-aebc-0000f80367c1"),
+            ("ms-ds-phonetic-display-name", "e21a94e4-2d66-4ce5-b30d-0ef87a776ff0"),
+            ("frs-root-security", "5245801f-ca6a-11d0-afff-0000f80367c1"),
+            ("subschema", "5a8b3261-c38d-11d1-bbc9-0080c76670c0"),
+            ("ntds-site-settings", "19195a5d-6da0-11d0-afd3-00c04fd930c9"),
+            ("computer", "bf967a86-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ts-secondary-desktops", "f63aa29a-bb31-48e1-bfab-0a6c5a1d39c2"),
+            ("range-upper", "bf967a0d-0de6-11d0-a285-00aa003049e2"),
+            ("msi-file-list", "7bfdcb7d-4807-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-phonetic-company-name", "5bd5208d-e5f4-46ae-a514-543bc9c47659"),
+            ("frs-root-path", "1be8f174-a9ff-11d0-afe2-00c04fd930c9"),
+            ("ms-ts-primary-desktop", "29259694-09e4-4237-9f72-9306ebe63ab2"),
+            ("range-lower", "bf967a0c-0de6-11d0-a285-00aa003049e2"),
+            ("mscope-id", "963d2751-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-phonetic-department", "6cd53daf-003e-49e7-a702-6fa896e7a6ef"),
+            ("frs-replica-set-type", "26d9736b-6070-11d1-a9c6-0000f80367c1"),
+            ("dmd", "bf967a8f-0de6-11d0-a285-00aa003049e2"),
+            ("ntds-service", "19195a5f-6da0-11d0-afd3-00c04fd930c9"),
+            ("com-connection-point", "bf967a85-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ts-endpoint-plugin", "3c08b569-801f-4158-b17b-e363d6ae696a"),
+            ("querypoint", "7bfdcb86-4807-11d1-a9c3-0000f80367c1"),
+            ("ms-wmi-targettype", "ca2a281e-262b-4ff7-b419-bc123352a4e9"),
+            ("ms-ds-phonetic-last-name", "f217e4ec-0836-4b90-88af-2f5d4bbda2bc"),
+            ("frs-replica-set-guid", "5245801a-ca6a-11d0-afff-0000f80367c1"),
+            ("ms-ts-endpoint-type", "377ade80-e2d8-46c5-9bcd-6d9dec93b35e"),
+            ("query-policy-object", "e1aea403-cd5b-11d0-afff-0000f80367c1"),
+            ("ms-wmi-targetpath", "5006a79a-6bfe-4561-9f52-13cf4dd3e560"),
+            ("ms-ds-phonetic-first-name", "4b1cba4e-302f-4134-ac7c-f01f6c797843"),
+            ("frs-primary-member", "2a132581-9373-11d1-aebc-0000f80367c1"),
+            ("ntds-dsa", "f0f8ffab-1191-11d0-a060-00aa006c33ed"),
+            ("ntds-dsa-ro", "85d16ec1-0791-4bc8-8ab3-70980602ff8c"),
+            ("class-store", "bf967a84-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ts-endpoint-data", "40e1c407-4344-40f3-ab43-3625a34a63a2"),
+            ("query-policy-bl", "e1aea404-cd5b-11d0-afff-0000f80367c1"),
+            ("ms-wmi-targetobject", "c44f67a5-7de5-4a1f-92d9-662b57364b77"),
+            ("ms-ds-non-members-bl", "2a8c68fc-3a7a-4e87-8720-fe77c51cbe74"),
+            ("frs-partner-auth-level", "2a132580-9373-11d1-aebc-0000f80367c1"),
+            ("ms-ts-initial-program", "9201ac6f-1d69-4dfb-802e-d95510109599"),
+            ("query-filter", "cbf70a26-7e78-11d2-9921-0000f87a57d4"),
+            ("ms-wmi-targetnamespace", "1c4ab61f-3420-44e5-849d-8b5dbf60feb7"),
+            ("ms-ds-non-members", "cafcb1de-f23c-46b5-adf7-1e64957bd5db"),
+            ("frs-member-reference-bl", "2a13257f-9373-11d1-aebc-0000f80367c1"),
+            ("organization", "bf967aa3-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ts-work-directory", "a744f666-3d3c-4cc8-834b-9d4f6f687b8b"),
+            ("quality-of-service", "80a67e4e-9f22-11d0-afdd-00c04fd930c9"),
+            ("ms-wmi-targetclass", "95b6d8d6-c9e8-4661-a2bc-6a5cabc04c62"),
+            ("ms-ds-nc-type", "5a2eacd7-cc2b-48cf-9d9a-b6f1a0024de9"),
+            ("frs-member-reference", "2a13257e-9373-11d1-aebc-0000f80367c1"),
+            ("ntds-connection", "19195a60-6da0-11d0-afd3-00c04fd930c9"),
+            ("class-registration", "bf967a82-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ts-default-to-main-printer", "c0ffe2bd-cacf-4dc7-88d5-61e9e95766f6"),
+            ("pwd-properties", "bf967a0b-0de6-11d0-a285-00aa003049e2"),
+            ("ms-wmi-stringvalidvalues", "37609d31-a2bf-4b58-8f53-2b64e57a076d"),
+            ("ms-ds-members-for-az-role-bl", "ececcd20-a7e0-4688-9ccf-02ece5e287f5"),
+            ("frs-level-limit", "5245801e-ca6a-11d0-afff-0000f80367c1"),
+            ("ms-ts-connect-printer-drives", "8ce6a937-871b-4c92-b285-d99d4036681c"),
+            ("pwd-last-set", "bf967a0a-0de6-11d0-a285-00aa003049e2"),
+            ("ms-wmi-stringdefault", "152e42b6-37c5-4f55-ab48-1606384a9aea"),
+            ("ms-ds-members-for-az-role", "cbf7e6cd-85a4-4314-8939-8bfe80597835"),
+            ("frs-flags", "2a13257d-9373-11d1-aebc-0000f80367c1"),
+            ("msmq-site-link", "9a0dc346-c100-11d1-bbc5-0080c76670c0"),
+            ("certification-authority", "3fdfee50-47f4-11d1-a9c3-0000f80367c1"),
+            ("ms-ts-connect-client-drives", "23572aaf-29dd-44ea-b0fa-7e8438b9a4a3"),
+            ("pwd-history-length", "bf967a09-0de6-11d0-a285-00aa003049e2"),
+            ("ms-wmi-sourceorganization", "34f7ed6c-615d-418d-aa00-549a7d7be03e"),
+            ("ms-ds-max-values", "d1e169a4-ebe9-49bf-8fcb-8aef3874592d"),
+            ("frs-file-filter", "1be8f170-a9ff-11d0-afe2-00c04fd930c9"),
+            ("ms-ts-broken-connection-action", "1cf41bba-5604-463e-94d6-1a1287b72ca3"),
+            ("purported-search", "b4b54e50-943a-11d1-aebd-0000f80367c1"),
+            ("ms-wmi-scopeguid", "87b78d51-405f-4b7f-80ed-2bd28786f48d"),
+            ("ms-ds-password-settings-precedence", "456374ac-1f0a-4617-93cf-bc55a7c9d341"),
+            ("frs-fault-condition", "1be8f178-a9ff-11d0-afe2-00c04fd930c9"),
+            ("msmq-settings", "9a0dc347-c100-11d1-bbc5-0080c76670c0"),
+            ("category-registration", "7d6c0e9d-7e20-11d0-afd6-00c04fd930c9"),
+            ("ms-ts-reconnection-action", "366ed7ca-3e18-4c7f-abae-351a01e4b4f7"),
+            ("public-key-policy", "80a67e28-9f22-11d0-afdd-00c04fd930c9"),
+            ("ms-wmi-querylanguage", "7d3cfa98-c17b-4254-8bd7-4de9b932a345"),
+            ("ms-ds-resultant-pso", "b77ea093-88d0-4780-9a98-911f8e8b1dca"),
+            ("frs-extensions", "52458020-ca6a-11d0-afff-0000f80367c1"),
+            ("msmq-foreign", "9a0dc32f-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-quota-amount", "fbb9a00d-3a8c-4233-9cf9-7189264903a1"),
+            ("gp-link", "f30e3bbe-9ff0-11d1-b603-0000f80367c1"),
+            ("acs-max-duration-per-flow", "7f56127e-5301-11d1-a9c5-0000f80367c1"),
+            ("ms-tsls-property01", "87e53590-971d-4a52-955b-4794d15a84ae"),
+            ("retired-repl-dsa-signatures", "7bfdcb7f-4807-11d1-a9c3-0000f80367c1"),
+            ("msmq-encrypt-key", "9a0dc331-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-principal-name", "564e9325-d057-c143-9e3b-4f9e5ef46f93"),
+            ("governs-id", "bf96797d-0de6-11d0-a285-00aa003049e2"),
+            ("acs-max-aggregate-peak-rate-per-user", "f072230c-aef5-11d1-bdcf-0000f80367c1"),
+            ("organizational-unit", "bf967aa5-0de6-11d0-a285-00aa003049e2"),
+            ("cross-ref", "bf967a8d-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ts-managingls4", "f7a3b6a0-2107-4140-b306-75cb521731e5"),
+            ("required-categories", "7d6c0e93-7e20-11d0-afd6-00c04fd930c9"),
+            ("msmq-ds-services", "2df90d78-009f-11d2-aa4c-00c04fd7d83a"),
+            ("ms-ds-other-settings", "79d2f34c-9d7d-42bb-838f-866b3e4400e2"),
+            ("global-address-list", "f754c748-06f4-11d2-aa53-00c04fd7d83a"),
+            ("acs-identity-name", "dab029b6-ddf7-11d1-90a5-00c04fd91ab1"),
+            ("ms-ts-managingls3", "fad5dcc1-2130-4c87-a118-75322cd67050"),
+            ("reps-to", "bf967a1e-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-ds-service", "2df90d82-009f-11d2-aa4c-00c04fd7d83a"),
+            ("ms-ds-operations-for-az-task-bl", "a637d211-5739-4ed1-89b2-88974548bc59"),
+            ("given-name", "f0f8ff8e-1191-11d0-a060-00aa006c33ed"),
+            ("acs-event-log-level", "7f561286-5301-11d1-a9c5-0000f80367c1"),
+            ("organizational-role", "a8df74bf-c5ea-11d1-bbcb-0080c76670c0"),
+            ("crl-distribution-point", "167758ca-47f3-11d1-a9c3-0000f80367c1"),
+            ("ms-ts-managingls2", "349f0757-51bd-4fc8-9d66-3eceea8a25be"),
+            ("reps-from", "bf967a1d-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-digests-mig", "0f71d8e0-da3b-11d1-90a5-00c04fd91ab1"),
+            ("ms-ds-operations-for-az-task", "1aacb436-2e9d-44a9-9298-ce4debeb6ebf"),
+            ("generation-qualifier", "16775804-47f3-11d1-a9c3-0000f80367c1"),
+            ("acs-enable-rsvp-message-logging", "7f561285-5301-11d1-a9c5-0000f80367c1"),
+            ("ms-ts-managingls", "f3bcc547-85b0-432c-9ac0-304506bf2c83"),
+            ("repl-interval", "45ba9d1a-56fa-11d2-90d0-00c04fd91ab1"),
+            ("msmq-digests", "9a0dc33c-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-operations-for-az-role-bl", "f85b6228-3734-4525-b6b7-3f3bb220902c"),
+            ("generated-connection", "bf96797a-0de6-11d0-a285-00aa003049e2"),
+            ("acs-enable-rsvp-accounting", "f072230e-aef5-11d1-bdcf-0000f80367c1"),
+            ("organizational-person", "bf967aa4-0de6-11d0-a285-00aa003049e2"),
+            ("country", "bf967a8c-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ts-licenseversion4", "70ca5d97-2304-490a-8a27-52678c8d2095"),
+            ("reports", "bf967a1c-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-dependent-client-services", "2df90d76-009f-11d2-aa4c-00c04fd7d83a"),
+            ("ms-ds-operations-for-az-role", "93f701be-fa4c-43b6-bc2f-4dbea718ffab"),
+            ("garbage-coll-period", "5fd424a1-1262-11d0-a060-00aa006c33ed"),
+            ("acs-enable-acs-service", "7f561287-5301-11d1-a9c5-0000f80367c1"),
+            ("ms-ts-licenseversion3", "f8ba8f81-4cab-4973-a3c8-3a6da62a5e31"),
+            ("replica-source", "bf967a18-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-dependent-client-service", "2df90d83-009f-11d2-aa4c-00c04fd7d83a"),
+            ("ms-ds-object-reference-bl", "2b702515-c1f7-4b3b-b148-c0e4c6ceecb4"),
+            ("fsmo-role-owner", "66171887-8f3c-11d0-afda-00c04fd930c9"),
+            ("acs-dsbm-refresh", "1cb3559f-56d0-11d1-a9c6-0000f80367c1"),
+            ("ntfrs-subscriptions", "2a132587-9373-11d1-aebc-0000f80367c1"),
+            ("control-access-right", "8297931e-86d3-11d0-afda-00c04fd930c9"),
+            ("ms-ts-licenseversion2", "4b0df103-8d97-45d9-ad69-85c3080ba4e7"),
+            ("repl-uptodate-vector", "bf967a16-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-csp-name", "9a0dc334-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-object-reference", "638ec2e8-22e7-409c-85d2-11b21bee72de"),
+            ("frs-working-path", "1be8f173-a9ff-11d0-afe2-00c04fd930c9"),
+            ("acs-dsbm-priority", "1cb3559e-56d0-11d1-a9c6-0000f80367c1"),
+            ("ms-ts-licenseversion", "0ae94a89-372f-4df2-ae8a-c64a2bc47278"),
+            ("repl-topology-stay-of-execution", "7bfdcb83-4807-11d1-a9c3-0000f80367c1"),
+            ("msmq-cost", "9a0dc33a-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-machine-account-quota", "d064fb68-1480-11d3-91c1-0000f87a57d4"),
+            ("frs-version-guid", "26d9736c-6070-11d1-a9c6-0000f80367c1"),
+            ("acs-dsbm-deadtime", "1cb355a0-56d0-11d1-a9c6-0000f80367c1"),
+            ("ntfrs-subscriber", "2a132588-9373-11d1-aebc-0000f80367c1"),
+            ("container", "bf967a8b-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ts-expiredate4", "5e11dc43-204a-4faf-a008-6863621c6f5f"),
+            ("repl-property-meta-data", "281416c0-1968-11d0-a28f-00aa003049e2"),
+            ("msmq-computer-type-ex", "18120de8-f4c4-4341-bd95-32eb5bcf7c80"),
+            ("ms-ds-top-quota-usage", "7b7cce4f-f1f5-4bb6-b7eb-23504af19e75"),
+            ("frs-version", "2a132585-9373-11d1-aebc-0000f80367c1"),
+            ("acs-direction", "7f56127a-5301-11d1-a9c5-0000f80367c1"),
+            ("ms-ts-expiredate3", "41bc7f04-be72-4930-bd10-1f3439412387"),
+            ("remote-storage-guid", "2a39c5b0-8960-11d1-aebc-0000f80367c1"),
+            ("msmq-computer-type", "9a0dc32e-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-tombstone-quota-factor", "461744d7-f3b6-45ba-8753-fb9552a5df32"),
+            ("frs-update-timeout", "1be8f172-a9ff-11d0-afe2-00c04fd930c9"),
+            ("acs-cache-timeout", "1cb355a1-56d0-11d1-a9c6-0000f80367c1"),
+            ("ntfrs-settings", "f780acc2-56f0-11d1-a9c6-0000f80367c1"),
+            ("person", "bf967aa7-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ts-expiredate2", "54dfcf71-bc3f-4f0b-9d5a-4b2476bb8925"),
+            ("remote-source-type", "bf967a15-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-base-priority", "9a0dc323-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-trust-forest-trust-info", "29cc866e-49d3-4969-942e-1dbc0925d183"),
+            ("frs-time-last-config-change", "2a132584-9373-11d1-aebc-0000f80367c1"),
+            ("acs-allocable-rsvp-bandwidth", "7f561283-5301-11d1-a9c5-0000f80367c1"),
+            ("contact", "5cb41ed0-0e4c-11d0-a286-00aa003049e2"),
+            ("ms-ts-expiredate", "70004ef5-25c3-446a-97c8-996ae8566776"),
+            ("remote-source", "bf967a14-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-authenticate", "9a0dc326-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-supported-encryption-types", "20119867-1d04-4ab7-9371-cfc3d5df0afd"),
+            ("frs-time-last-command", "2a132583-9373-11d1-aebc-0000f80367c1"),
+            ("acs-aggregate-token-rate-per-user", "7f56127d-5301-11d1-a9c5-0000f80367c1"),
+            ("ntfrs-replica-set", "5245803a-ca6a-11d0-afff-0000f80367c1"),
+            ("connection-point", "5cb41ecf-0e4c-11d0-a286-00aa003049e2"),
+            ("ms-ts-property02", "3586f6ac-51b7-4978-ab42-f936463198e7"),
+            ("remote-server-name", "bf967a12-0de6-11d0-a285-00aa003049e2"),
+            ("msi-script-size", "96a7dd63-9118-11d1-aebc-0000f80367c1"),
+            ("ms-dfs-link-security-descriptor-v2", "57cf87f7-3426-4841-b322-02b3b6e9eba8"),
+            ("roomnumber", "81d7f8c2-e327-4a0d-91c6-b42d4009115f"),
+            ("msmq-os-type", "9a0dc330-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-repl-attribute-meta-data", "d7c53242-724e-4c39-9d4c-2df8c9d66c7a"),
+            ("help-data16", "5fd424a7-1262-11d0-a060-00aa006c33ed"),
+            ("acs-non-reserved-min-policed-size", "b6873917-3b90-11d2-90cc-00c04fd91ab1"),
+            ("query-policy", "83cc7075-cca7-11d0-afff-0000f80367c1"),
+            ("dns-node", "e0fa1e8c-9b45-11d0-afdd-00c04fd930c9"),
+            ("ms-dfs-link-path-v2", "86b021f6-10ab-40a2-a252-1dc0cc3be6a9"),
+            ("role-occupant", "a8df7465-c5ea-11d1-bbcb-0080c76670c0"),
+            ("msmq-nt4-stub", "6f914be6-d57e-11d1-90a2-00c04fd91ab1"),
+            ("ms-ds-preferred-gc-site", "d921b50a-0ab2-42cd-87f6-09cf83a91854"),
+            ("has-partial-replica-ncs", "bf967981-0de6-11d0-a285-00aa003049e2"),
+            ("acs-non-reserved-max-sdu-size", "aec2cfe3-3b90-11d2-90cc-00c04fd91ab1"),
+            ("ms-dfs-link-identity-guid-v2", "edb027f3-5726-4dee-8d4e-dbf07e1ad1f1"),
+            ("rights-guid", "8297931c-86d3-11d0-afda-00c04fd930c9"),
+            ("msmq-nt4-flags", "eb38a158-d57f-11d1-90a2-00c04fd91ab1"),
+            ("ms-ds-per-user-trust-tombstones-quota", "8b70a6c6-50f9-4fa3-a71e-1ce03040449b"),
+            ("has-master-ncs", "bf967982-0de6-11d0-a285-00aa003049e2"),
+            ("acs-minimum-policed-size", "8d0e7195-3b90-11d2-90cc-00c04fd91ab1"),
+            ("print-queue", "bf967aa8-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dfs-last-modified-v2", "3c095e8a-314e-465b-83f5-ab8277bcf29b"),
+            ("rid-used-pool", "6617188b-8f3c-11d0-afda-00c04fd930c9"),
+            ("msmq-name-style", "9a0dc333-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-per-user-trust-quota", "d161adf0-ca24-4993-a3aa-8b2c981302e8"),
+            ("groups-to-ignore", "eea65904-8ac6-11d0-afda-00c04fd930c9"),
+            ("acs-minimum-latency", "9517fefb-3b90-11d2-90cc-00c04fd91ab1"),
+            ("display-template", "5fd4250c-1262-11d0-a060-00aa006c33ed"),
+            ("ms-dfs-generation-guid-v2", "35b8b3d9-c58f-43d6-930e-5040f2f1a781"),
+            ("rid-set-references", "7bfdcb7b-4807-11d1-a9c3-0000f80367c1"),
+            ("msmq-multicast-address", "1d2f4412-f10d-4337-9b48-6e5b125cd265"),
+            ("ms-ds-non-security-group-extra-classes", "2de144fc-1f52-486f-bdf4-16fcc3084e54"),
+            ("group-type", "9a9a021e-4a5b-11d1-a9c3-0000f80367c1"),
+            ("acs-minimum-delay-variation", "9c65329b-3b90-11d2-90cc-00c04fd91ab1"),
+            ("ms-pki-private-key-recovery-agent", "1562a632-44b9-4a7e-a2d3-e426c96a3acc"),
+            ("ms-dfs-comment-v2", "b786cec9-61fd-4523-b2c1-5ceb3860bb32"),
+            ("rid-previous-allocation-pool", "6617188a-8f3c-11d0-afda-00c04fd930c9"),
+            ("msmq-migrated", "9a0dc33f-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-nc-ro-replica-locations-bl", "f547511c-5b2a-44cc-8358-992a88258164"),
+            ("group-priority", "eea65905-8ac6-11d0-afda-00c04fd930c9"),
+            ("acs-maximum-sdu-size", "87a2d8f9-3b90-11d2-90cc-00c04fd91ab1"),
+            ("display-specifier", "e0fa1e8a-9b45-11d0-afdd-00c04fd930c9"),
+            ("ms-dfsr-stagingcleanuptriggerinpercent", "d64b9c23-e1fa-467b-b317-6964d744d633"),
+            ("rid-next-rid", "6617188c-8f3c-11d0-afda-00c04fd930c9"),
+            ("msmq-long-lived", "9a0dc335-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-nc-ro-replica-locations", "3df793df-9858-4417-a701-735a1ecebf74"),
+            ("group-membership-sam", "bf967980-0de6-11d0-a285-00aa003049e2"),
+            ("acs-max-token-rate-per-flow", "7f56127b-5301-11d1-a9c5-0000f80367c1"),
+            ("pki-enrollment-service", "ee4aa692-3bba-11d2-90cc-00c04fd91ab1"),
+            ("ms-dfsr-commonstagingsizeinmb", "135eb00e-4846-458b-8ea2-a37559afd405"),
+            ("rid-manager-reference", "66171886-8f3c-11d0-afda-00c04fd930c9"),
+            ("msmq-label-ex", "4580ad25-d407-48d2-ad24-43e6e56793d7"),
+            ("ms-ds-nc-replica-locations", "97de9615-b537-46bc-ac0f-10720f3909f3"),
+            ("group-attributes", "bf96797e-0de6-11d0-a285-00aa003049e2"),
+            ("acs-max-token-bucket-per-flow", "81f6e0df-3b90-11d2-90cc-00c04fd91ab1"),
+            ("dhcp-class", "963d2756-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-dfsr-commonstagingpath", "936eac41-d257-4bb9-bd55-f310a3cf09ad"),
+            ("rid-available-pool", "66171888-8f3c-11d0-afda-00c04fd930c9"),
+            ("msmq-label", "9a0dc325-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-nc-repl-outbound-neighbors", "855f2ef5-a1c5-4cc4-ba6d-32522848b61f"),
+            ("gpc-wql-filter", "7bd4c7a6-1add-4436-8c04-3999a880154c"),
+            ("acs-max-size-of-rsvp-log-file", "1cb3559d-56d0-11d1-a9c6-0000f80367c1"),
+            ("pki-certificate-template", "e5209ca2-3bba-11d2-90cc-00c04fd91ab1"),
+            ("ms-dfsr-options2", "11e24318-4ca6-4f49-9afe-e5eb1afa3473"),
+            ("rid-allocation-pool", "66171889-8f3c-11d0-afda-00c04fd930c9"),
+            ("msmq-journal-quota", "9a0dc324-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-nc-repl-inbound-neighbors", "9edba85a-3e9e-431b-9b1a-a5b6e9eda796"),
+            ("gpc-user-extension-names", "42a75fc6-783f-11d2-9916-0000f87a57d4"),
+            ("acs-max-size-of-rsvp-account-file", "f0722311-aef5-11d1-bdcf-0000f80367c1"),
+            ("dfs-configuration", "8447f9f2-1027-11d0-a05f-00aa006c33ed"),
+            ("ms-dfsr-ondemandexclusiondirectoryfilter", "7d523aff-9012-49b2-9925-f922a0018656"),
+            ("rid", "bf967a22-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-journal", "9a0dc321-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-nc-repl-cursors", "8a167ce4-f9e8-47eb-8d78-f7fe80abb2cc"),
+            ("gpc-machine-extension-names", "32ff8ecc-783f-11d2-9916-0000f87a57d4"),
+            ("acs-max-peak-bandwidth-per-flow", "7f56127c-5301-11d1-a9c5-0000f80367c1"),
+            ("physical-location", "b7b13122-b82e-11d0-afee-0000f80367c1"),
+            ("ms-dfsr-ondemandexclusionfilefilter", "a68359dc-a581-4ee6-9015-5382c60f0fb4"),
+            ("revision", "bf967a21-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-interval2", "99b88f52-3b7b-11d2-90cc-00c04fd91ab1"),
+            ("ms-ds-quota-used", "b5a84308-615d-4bb7-b05f-2f1746aa439f"),
+            ("gpc-functionality-version", "f30e3bc0-9ff0-11d1-b603-0000f80367c1"),
+            ("acs-max-peak-bandwidth", "7f561284-5301-11d1-a9c5-0000f80367c1"),
+            ("device", "bf967a8e-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dfsr-defaultcompressionexclusionfilter", "87811bd5-cd8b-45cb-9f5d-980f3a9e0c97"),
+            ("token-groups-no-gc-acceptable", "040fc392-33df-11d2-98b2-0000f87a57d4"),
+            ("msmq-interval1", "8ea825aa-3b7b-11d2-90cc-00c04fd91ab1"),
+            ("ms-ds-quota-trustee", "16378906-4ea5-49be-a8d1-bfd41dff4f65"),
+            ("gpc-file-sys-path", "f30e3bc1-9ff0-11d1-b603-0000f80367c1"),
+            ("acs-max-no-of-log-files", "1cb3559c-56d0-11d1-a9c6-0000f80367c1"),
+            ("ms-dfsr-disablepacketprivacy", "6a84ede5-741e-43fd-9dd6-aa0f61578621"),
+            ("token-groups-global-and-universal", "46a9b11d-60ae-405a-b7e8-ff8a58d456d2"),
+            ("msmq-in-routing-servers", "9a0dc32c-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-quota-effective", "6655b152-101c-48b4-b347-e1fcebc60157"),
+            ("gp-options", "f30e3bbf-9ff0-11d1-b603-0000f80367c1"),
+            ("acs-max-no-of-account-files", "f0722310-aef5-11d1-bdcf-0000f80367c1"),
+            ("package-registration", "bf967aa6-0de6-11d0-a285-00aa003049e2"),
+            ("cross-ref-container", "ef9e60e0-56f7-11d1-a9c6-0000f80367c1"),
+            ("ms-tsls-property02", "47c77bb0-316e-4e2f-97f1-0d4c48fca9dd"),
+            ("token-groups", "b7c69e6d-2cc7-11d2-854e-00a0c983f608"),
+            ("additional-trusted-service-names", "032160be-9824-11d1-aec0-0000f80367c1"),
+            ("ds-ui-settings", "09b10f14-6f93-11d2-9905-0000f87a57d4"),
+            ("ms-ds-claim-shares-possible-values-with", "52c8d13a-ce0b-4f57-892b-18f5a43a2400"),
+            ("sam-domain-updates", "04d2d114-f799-4e9b-bcdc-90e8f5ba7ebe"),
+            ("msmq-secured-source", "8bf0221b-7a06-4d63-91f0-1499941813d3"),
+            ("ms-ds-tasks-for-az-role-bl", "a0dcd536-5158-42fe-8c40-c00a7ad37959"),
+            ("install-ui-level", "96a7dd64-9118-11d1-aebc-0000f80367c1"),
+            ("additional-information", "6d05fb41-246b-11d0-a9c8-00aa006c33ed"),
+            ("room", "7860e5d2-c8b0-4cbb-bd45-d9455beb9206"),
+            ("ms-ds-claim-type-applies-to-class", "6afb0e4c-d876-437c-aeb6-c3e41454c272"),
+            ("sam-account-type", "6e7b626c-64f2-11d0-afd2-00c04fd930c9"),
+            ("msmq-routing-services", "2df90d77-009f-11d2-aa4c-00c04fd7d83a"),
+            ("ms-ds-tasks-for-az-role", "35319082-8c4a-4646-9386-c2949d49894d"),
+            ("initials", "f0f8ff90-1191-11d0-a060-00aa006c33ed"),
+            ("acs-server-list", "7cbd59a5-3b90-11d2-90cc-00c04fd91ab1"),
+            ("domainrelatedobject", "8bfd2d3d-efda-4549-852c-f85e137aedc6"),
+            ("ms-ds-claim-attribute-source", "eebc123e-bae6-4166-9e5b-29884a8b76b0"),
+            ("sam-account-name", "3e0abfd0-126a-11d0-a060-00aa006c33ed"),
+            ("msmq-routing-service", "2df90d81-009f-11d2-aa4c-00c04fd7d83a"),
+            ("ms-ds-spn-suffixes", "789ee1eb-8c8e-4e4c-8cec-79b31b7617b5"),
+            ("initial-auth-outgoing", "52458024-ca6a-11d0-afff-0000f80367c1"),
+            ("acs-total-no-of-flows", "7f561280-5301-11d1-a9c5-0000f80367c1"),
+            ("rid-set", "7bfdcb89-4807-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-claim-value-type", "c66217b9-e48e-47f7-b7d5-6552b8afd619"),
+            ("rpc-ns-transfer-syntax", "29401c4a-7a27-11d0-afd6-00c04fd930c9"),
+            ("msmq-recipient-formatname", "3bfe6748-b544-485a-b067-1b310c4334bf"),
+            ("ms-ds-site-affinity", "c17c5602-bcb7-46f0-9656-6370ca884b72"),
+            ("initial-auth-incoming", "52458023-ca6a-11d0-afff-0000f80367c1"),
+            ("acs-time-of-day", "7f561279-5301-11d1-a9c5-0000f80367c1"),
+            ("domain-policy", "bf967a99-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-claim-possible-values", "2e28edee-ed7c-453f-afe4-93bd86f2174f"),
+            ("rpc-ns-profile-entry", "bf967a28-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-quota", "9a0dc322-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-settings", "0e1b47d7-40a3-4b48-8d1b-4cac0c1cdf21"),
+            ("indexedscopes", "7bfdcb87-4807-11d1-a9c3-0000f80367c1"),
+            ("acs-service-type", "7f56127f-5301-11d1-a9c5-0000f80367c1"),
+            ("rid-manager", "6617188d-8f3c-11d0-afda-00c04fd930c9"),
+            ("ms-ds-is-used-as-resource-security-attribute", "51c9f89d-4730-468d-a2b5-1d493212d17e"),
+            ("rpc-ns-priority", "bf967a27-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-queue-type", "9a0dc320-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-security-group-extra-classes", "4f146ae8-a4fe-4801-a731-f51848a4f4e4"),
+            ("implemented-categories", "7d6c0e92-7e20-11d0-afd6-00c04fd930c9"),
+            ("acs-rsvp-log-files-location", "1cb3559b-56d0-11d1-a9c6-0000f80367c1"),
+            ("ms-ds-bridgehead-servers-used", "3ced1465-7b71-2541-8780-1e1ea6243a82"),
+            ("rpc-ns-object-id", "29401c48-7a27-11d0-afd6-00c04fd930c9"),
+            ("msmq-queue-quota", "3f6b8e12-d57f-11d1-90a2-00c04fd91ab1"),
+            ("ms-ds-sd-reference-domain", "4c51e316-f628-43a5-b06b-ffb695fcb4f3"),
+            ("icon-path", "f0f8ff83-1191-11d0-a060-00aa006c33ed"),
+            ("acs-rsvp-account-files-location", "f072230f-aef5-11d1-bdcf-0000f80367c1"),
+            ("rfc822localpart", "b93e3a78-cbae-485e-a07b-5ef4ae505686"),
+            ("domain-dns", "19195a5b-6da0-11d0-afd3-00c04fd930c9"),
+            ("ms-dfs-ttl-v2", "ea944d31-864a-4349-ada5-062e2c614f5e"),
+            ("rpc-ns-interface-id", "bf967a25-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-queue-name-ext", "2df90d87-009f-11d2-aa4c-00c04fd7d83a"),
+            ("ms-ds-schema-extensions", "b39a61be-ed07-4cab-9a4a-4963ed0141e1"),
+            ("host", "6043df71-fa48-46cf-ab7c-cbd54644b22d"),
+            ("acs-priority", "7f561281-5301-11d1-a9c5-0000f80367c1"),
+            ("domain", "19195a5a-6da0-11d0-afd3-00c04fd930c9"),
+            ("ms-dfs-target-list-v2", "6ab126c6-fa41-4b36-809e-7ca91610d48f"),
+            ("rpc-ns-group", "bf967a24-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-queue-journal-quota", "8e441266-d57f-11d1-90a2-00c04fd91ab1"),
+            ("ms-ds-retired-repl-nc-signatures", "d5b35506-19d6-4d26-9afb-11357ac99b5e"),
+            ("houseidentifier", "a45398b7-c44a-4eb6-82d3-13c10946dbfe"),
+            ("acs-policy-name", "1cb3559a-56d0-11d1-a9c6-0000f80367c1"),
+            ("residential-person", "a8df74d6-c5ea-11d1-bbcb-0080c76670c0"),
+            ("documentseries", "7a2be07c-302f-4b96-bc90-0795d66885f8"),
+            ("ms-dfs-short-name-link-path-v2", "2d7826f0-4cf7-42e9-a039-1110e0d9ca99"),
+            ("rpc-ns-entry-flags", "80212841-4bdc-11d1-a9c4-0000f80367c1"),
+            ("msmq-qm-id", "9a0dc33e-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-replicationepoch", "08e3aa79-eb1c-45b5-af7b-8f94246c8e41"),
+            ("home-drive", "bf967986-0de6-11d0-a285-00aa003049e2"),
+            ("acs-permission-bits", "7f561282-5301-11d1-a9c5-0000f80367c1"),
+            ("ms-dfs-schema-minor-version", "fef9a725-e8f1-43ab-bd86-6a0115ce9e38"),
+            ("rpc-ns-codeset", "7a0ba0e0-8e98-11d0-afda-00c04fd930c9"),
+            ("msmq-privacy-level", "9a0dc327-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-replication-notify-subsequent-dsa-delay", "d63db385-dd92-4b52-b1d8-0d3ecc0e86b6"),
+            ("home-directory", "bf967985-0de6-11d0-a285-00aa003049e2"),
+            ("acs-non-reserved-tx-size", "f072230d-aef5-11d1-bdcf-0000f80367c1"),
+            ("remote-storage-service-point", "2a39c5bd-8960-11d1-aebc-0000f80367c1"),
+            ("document", "39bad96d-c2d6-4baf-88ab-7e4207600117"),
+            ("ms-dfs-schema-major-version", "ec6d7855-704a-4f61-9aa6-c49a7c1d54c7"),
+            ("rpc-ns-bindings", "bf967a23-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-prev-site-gates", "2df90d75-009f-11d2-aa4c-00c04fd7d83a"),
+            ("ms-ds-replication-notify-first-dsa-delay", "85abd4f4-0a89-4e49-bdec-6f35bb2562ba"),
+            ("hide-from-ab", "ec05b750-a977-4efe-8e8d-ba6c1a6e33a8"),
+            ("acs-non-reserved-tx-limit", "1cb355a2-56d0-11d1-a9c6-0000f80367c1"),
+            ("ms-dfs-properties-v2", "0c3e5bc5-eb0e-40f5-9b53-334e958dffdb"),
+            ("rpc-ns-annotation", "88611bde-8cf4-11d0-afda-00c04fd930c9"),
+            ("msmq-owner-id", "9a0dc328-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-replicates-nc-reason", "0ea12b84-08b3-11d3-91bc-0000f87a57d4"),
+            ("help-file-name", "5fd424a9-1262-11d0-a060-00aa006c33ed"),
+            ("acs-non-reserved-token-size", "a916d7c9-3b90-11d2-90cc-00c04fd91ab1"),
+            ("remote-mail-recipient", "bf967aa9-0de6-11d0-a285-00aa003049e2"),
+            ("dns-zone", "e0fa1e8b-9b45-11d0-afdd-00c04fd930c9"),
+            ("ms-dfs-namespace-identity-guid-v2", "200432ce-ec5f-4931-a525-d7f4afe34e68"),
+            ("root-trust", "7bfdcb80-4807-11d1-a9c3-0000f80367c1"),
+            ("msmq-out-routing-servers", "9a0dc32b-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-repl-value-meta-data", "2f5c8145-e1bd-410b-8957-8bfa81d5acfd"),
+            ("help-data32", "5fd424a8-1262-11d0-a060-00aa006c33ed"),
+            ("acs-non-reserved-peak-rate", "a331a73f-3b90-11d2-90cc-00c04fd91ab1"),
+            ("ms-ds-is-full-replica-for", "c8bc72e0-a6b4-48f0-94a5-fd76a88c9987"),
+            ("ipsec-negotiation-policy-type", "07383074-91df-11d1-aebc-0000f80367c1"),
+            ("allowed-attributes", "9a7ad940-ca53-11d1-bbd0-0080c76670c0"),
+            ("ft-dfs", "8447f9f3-1027-11d0-a05f-00aa006c33ed"),
+            ("ms-tpm-srk-pub-thumbprint", "19d706eb-4d76-44a2-85d6-1c342be3be37"),
+            ("see-also", "bf967a31-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-sites", "9a0dc32a-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-krbtgt-link-bl", "5dd68c41-bfdf-438b-9b5d-39d9618bf260"),
+            ("ipsec-negotiation-policy-reference", "b40ff822-427a-11d1-a9c2-0000f80367c1"),
+            ("admin-property-pages", "52458038-ca6a-11d0-afff-0000f80367c1"),
+            ("rpc-server-element", "f29653d0-7ad0-11d0-afd6-00c04fd930c9"),
+            ("ms-spp-issuance-license", "1075b3a1-bbaf-49d2-ae8d-c4f25c823303"),
+            ("security-identifier", "bf967a2f-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-site-name-ex", "422144fa-c17f-4649-94d6-9731ed2784ed"),
+            ("ms-ds-revealed-dsas", "94f6f2ac-c76d-4b5e-b71f-f332c3e93c22"),
+            ("ipsec-negotiation-policy-action", "07383075-91df-11d1-aebc-0000f80367c1"),
+            ("admin-multiselect-property-pages", "18f9b67d-5ac6-4b3b-97db-d0a406afb7ba"),
+            ("friendlycountry", "c498f152-dc6b-474a-9f52-7cdba3d7d351"),
+            ("ms-spp-config-license", "0353c4b5-d199-40b0-b3c5-deb32fd9ec06"),
+            ("secretary", "01072d9a-98ad-4a53-9744-e83e287278fb"),
+            ("msmq-site-name", "ffadb4b2-de39-11d1-90a5-00c04fd91ab1"),
+            ("ms-ds-secondary-krbtgt-number", "aa156612-2396-467e-ad6a-28d23fdb1865"),
+            ("ipsec-name", "b40ff81c-427a-11d1-a9c2-0000f80367c1"),
+            ("admin-display-name", "bf96791a-0de6-11d0-a285-00aa003049e2"),
+            ("rpc-server", "88611be0-8cf4-11d0-afda-00c04fd930c9"),
+            ("ms-spp-phone-license", "67e4d912-f362-4052-8c79-42f45ba7b221"),
+            ("search-guide", "bf967a2e-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-site-id", "9a0dc340-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-reveal-ondemand-group", "303d9f4a-1dd6-4b38-8fc5-33afe8c988ad"),
+            ("ipsec-isakmp-reference", "b40ff820-427a-11d1-a9c2-0000f80367c1"),
+            ("admin-description", "bf967919-0de6-11d0-a285-00aa003049e2"),
+            ("foreign-security-principal", "89e31c12-8530-11d0-afda-00c04fd930c9"),
+            ("ms-spp-online-license", "098f368e-4812-48cd-afb7-a136b96807ed"),
+            ("search-flags", "bf967a2d-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-site-gates-mig", "e2704852-3b7b-11d2-90cc-00c04fd91ab1"),
+            ("ms-ds-never-reveal-group", "15585999-fd49-4d66-b25d-eeb96aba8174"),
+            ("ipsec-id", "b40ff81d-427a-11d1-a9c2-0000f80367c1"),
+            ("admin-count", "bf967918-0de6-11d0-a285-00aa003049e2"),
+            ("rpc-profile-element", "f29653cf-7ad0-11d0-afd6-00c04fd930c9"),
+            ("ms-spp-confirmation-id", "6e8797c4-acda-4a49-8740-b0bd05a9b831"),
+            ("sd-rights-effective", "c3dbafa6-33df-11d2-98b2-0000f87a57d4"),
+            ("msmq-site-gates", "9a0dc339-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-has-full-replica-ncs", "1d3c2d18-42d0-4868-99fe-0eca1e6fa9f3"),
+            ("ipsec-filter-reference", "b40ff823-427a-11d1-a9c2-0000f80367c1"),
+            ("admin-context-menu", "553fd038-f32e-11d0-b0bc-00c04fd8dca6"),
+            ("file-link-tracking-entry", "8e4eb2ed-4712-11d0-a1a0-00c04fd930c9"),
+            ("ms-spp-installation-id", "69bfb114-407b-4739-a213-c663802b3e37"),
+            ("script-path", "bf9679a8-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-site-foreign", "fd129d8a-d57e-11d1-90a2-00c04fd91ab1"),
+            ("ms-ds-revealed-users", "185c7821-3749-443a-bd6a-288899071adb"),
+            ("ipsec-data-type", "b40ff81e-427a-11d1-a9c2-0000f80367c1"),
+            ("address-type", "5fd42464-1262-11d0-a060-00aa006c33ed"),
+            ("rpc-profile", "88611be1-8cf4-11d0-afda-00c04fd930c9"),
+            ("ms-spp-kms-ids", "9b663eda-3542-46d6-9df0-314025af2bac"),
+            ("scope-flags", "16f3a4c2-7e79-11d2-9921-0000f87a57d4"),
+            ("msmq-site-2", "9a0dc338-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-krbtgt-link", "778ff5c9-6f4e-4b74-856a-d68383313910"),
+            ("ipsec-data", "b40ff81f-427a-11d1-a9c2-0000f80367c1"),
+            ("address-syntax", "5fd42463-1262-11d0-a060-00aa006c33ed"),
+            ("file-link-tracking", "dd712229-10e4-11d0-a05f-00aa006c33ed"),
+            ("ms-spp-csvlk-sku-id", "9684f739-7b78-476d-8d74-31ad7692eef4"),
+            ("schema-version", "bf967a2c-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-site-1", "9a0dc337-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-source-object-dn", "773e93af-d3b4-48d4-b3f9-06457602d3d0"),
+            ("invocation-id", "bf96798e-0de6-11d0-a285-00aa003049e2"),
+            ("address-home", "16775781-47f3-11d1-a9c3-0000f80367c1"),
+            ("rpc-group", "88611bdf-8cf4-11d0-afda-00c04fd930c9"),
+            ("ms-spp-csvlk-partial-product-key", "a601b091-8652-453a-b386-87ad239b7c08"),
+            ("schema-update", "1e2d06b4-ac8f-11d0-afe3-00c04fd930c9"),
+            ("msmq-sign-key", "9a0dc332-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-updatescript", "146eb639-bb9f-4fc1-a825-e29e00c77920"),
+            ("international-isdn-number", "bf96798d-0de6-11d0-a285-00aa003049e2"),
+            ("address-entry-display-table-msdos", "5fd42462-1262-11d0-a060-00aa006c33ed"),
+            ("dynamic-object", "66d51249-3355-4c1f-b24e-81f252aca23b"),
+            ("ms-spp-csvlk-pid", "b47f510d-6b50-47e1-b556-772c79e4ffc4"),
+            ("schema-info", "f9fb64ae-93b4-11d2-9945-0000f87a57d4"),
+            ("msmq-sign-certificates-mig", "3881b8ea-da3b-11d1-90a5-00c04fd91ab1"),
+            ("ms-ds-user-password-expiry-time-computed", "add5cf10-7b09-4449-9ae6-2534148f8a72"),
+            ("inter-site-topology-renew", "b7c69e5f-2cc7-11d2-854e-00a0c983f608"),
+            ("address-entry-display-table", "5fd42461-1262-11d0-a060-00aa006c33ed"),
+            ("rpc-entry", "bf967aac-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-members-of-resource-property-list-bl", "7469b704-edb0-4568-a5a5-59f4862c75a7"),
+            ("schema-id-guid", "bf967923-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-sign-certificates", "9a0dc33b-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-user-account-control-computed", "2cc4b836-b63f-4940-8d23-ea7acf06af56"),
+            ("inter-site-topology-generator", "b7c69e5e-2cc7-11d2-854e-00a0c983f608"),
+            ("address-book-roots", "f70b6e48-06f4-11d2-aa53-00c04fd7d83a"),
+            ("dsa", "3fdfee52-47f4-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-members-of-resource-property-list", "4d371c11-4cad-4c41-8ad2-b180ab2bd13c"),
+            ("schema-flags-ex", "bf967a2b-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-services", "9a0dc33d-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-tasks-for-az-task-bl", "df446e52-b5fa-4ca2-a42f-13f98a526c8f"),
+            ("inter-site-topology-failover", "b7c69e60-2cc7-11d2-854e-00a0c983f608"),
+            ("address", "f0f8ff84-1191-11d0-a060-00aa006c33ed"),
+            ("rpc-container", "80212842-4bdc-11d1-a9c4-0000f80367c1"),
+            ("ms-ds-claim-shares-possible-values-with-bl", "54d522db-ec95-48f5-9bbd-1880ebbb2180"),
+            ("schedule", "dd712224-10e4-11d0-a05f-00aa006c33ed"),
+            ("msmq-service-type", "9a0dc32d-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-tasks-for-az-task", "b11c8ee2-5fcd-46a7-95f0-f38333f096cf"),
+            ("instance-type", "bf96798c-0de6-11d0-a285-00aa003049e2"),
+            ("must-contain", "bf9679d3-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-token-group-names", "65650576-4699-4fc9-8d18-26e0cd0137a6"),
+            ("keywords", "bf967993-0de6-11d0-a285-00aa003049e2"),
+            ("attributecertificateattribute", "fa4693bb-7bc2-4cb9-81a8-c99c43b7905e"),
+            ("ms-dns-dnskey-record-set-ttl", "8f4e317f-28d7-442c-a6df-1f491f97b326"),
+            ("service-instance-version", "bf967a37-0de6-11d0-a285-00aa003049e2"),
+            ("msrassavedframedroute", "db0c90c7-c1f2-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-optional-feature-flags", "8a0560c1-97b9-4811-9db7-dc061598965b"),
+            ("jpegphoto", "bac80572-09c4-4fa9-9ae6-7628d7adbe0e"),
+            ("associatedname", "f7fbfc45-85ab-42a4-a435-780e62f7858b"),
+            ("security-object", "bf967aaf-0de6-11d0-a285-00aa003049e2"),
+            ("infrastructure-update", "2df90d89-009f-11d2-aa4c-00c04fd7d83a"),
+            ("ms-dns-nsec3-iterations", "80b70aab-8959-4ec0-8e93-126e76df3aca"),
+            ("service-dns-name-type", "28630eba-41d5-11d1-a9c1-0000f80367c1"),
+            ("msrassavedframedipaddress", "db0c90c6-c1f2-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-value-type-reference-bl", "ab5543ad-23a1-3b45-b937-9b313d5474a8"),
+            ("is-single-valued", "bf967992-0de6-11d0-a285-00aa003049e2"),
+            ("associateddomain", "3320fc38-c379-4c17-a510-1bdf6133c5da"),
+            ("ms-dns-nsec3-random-salt-length", "13361665-916c-4de7-a59d-b1ebbd0de129"),
+            ("service-dns-name", "28630eb8-41d5-11d1-a9c1-0000f80367c1"),
+            ("msrassavedcallbacknumber", "db0c90c5-c1f2-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-value-type-reference", "78fc5d84-c1dc-3148-8984-58f792d41d3e"),
+            ("is-recycled", "8fb59256-55f1-444b-aacb-f5b482fe3459"),
+            ("assoc-nt-account", "398f63c0-ca60-11d1-bbd1-0000f81f10c0"),
+            ("secret", "bf967aae-0de6-11d0-a285-00aa003049e2"),
+            ("inetorgperson", "4828cc14-1437-45bc-9b07-ad6f015e5f28"),
+            ("ms-dns-nsec3-hash-algorithm", "ff9e5552-7db7-4138-8888-05ce320a0323"),
+            ("service-class-name", "b7b1311d-b82e-11d0-afee-0000f80367c1"),
+            ("msradiusservicetype", "db0c90b6-c1f2-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-usn-last-sync-success", "31f7b8b6-c9f8-4f2d-a37b-58a823030331"),
+            ("is-privilege-holder", "19405b9c-3cfa-11d1-a9c0-0000f80367c1"),
+            ("assistant", "0296c11c-40da-11d1-a9c0-0000f80367c1"),
+            ("index-server-catalog", "7bfdcb8a-4807-11d1-a9c3-0000f80367c1"),
+            ("ms-dns-rfc5011-key-rollovers", "27d93c40-065a-43c0-bdd8-cdf2c7d120aa"),
+            ("service-class-info", "bf967a36-0de6-11d0-a285-00aa003049e2"),
+            ("msradiusframedroute", "db0c90a9-c1f2-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-failed-interactive-logon-count-at-last-successful-logon", "c5d234e5-644a-4403-a665-e26e0aef5e98"),
+            ("is-member-of-partial-attribute-set", "19405b9d-3cfa-11d1-a9c0-0000f80367c1"),
+            ("asset-number", "ba305f75-47e3-11d0-a1a6-00c04fd930c9"),
+            ("sam-server", "bf967aad-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dns-ds-record-algorithms", "5c5b7ad2-20fa-44bb-beb3-34b9c0f65579"),
+            ("service-class-id", "bf967a35-0de6-11d0-a285-00aa003049e2"),
+            ("msradiusframedipaddress", "db0c90a4-c1f2-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-failed-interactive-logon-count", "dc3ca86f-70ad-4960-8425-a4d6313d93dd"),
+            ("is-member-of-dl", "bf967991-0de6-11d0-a285-00aa003049e2"),
+            ("applies-to", "8297931d-86d3-11d0-afda-00c04fd930c9"),
+            ("group-policy-container", "f30e3bc2-9ff0-11d1-b603-0000f80367c1"),
+            ("ms-dns-maintain-trust-anchor", "0dc063c1-52d9-4456-9e15-9c2434aafd94"),
+            ("service-binding-information", "b7b1311c-b82e-11d0-afee-0000f80367c1"),
+            ("msradiuscallbacknumber", "db0c909c-c1f2-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-last-failed-interactive-logon-time", "c7e7dafa-10c3-4b8b-9acd-54f11063742e"),
+            ("is-ephemeral", "f4c453f0-c5f1-11d1-bbcb-0080c76670c0"),
+            ("application-name", "dd712226-10e4-11d0-a05f-00aa006c33ed"),
+            ("sam-domain-base", "bf967a91-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dns-nsec3-optout", "7bea2088-8ce2-423c-b191-66ec506b1595"),
+            ("server-state", "bf967a34-0de6-11d0-a285-00aa003049e2"),
+            ("msnpsavedcallingstationid", "db0c908e-c1f2-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-last-successful-interactive-logon-time", "011929e6-8b5d-4258-b64a-00b0b4949747"),
+            ("is-deleted", "bf96798f-0de6-11d0-a285-00aa003049e2"),
+            ("app-schema-version", "96a7dd65-9118-11d1-aebc-0000f80367c1"),
+            ("groupofuniquenames", "0310a911-93a3-4e21-a7a3-55d85ab2c48b"),
+            ("ms-dns-sign-with-nsec3", "c79f2199-6da1-46ff-923c-1f3f800c721e"),
+            ("server-role", "bf967a33-0de6-11d0-a285-00aa003049e2"),
+            ("msnpcallingstationid", "db0c908a-c1f2-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-revealed-list-bl", "aa1c88fd-b0f6-429f-b2ca-9d902266e808"),
+            ("is-defunct", "28630ebe-41d5-11d1-a9c1-0000f80367c1"),
+            ("anr", "45b01500-c419-11d1-bbc9-0080c76670c0"),
+            ("sam-domain", "bf967a90-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dns-is-signed", "aa12854c-d8fc-4d5e-91ca-368b8d829bee"),
+            ("server-reference-bl", "26d9736e-6070-11d1-a9c6-0000f80367c1"),
+            ("msnpcalledstationid", "db0c9089-c1f2-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-revealed-list", "cbdad11c-7fec-387b-6219-3a0627d9af81"),
+            ("is-critical-system-object", "00fbf30d-91fe-11d1-aebc-0000f80367c1"),
+            ("alt-security-identities", "00fbf30c-91fe-11d1-aebc-0000f80367c1"),
+            ("group-of-names", "bf967a9d-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dns-keymaster-zones", "0be0dd3b-041a-418c-ace9-2f17d23e9d42"),
+            ("server-reference", "26d9736d-6070-11d1-a9c6-0000f80367c1"),
+            ("msnpallowdialin", "db0c9085-c1f2-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-is-user-cachable-at-rodc", "fe01245a-341f-4556-951f-48c033a89050"),
+            ("ipsec-policy-reference", "b7b13118-b82e-11d0-afee-0000f80367c1"),
+            ("allowed-child-classes-effective", "9a7ad943-ca53-11d1-bbd0-0080c76670c0"),
+            ("rras-administration-dictionary", "f39b98ae-938d-11d1-aebd-0000f80367c1"),
+            ("ms-tpm-tpm-information-for-computer-bl", "14fa84c9-8ecd-4348-bc91-6d3ced472ab7"),
+            ("server-name", "09dcb7a0-165f-11d0-a064-00aa006c33ed"),
+            ("msmq-version", "9a0dc336-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ds-is-partial-replica-for", "37c94ff6-c6d4-498f-b2f9-c6f7f8647809"),
+            ("ipsec-owners-reference", "b40ff824-427a-11d1-a9c2-0000f80367c1"),
+            ("allowed-child-classes", "9a7ad942-ca53-11d1-bbd0-0080c76670c0"),
+            ("group", "bf967a9c-0de6-11d0-a285-00aa003049e2"),
+            ("ms-tpm-tpm-information-for-computer", "ea1b7b93-5e48-46d5-bc6c-4df4fda78a35"),
+            ("serial-number", "bf967a32-0de6-11d0-a285-00aa003049e2"),
+            ("msmq-user-sid", "c58aae32-56f9-11d2-90d0-00c04fd91ab1"),
+            ("ms-ds-is-domain-for", "ff155a2a-44e5-4de0-8318-13a58988de4f"),
+            ("ipsec-nfa-reference", "b40ff821-427a-11d1-a9c2-0000f80367c1"),
+            ("allowed-attributes-effective", "9a7ad941-ca53-11d1-bbd0-0080c76670c0"),
+            ("rras-administration-connection-point", "2a39c5be-8960-11d1-aebc-0000f80367c1"),
+            ("ms-tpm-owner-information-temp", "c894809d-b513-4ff8-8811-f4f43f5ac7bc"),
+            ("seq-notification", "ddac0cf2-af8f-11d0-afeb-00c04fd930c9"),
+            ("msmq-transactional", "9a0dc329-c100-11d1-bbc5-0080c76670c0"),
+            ("ipsec-negotiation-policy", "b40ff827-427a-11d1-a9c2-0000f80367c1"),
+            ("ms-authz-central-access-policy-id", "62f29b60-be74-4630-9456-2f6691993a86"),
+            ("site-server", "1be8f17c-a9ff-11d0-afe2-00c04fd930c9"),
+            ("netboot-machine-file-path", "3e978923-8c01-11d0-afda-00c04fd930c9"),
+            ("ms-dfsr-stagingsizeinmb", "250a8f20-f6fc-4559-ae65-e4b24c67aebe"),
+            ("legacy-exchange-dn", "28630ebc-41d5-11d1-a9c1-0000f80367c1"),
+            ("bridgehead-server-list-bl", "d50c2cdb-8951-11d1-aebc-0000f80367c1"),
+            ("ms-authz-resource-condition", "80997877-f874-4c68-864d-6e508a83bdbd"),
+            ("site-object-bl", "3e10944d-c354-11d0-aff8-0000f80367c1"),
+            ("netboot-locally-installed-oses", "07383080-91df-11d1-aebc-0000f80367c1"),
+            ("ms-dfsr-stagingpath", "86b9a69e-f0a6-405d-99bb-77d977992c2a"),
+            ("ldap-ipdeny-list", "7359a353-90f7-11d1-aebc-0000f80367c1"),
+            ("birth-location", "1f0075f9-7e40-11d0-afd6-00c04fd930c9"),
+            ("service-instance", "bf967ab2-0de6-11d0-a285-00aa003049e2"),
+            ("ipsec-isakmp-policy", "b40ff828-427a-11d1-a9c2-0000f80367c1"),
+            ("ms-authz-last-effective-security-policy", "8e1685c6-3e2f-48a2-a58d-5af0ea789fa0"),
+            ("site-object", "3e10944c-c354-11d0-aff8-0000f80367c1"),
+            ("netboot-limit-clients", "07383077-91df-11d1-aebc-0000f80367c1"),
+            ("ms-dfsr-rootsizeinmb", "90b769ac-4413-43cf-ad7a-867142e740a3"),
+            ("ldap-display-name", "bf96799a-0de6-11d0-a285-00aa003049e2"),
+            ("bad-pwd-count", "bf96792e-0de6-11d0-a285-00aa003049e2"),
+            ("ms-authz-proposed-security-policy", "b946bece-09b5-4b6a-b25a-4b63a330e80e"),
+            ("site-list", "d50c2cdc-8951-11d1-aebc-0000f80367c1"),
+            ("netboot-intellimirror-oses", "0738307e-91df-11d1-aebc-0000f80367c1"),
+            ("ms-dfsr-rootpath", "d7d5e8c1-e61f-464f-9fcf-20bbe0a2ec54"),
+            ("ldap-admin-limits", "7359a352-90f7-11d1-aebc-0000f80367c1"),
+            ("bad-password-time", "bf96792d-0de6-11d0-a285-00aa003049e2"),
+            ("service-connection-point", "28630ec1-41d5-11d1-a9c1-0000f80367c1"),
+            ("ipsec-filter", "b40ff826-427a-11d1-a9c2-0000f80367c1"),
+            ("ms-authz-effective-security-policy", "07831919-8f94-4fb6-8a42-91545dccdad3"),
+            ("site-link-list", "d50c2cdd-8951-11d1-aebc-0000f80367c1"),
+            ("netboot-initialization", "3e978920-8c01-11d0-afda-00c04fd930c9"),
+            ("ms-dfsr-extension", "78f011ec-a766-4b19-adcf-7b81ed781a4d"),
+            ("last-update-sequence", "7d6c0e9c-7e20-11d0-afd6-00c04fd930c9"),
+            ("auxiliary-class", "bf96792c-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dns-nsec3-current-salt", "387d9432-a6d1-4474-82cd-0a89aae084ae"),
+            ("site-guid", "3e978924-8c01-11d0-afda-00c04fd930c9"),
+            ("netboot-duid", "532570bd-3d77-424f-822f-0d636dc6daad"),
+            ("ms-dfsr-version", "1a861408-38c3-49ea-ba75-85481a77c655"),
+            ("last-set-time", "bf967998-0de6-11d0-a285-00aa003049e2"),
+            ("authority-revocation-list", "1677578d-47f3-11d1-a9c3-0000f80367c1"),
+            ("service-class", "bf967ab1-0de6-11d0-a285-00aa003049e2"),
+            ("ipsec-base", "b40ff825-427a-11d1-a9c2-0000f80367c1"),
+            ("ms-dns-nsec3-user-salt", "aff16770-9622-4fbc-a128-3088777605b9"),
+            ("signature-algorithms", "2a39c5b2-8960-11d1-aebc-0000f80367c1"),
+            ("netboot-guid", "3e978921-8c01-11d0-afda-00c04fd930c9"),
+            ("ms-frs-topology-pref", "92aa27e0-5c50-402d-9ec1-ee847def9788"),
+            ("last-logon-timestamp", "c0e20a04-0e5a-4ff3-9482-5efeaecd7060"),
+            ("authentication-options", "bf967928-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dns-propagation-time", "ba340d47-2181-4ca0-a2f6-fae4479dab2a"),
+            ("sid-history", "17eb4278-d167-11d0-b002-0000f80367c1"),
+            ("netboot-current-client-count", "07383079-91df-11d1-aebc-0000f80367c1"),
+            ("ms-frs-hub-member", "5643ff81-35b6-4ca9-9512-baf0bd0a2772"),
+            ("last-logon", "bf967997-0de6-11d0-a285-00aa003049e2"),
+            ("auditing-policy", "6da8a4fe-0e52-11d0-a286-00aa003049e2"),
+            ("service-administration-point", "b7b13123-b82e-11d0-afee-0000f80367c1"),
+            ("inter-site-transport-container", "26d97375-6070-11d1-a9c6-0000f80367c1"),
+            ("ms-dns-parent-has-secure-delegation", "285c6964-c11a-499e-96d8-bf7c75a223c6"),
+            ("show-in-advanced-view-only", "bf967984-0de6-11d0-a285-00aa003049e2"),
+            ("netboot-answer-requests", "0738307a-91df-11d1-aebc-0000f80367c1"),
+            ("ms-exch-owner-bl", "bf9679f4-0de6-11d0-a285-00aa003049e2"),
+            ("last-logoff", "bf967996-0de6-11d0-a285-00aa003049e2"),
+            ("audio", "d0e1d224-e1a0-42ce-a2da-793ba5244f35"),
+            ("ms-dns-dnskey-records", "28c458f5-602d-4ac9-a77c-b3f1be503a7e"),
+            ("show-in-address-book", "3e74f60e-3e73-11d1-a9c0-0000f80367c1"),
+            ("netboot-answer-only-valid-clients", "0738307b-91df-11d1-aebc-0000f80367c1"),
+            ("ms-exch-labeleduri", "16775820-47f3-11d1-a9c3-0000f80367c1"),
+            ("last-known-parent", "52ab8670-5709-11d1-a9c6-0000f80367c1"),
+            ("attribute-types", "9a7ad944-ca53-11d1-bbd0-0080c76670c0"),
+            ("servers-container", "f780acc0-56f0-11d1-a9c6-0000f80367c1"),
+            ("inter-site-transport", "26d97376-6070-11d1-a9c6-0000f80367c1"),
+            ("ms-dns-signing-keys", "b7673e6d-cad9-4e9e-b31a-63e8098fdd63"),
+            ("short-server-name", "45b01501-c419-11d1-bbc9-0080c76670c0"),
+            ("netboot-allow-new-clients", "07383076-91df-11d1-aebc-0000f80367c1"),
+            ("ms-exch-house-identifier", "a8df7407-c5ea-11d1-bbcb-0080c76670c0"),
+            ("last-content-indexed", "bf967995-0de6-11d0-a285-00aa003049e2"),
+            ("attribute-syntax", "bf967925-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dns-signing-key-descriptors", "3443d8cd-e5b6-4f3b-b098-659a0214a079"),
+            ("shell-property-pages", "52458039-ca6a-11d0-afff-0000f80367c1"),
+            ("netbios-name", "bf9679d8-0de6-11d0-a285-00aa003049e2"),
+            ("ms-exch-assistant-name", "a8df7394-c5ea-11d1-bbcb-0080c76670c0"),
+            ("last-backup-restoration-time", "1fbb0be8-ba63-11d0-afef-0000f80367c1"),
+            ("attribute-security-guid", "bf967924-0de6-11d0-a285-00aa003049e2"),
+            ("server", "bf967a92-0de6-11d0-a285-00aa003049e2"),
+            ("intellimirror-scp", "07383085-91df-11d1-aebc-0000f80367c1"),
+            ("ms-dns-secure-delegation-polling-period", "f6b0f0be-a8e4-4468-8fd9-c3c47b8722f9"),
+            ("shell-context-menu", "553fd039-f32e-11d0-b0bc-00c04fd8dca6"),
+            ("nc-name", "bf9679d6-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-token-group-names-no-gc-acceptable", "523fc6c8-9af4-4a02-9cd7-3dea129eeb27"),
+            ("labeleduri", "c569bb46-c680-44bc-a273-e6c227d71b45"),
+            ("attribute-id", "bf967922-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dns-signature-inception-offset", "03d4c32e-e217-4a61-9699-7bbc4729a026"),
+            ("setup-command", "7d6c0e97-7e20-11d0-afd6-00c04fd930c9"),
+            ("name-service-flags", "80212840-4bdc-11d1-a9c4-0000f80367c1"),
+            ("ms-ds-token-group-names-global-and-universal", "fa06d1f4-7922-4aad-b79c-b2201f54417c"),
+            ("knowledge-information", "1677581f-47f3-11d1-a9c3-0000f80367c1"),
+            ("attribute-display-names", "cb843f80-48d9-11d1-a9c3-0000f80367c1"),
+            ("security-principal", "bf967ab0-0de6-11d0-a285-00aa003049e2"),
+            ("intellimirror-group", "07383086-91df-11d1-aebc-0000f80367c1"),
+            ("ms-dns-ds-record-set-ttl", "29869b7c-64c4-42fe-97d5-fbc2fa124160"),
+            ("catalogs", "7bfdcb81-4807-11d1-a9c3-0000f80367c1"),
+            ("subnet-container", "b7b13125-b82e-11d0-afee-0000f80367c1"),
+            ("link-track-vol-entry", "ddac0cf6-af8f-11d0-afeb-00c04fd930c9"),
+            ("ms-kds-publickey-length", "e338f470-39cd-4549-ab5b-f69f9e583fe0"),
+            ("surname", "bf967a41-0de6-11d0-a285-00aa003049e2"),
+            ("notification-list", "19195a56-6da0-11d0-afd3-00c04fd930c9"),
+            ("ms-dfsr-rdcminfilesizeinkb", "f402a330-ace5-4dc1-8cc9-74d900bf8ae0"),
+            ("lockout-time", "28630ebf-41d5-11d1-a9c1-0000f80367c1"),
+            ("carlicense", "d4159c92-957d-4a87-8a67-8d2934e01649"),
+            ("ms-kds-secretagreement-param", "30b099d9-edfe-7549-b807-eba444da79e9"),
+            ("supported-application-context", "1677588f-47f3-11d1-a9c3-0000f80367c1"),
+            ("non-security-member-bl", "52458019-ca6a-11d0-afff-0000f80367c1"),
+            ("ms-dfsr-rdcenabled", "e3b44e05-f4a7-4078-a730-f48670a743f8"),
+            ("lockout-threshold", "bf9679a6-0de6-11d0-a285-00aa003049e2"),
+            ("canonical-name", "9a7ad945-ca53-11d1-bbd0-0080c76670c0"),
+            ("subnet", "b7b13124-b82e-11d0-afee-0000f80367c1"),
+            ("link-track-omt-entry", "ddac0cf7-af8f-11d0-afeb-00c04fd930c9"),
+            ("ms-kds-secretagreement-algorithmid", "1702975d-225e-cb4a-b15d-0daea8b5e990"),
+            ("supplemental-credentials", "bf967a3f-0de6-11d0-a285-00aa003049e2"),
+            ("non-security-member", "52458018-ca6a-11d0-afff-0000f80367c1"),
+            ("ms-dfsr-contentsetguid", "1035a8e1-67a8-4c21-b7bb-031cdf99d7a0"),
+            ("lockout-duration", "bf9679a5-0de6-11d0-a285-00aa003049e2"),
+            ("can-upgrade-script", "d9e18314-8939-11d1-aebc-0000f80367c1"),
+            ("ms-kds-kdf-param", "8a800772-f4b8-154f-b41c-2e4271eff7a7"),
+            ("superior-dns-root", "5245801d-ca6a-11d0-afff-0000f80367c1"),
+            ("next-rid", "bf9679db-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dfsr-options", "d6d67084-c720-417d-8647-b696237a114c"),
+            ("lock-out-observation-window", "bf9679a4-0de6-11d0-a285-00aa003049e2"),
+            ("ca-web-url", "963d2736-48be-11d1-a9c3-0000f80367c1"),
+            ("storage", "bf967ab5-0de6-11d0-a285-00aa003049e2"),
+            ("link-track-object-move-table", "ddac0cf5-af8f-11d0-afeb-00c04fd930c9"),
+            ("ms-kds-kdf-algorithmid", "db2c48b2-d14d-ec4e-9f58-ad579d8b440e"),
+            ("super-scopes", "963d274b-48be-11d1-a9c3-0000f80367c1"),
+            ("next-level-store", "bf9679da-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dfsr-flags", "fe515695-3f61-45c8-9bfa-19c148c57b09"),
+            ("location", "09dcb79f-165f-11d0-a064-00aa006c33ed"),
+            ("ca-usages", "963d2738-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-is-primary-computer-for", "998c06ac-3f87-444e-a5df-11b03dc8a50c"),
+            ("super-scope-description", "963d274c-48be-11d1-a9c3-0000f80367c1"),
+            ("network-address", "bf9679d9-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dfsr-keywords", "048b4692-6227-4b67-a074-c4437083e14b"),
+            ("localization-display-id", "a746f0d1-78d0-11d2-9916-0000f87a57d4"),
+            ("ca-connect", "963d2735-48be-11d1-a9c3-0000f80367c1"),
+            ("sites-container", "7a4117da-cd67-11d0-afff-0000f80367c1"),
+            ("licensing-site-settings", "1be8f17d-a9ff-11d0-afe2-00c04fd930c9"),
+            ("ms-ds-primary-computer", "a13df4e2-dbb0-4ceb-828b-8b2e143e9e81"),
+            ("subschemasubentry", "9a7ad94d-ca53-11d1-bbd0-0080c76670c0"),
+            ("netboot-tools", "0738307f-91df-11d1-aebc-0000f80367c1"),
+            ("ms-dfsr-schedule", "4699f15f-a71f-48e2-9ff5-5897c0759205"),
+            ("localized-description", "d9e18316-8939-11d1-aebc-0000f80367c1"),
+            ("ca-certificate-dn", "963d2740-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-generation-id", "1e5d393d-8cb7-4b4f-840a-973b36cc09c3"),
+            ("sub-refs", "bf967a3c-0de6-11d0-a285-00aa003049e2"),
+            ("netboot-sif-file", "2df90d84-009f-11d2-aa4c-00c04fd7d83a"),
+            ("ms-dfsr-directoryfilter", "93c7b477-1f2e-4b40-b7bf-007e8d038ccf"),
+            ("locality-name", "bf9679a2-0de6-11d0-a285-00aa003049e2"),
+            ("ca-certificate", "bf967932-0de6-11d0-a285-00aa003049e2"),
+            ("site-link-bridge", "d50c2cdf-8951-11d1-aebc-0000f80367c1"),
+            ("leaf", "bf967a9e-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-claim-is-single-valued", "cd789fb9-96b4-4648-8219-ca378161af38"),
+            ("sub-class-of", "bf967a3b-0de6-11d0-a285-00aa003049e2"),
+            ("netboot-server", "07383081-91df-11d1-aebc-0000f80367c1"),
+            ("ms-dfsr-filefilter", "d68270ac-a5dc-4841-a6ac-cd68be38c181"),
+            ("locale-id", "bf9679a1-0de6-11d0-a285-00aa003049e2"),
+            ("bytes-per-minute", "ba305f76-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-ds-claim-is-value-space-restricted", "0c2ce4c7-f1c3-4482-8578-c60d4bb74422"),
+            ("structural-object-class", "3860949f-f6a8-4b38-9950-81ecb6bc2982"),
+            ("netboot-scp-bl", "07383082-91df-11d1-aebc-0000f80367c1"),
+            ("ms-dfsr-tombstoneexpiryinmin", "23e35d4c-e324-4861-a22f-e199140dae00"),
+            ("local-policy-reference", "80a67e4d-9f22-11d0-afdd-00c04fd930c9"),
+            ("business-category", "bf967931-0de6-11d0-a285-00aa003049e2"),
+            ("site-link", "d50c2cde-8951-11d1-aebc-0000f80367c1"),
+            ("ipsec-policy", "b7b13121-b82e-11d0-afee-0000f80367c1"),
+            ("ms-ds-claim-source-type", "92f19c05-8dfa-4222-bbd1-2c4f01487754"),
+            ("street-address", "bf967a3a-0de6-11d0-a285-00aa003049e2"),
+            ("netboot-new-machine-ou", "0738307d-91df-11d1-aebc-0000f80367c1"),
+            ("ms-dfsr-replicationgrouptype", "eeed0fc8-1001-45ed-80cc-bbf744930720"),
+            ("local-policy-flags", "bf96799e-0de6-11d0-a285-00aa003049e2"),
+            ("builtin-modified-count", "bf967930-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-claim-source", "fa32f2a6-f28b-47d0-bf91-663e8f910a72"),
+            ("state-or-province-name", "bf967a39-0de6-11d0-a285-00aa003049e2"),
+            ("netboot-new-machine-naming-policy", "0738307c-91df-11d1-aebc-0000f80367c1"),
+            ("ms-dfsr-enabled", "03726ae7-8e7d-4446-8aae-a91657c00993"),
+            ("lm-pwd-history", "bf96799d-0de6-11d0-a285-00aa003049e2"),
+            ("builtin-creation-time", "bf96792f-0de6-11d0-a285-00aa003049e2"),
+            ("site", "bf967ab3-0de6-11d0-a285-00aa003049e2"),
+            ("ipsec-nfa", "b40ff829-427a-11d1-a9c2-0000f80367c1"),
+            ("ms-authz-member-rules-in-central-access-policy-bl", "516e67cf-fedd-4494-bb3a-bc506a948891"),
+            ("spn-mappings", "2ab0e76c-7041-11d2-9905-0000f87a57d4"),
+            ("netboot-mirror-data-file", "2df90d85-009f-11d2-aa4c-00c04fd7d83a"),
+            ("ms-dfsr-conflictsizeinmb", "9ad33fc9-aacf-4299-bb3e-d1fc6ea88e49"),
+            ("link-track-secret", "2ae80fe2-47b4-11d0-a1a4-00c04fd930c9"),
+            ("buildingname", "f87fa54b-b2c5-4fd7-88c0-daccb21d93c5"),
+            ("ms-authz-member-rules-in-central-access-policy", "57f22f7a-377e-42c3-9872-cec6f21d2e3e"),
+            ("smtp-mail-address", "26d9736f-6070-11d1-a9c6-0000f80367c1"),
+            ("netboot-max-clients", "07383078-91df-11d1-aebc-0000f80367c1"),
+            ("ms-dfsr-conflictpath", "5cf0bcc8-60f7-4bff-bda6-aea0344eb151"),
+            ("link-id", "bf96799b-0de6-11d0-a285-00aa003049e2"),
+            ("bridgehead-transport-list", "d50c2cda-8951-11d1-aebc-0000f80367c1"),
+            ("simplesecurityobject", "5fe69b0b-e146-4f15-b0ab-c1e5d488e094"),
+            ("ms-dfsr-maxageincacheinmin", "2ab0e48d-ac4e-4afc-83e5-a34240db6198"),
+            ("marshalled-interface", "bf9679b9-0de6-11d0-a285-00aa003049e2"),
+            ("com-typelib-id", "281416de-1968-11d0-a28f-00aa003049e2"),
+            ("shadowaccount", "5b6d8467-1a18-4174-b350-9cc6e7b4ac8d"),
+            ("ms-com-partitionset", "250464ab-c417-497a-975a-9e0d459a7ca1"),
+            ("ms-ds-groupmsamembership", "888eedd6-ce04-df40-b462-b8a50e41ba38"),
+            ("telex-primary", "0296c121-40da-11d1-a9c0-0000f80367c1"),
+            ("oem-information", "bf9679ea-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dfsr-mindurationcacheinmin", "4c5d607a-ce49-444a-9862-82a95f5d1fcc"),
+            ("mapi-id", "bf9679b7-0de6-11d0-a285-00aa003049e2"),
+            ("com-treat-as-class-id", "281416db-1968-11d0-a28f-00aa003049e2"),
+            ("ms-ds-managedpasswordinterval", "f8758ef7-ac76-8843-a2ee-a26b4dcaf409"),
+            ("telex-number", "bf967a4b-0de6-11d0-a285-00aa003049e2"),
+            ("object-version", "16775848-47f3-11d1-a9c3-0000f80367c1"),
+            ("ms-dfsr-cachepolicy", "db7a08e7-fc76-4569-a45f-f5ecb66a88b5"),
+            ("manager", "bf9679b5-0de6-11d0-a285-00aa003049e2"),
+            ("com-progid", "bf96793d-0de6-11d0-a285-00aa003049e2"),
+            ("posixaccount", "ad44bb41-67d5-4d88-b575-7b20674e76d8"),
+            ("ms-com-partition", "c9010e74-4e58-49f7-8a89-5e3e2340fcf8"),
+            ("ms-ds-managedpasswordpreviousid", "d0d62131-2d4a-d04f-99d9-1c63646229a4"),
+            ("teletex-terminal-identifier", "bf967a4a-0de6-11d0-a285-00aa003049e2"),
+            ("object-sid", "bf9679e8-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dfsr-readonly", "5ac48021-e447-46e7-9d23-92c0c6a90dfb"),
+            ("managed-objects", "0296c124-40da-11d1-a9c0-0000f80367c1"),
+            ("com-other-prog-id", "281416dd-1968-11d0-a28f-00aa003049e2"),
+            ("ms-ds-managedpasswordid", "0e78295a-c6d3-0a40-b491-d62251ffa0a6"),
+            ("telephone-number", "bf967a49-0de6-11d0-a285-00aa003049e2"),
+            ("object-guid", "bf9679e7-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dfsr-deletedsizeinmb", "53ed9ad1-9975-41f4-83f5-0c061a12553a"),
+            ("managed-by", "0296c120-40da-11d1-a9c0-0000f80367c1"),
+            ("com-interfaceid", "bf96793c-0de6-11d0-a285-00aa003049e2"),
+            ("volume", "bf967abb-0de6-11d0-a285-00aa003049e2"),
+            ("meeting", "11b6cc94-48c4-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-managedpassword", "e362ed86-b728-0842-b27d-2dea7a9df218"),
+            ("system-poss-superiors", "bf967a47-0de6-11d0-a285-00aa003049e2"),
+            ("object-count", "34aaa216-b699-11d0-afee-0000f80367c1"),
+            ("ms-dfsr-deletedpath", "817cf0b8-db95-4914-b833-5a079ef65764"),
+            ("machine-wide-policy", "80a67e4f-9f22-11d0-afdd-00c04fd930c9"),
+            ("com-clsid", "281416d9-1968-11d0-a28f-00aa003049e2"),
+            ("ms-ds-allowed-to-act-on-behalf-of-other-identity", "3f78c3e5-f79a-46bd-a0b8-9d18116ddc79"),
+            ("system-only", "bf967a46-0de6-11d0-a285-00aa003049e2"),
+            ("object-classes", "9a7ad94b-ca53-11d1-bbd0-0080c76670c0"),
+            ("ms-dfsr-priority", "eb20e7d6-32ad-42de-b141-16ad2631b01b"),
+            ("machine-role", "bf9679b2-0de6-11d0-a285-00aa003049e2"),
+            ("com-classid", "bf96793b-0de6-11d0-a285-00aa003049e2"),
+            ("user", "bf967aba-0de6-11d0-a285-00aa003049e2"),
+            ("mail-recipient", "bf967aa1-0de6-11d0-a285-00aa003049e2"),
+            ("ms-imaging-hash-algorithm", "8ae70db5-6406-4196-92fe-f3bb557520a7"),
+            ("system-must-contain", "bf967a45-0de6-11d0-a285-00aa003049e2"),
+            ("object-class-category", "bf9679e6-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dfsr-computerreferencebl", "5eb526d7-d71b-44ae-8cc6-95460052e6ac"),
+            ("machine-password-change-interval", "c9b6358e-bb38-11d0-afef-0000f80367c1"),
+            ("code-page", "bf967938-0de6-11d0-a285-00aa003049e2"),
+            ("type-library", "281416e2-1968-11d0-a28f-00aa003049e2"),
+            ("ms-imaging-thumbprint-hash", "9cdfdbc5-0304-4569-95f6-c4f663fe5ae6"),
+            ("system-may-contain", "bf967a44-0de6-11d0-a285-00aa003049e2"),
+            ("object-class", "bf9679e5-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dfsr-memberreferencebl", "adde62c6-1880-41ed-bd3c-30b7d25e14f0"),
+            ("machine-architecture", "bf9679af-0de6-11d0-a285-00aa003049e2"),
+            ("class-display-name", "548e1c22-dea6-11d0-b010-0000f80367c1"),
+            ("lost-and-found", "52ab8671-5709-11d1-a9c6-0000f80367c1"),
+            ("ms-kds-createtime", "ae18119f-6390-0045-b32d-97dbc701aef7"),
+            ("system-flags", "e0fa1e62-9b45-11d0-afdd-00c04fd930c9"),
+            ("object-category", "26d97369-6070-11d1-a9c6-0000f80367c1"),
+            ("ms-dfsr-computerreference", "6c7b5785-3d21-41bf-8a8a-627941544d5a"),
+            ("lsa-modified-count", "bf9679ae-0de6-11d0-a285-00aa003049e2"),
+            ("certificate-templates", "2a39c5b1-8960-11d1-aebc-0000f80367c1"),
+            ("trusted-domain", "bf967ab8-0de6-11d0-a285-00aa003049e2"),
+            ("ms-kds-usestarttime", "6cdc047f-f522-b74a-9a9c-d95ac8cdfda2"),
+            ("system-auxiliary-class", "bf967a43-0de6-11d0-a285-00aa003049e2"),
+            ("obj-dist-name", "bf9679e4-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dfsr-memberreference", "261337aa-f1c3-44b2-bbea-c88d49e6f0c7"),
+            ("lsa-creation-time", "bf9679ad-0de6-11d0-a285-00aa003049e2"),
+            ("certificate-revocation-list", "1677579f-47f3-11d1-a9c3-0000f80367c1"),
+            ("locality", "bf967aa0-0de6-11d0-a285-00aa003049e2"),
+            ("ms-kds-domainid", "96400482-cf07-e94c-90e8-f2efc4f0495e"),
+            ("sync-with-sid", "037651e5-441d-11d1-a9c3-0000f80367c1"),
+            ("nt-security-descriptor", "bf9679e3-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dfsr-dfslinktarget", "f7b85ba9-3bf9-428f-aab4-2eee6d56f063"),
+            ("logon-workstation", "bf9679ac-0de6-11d0-a285-00aa003049e2"),
+            ("certificate-authority-object", "963d2732-48be-11d1-a9c3-0000f80367c1"),
+            ("top", "bf967ab7-0de6-11d0-a285-00aa003049e2"),
+            ("ms-kds-version", "d5f07340-e6b0-1e4a-97be-0d3318bd9db1"),
+            ("sync-with-object", "037651e2-441d-11d1-a9c3-0000f80367c1"),
+            ("nt-pwd-history", "bf9679e2-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dfsr-replicationgroupguid", "2dad8796-7619-4ff8-966e-0a5cc67b287f"),
+            ("logon-hours", "bf9679ab-0de6-11d0-a285-00aa003049e2"),
+            ("category-id", "7d6c0e94-7e20-11d0-afd6-00c04fd930c9"),
+            ("link-track-volume-table", "ddac0cf4-af8f-11d0-afeb-00c04fd930c9"),
+            ("ms-kds-rootkeydata", "26627c27-08a2-0a40-a1b1-8dce85b42993"),
+            ("sync-membership", "037651e3-441d-11d1-a9c3-0000f80367c1"),
+            ("nt-mixed-domain", "3e97891f-8c01-11d0-afda-00c04fd930c9"),
+            ("ms-dfsr-rootfence", "51928e94-2cd8-4abe-b552-e50412444370"),
+            ("logon-count", "bf9679aa-0de6-11d0-a285-00aa003049e2"),
+            ("categories", "7bfdcb7e-4807-11d1-a9c3-0000f80367c1"),
+            ("ms-kds-privatekey-length", "615f42a1-37e7-1148-a0dd-3007e09cfc81"),
+            ("sync-attributes", "037651e4-441d-11d1-a9c3-0000f80367c1"),
+            ("nt-group-members", "bf9679df-0de6-11d0-a285-00aa003049e2"),
+            ("ms-dfsr-dfspath", "2cc903e2-398c-443b-ac86-ff6b01eac7ba"),
+            ("logo", "bf9679a9-0de6-11d0-a285-00aa003049e2"),
+            ("trust-auth-incoming", "bf967a59-0de6-11d0-a285-00aa003049e2"),
+            ("organizationalstatus", "28596019-7349-4d2f-adff-5a629961f942"),
+            ("ms-net-ieee-80211-gp-policydata", "9c1495a5-4d76-468e-991e-1433b0a67855"),
+            ("meetingid", "11b6cc7c-48c4-11d1-a9c3-0000f80367c1"),
+            ("creation-time", "bf967946-0de6-11d0-a285-00aa003049e2"),
+            ("nisnetgroup", "72efbf84-6e7b-4a5c-a8db-8a75a7cad254"),
+            ("ms-ds-az-scope", "4feae054-ce55-47bb-860e-5b12063a51de"),
+            ("ms-ds-cloudextensionattribute3", "82f6c81a-fada-4a0d-b0f7-706d46838eb5"),
+            ("trust-attributes", "80a67e5a-9f22-11d0-afdd-00c04fd930c9"),
+            ("organizational-unit-name", "bf9679f0-0de6-11d0-a285-00aa003049e2"),
+            ("ms-net-ieee-80211-gp-policyguid", "35697062-1eaf-448b-ac1e-388e0be4fdee"),
+            ("meetingendtime", "11b6cc91-48c4-11d1-a9c3-0000f80367c1"),
+            ("create-wizard-ext", "2b09958b-8931-11d1-aebc-0000f80367c1"),
+            ("ms-ds-cloudextensionattribute2", "f34ee0ac-c0c1-4ba9-82c9-1a90752f16a5"),
+            ("tree-name", "28630ebd-41d5-11d1-a9c1-0000f80367c1"),
+            ("organization-name", "bf9679ef-0de6-11d0-a285-00aa003049e2"),
+            ("ms-imaging-psp-string", "7b6760ae-d6ed-44a6-b6be-9de62c09ec67"),
+            ("meetingdescription", "11b6cc7e-48c4-11d1-a9c3-0000f80367c1"),
+            ("create-time-stamp", "2df90d73-009f-11d2-aa4c-00c04fd7d83a"),
+            ("ipnetwork", "d95836c3-143e-43fb-992a-b057f1ecadf9"),
+            ("ms-ds-az-role", "8213eac9-9d55-44dc-925c-e9a52b927644"),
+            ("ms-ds-cloudextensionattribute1", "9709eaaf-49da-4db2-908a-0446e5eab844"),
+            ("treat-as-leaf", "8fd044e3-771f-11d1-aeae-0000f80367c1"),
+            ("options-location", "963d274e-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-imaging-psp-identifier", "51583ce9-94fa-4b12-b990-304c35b18595"),
+            ("meetingcontactinfo", "11b6cc87-48c4-11d1-a9c3-0000f80367c1"),
+            ("create-dialog", "2b09958a-8931-11d1-aebc-0000f80367c1"),
+            ("ms-ds-rid-pool-allocation-enabled", "24977c8c-c1b7-3340-b4f6-2b375eb711d7"),
+            ("transport-type", "26d97374-6070-11d1-a9c6-0000f80367c1"),
+            ("options", "19195a53-6da0-11d0-afd3-00c04fd930c9"),
+            ("ms-iis-ftp-root", "2a7827a4-1483-49a5-9d84-52e3812156b4"),
+            ("meetingblob", "11b6cc93-48c4-11d1-a9c3-0000f80367c1"),
+            ("country-name", "bf967945-0de6-11d0-a285-00aa003049e2"),
+            ("iphost", "ab911646-8827-4f95-8780-5a8f008eb68f"),
+            ("ms-ds-az-operation", "860abe37-9a9b-4fa4-b3d2-b8ace5df9ec5"),
+            ("ms-ds-applies-to-resource-types", "693f2006-5764-3d4a-8439-58f04aab4b59"),
+            ("transport-dll-name", "26d97372-6070-11d1-a9c6-0000f80367c1"),
+            ("option-description", "963d274d-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-iis-ftp-dir", "8a5c99e9-2230-46eb-b8e8-e59d712eb9ee"),
+            ("meetingbandwidth", "11b6cc92-48c4-11d1-a9c3-0000f80367c1"),
+            ("country-code", "5fd42471-1262-11d0-a060-00aa006c33ed"),
+            ("ms-ds-transformation-rules-compiled", "0bb49a10-536b-bc4d-a273-0bab0dd4bd10"),
+            ("transport-address-attribute", "c1dc867c-a261-11d1-b606-0000f80367c1"),
+            ("operator-count", "bf9679ee-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ieee-80211-id", "7f73ef75-14c9-4c23-81de-dd07a06f9e8b"),
+            ("meetingapplication", "11b6cc83-48c4-11d1-a9c3-0000f80367c1"),
+            ("cost", "bf967944-0de6-11d0-a285-00aa003049e2"),
+            ("oncrpc", "cadd1e5e-fefc-4f3f-b5a9-70e994204303"),
+            ("ms-ds-az-application", "ddf8de9b-cba5-4e12-842e-28d8b66f75ec"),
+            ("ms-ds-tdo-ingress-bl", "5a5661a1-97c6-544b-8056-e430fe7bc554"),
+            ("tombstone-lifetime", "16c3a860-1273-11d0-a060-00aa006c33ed"),
+            ("operating-system-version", "3e978926-8c01-11d0-afda-00c04fd930c9"),
+            ("ms-ieee-80211-data-type", "6558b180-35da-4efe-beed-521f8f48cafb"),
+            ("meetingadvertisescope", "11b6cc8b-48c4-11d1-a9c3-0000f80367c1"),
+            ("control-access-rights", "6da8a4fc-0e52-11d0-a286-00aa003049e2"),
+            ("ms-ds-tdo-egress-bl", "d5006229-9913-2242-8b17-83761d1e0e5b"),
+            ("title", "bf967a55-0de6-11d0-a285-00aa003049e2"),
+            ("operating-system-service-pack", "3e978927-8c01-11d0-afda-00c04fd930c9"),
+            ("ms-ieee-80211-data", "0e0d0938-2658-4580-a9f6-7a0ac7b566cb"),
+            ("may-contain", "bf9679bf-0de6-11d0-a285-00aa003049e2"),
+            ("context-menu", "4d8601ee-ac85-11d0-afe3-00c04fd930c9"),
+            ("ipprotocol", "9c2dcbd2-fbf0-4dc7-ace0-8356dcd0f013"),
+            ("ms-ds-az-admin-manager", "cfee1051-5f28-4bae-a863-5d0cc18a8ed1"),
+            ("ms-ds-egress-claims-transformation-policy", "c137427e-9a73-b040-9190-1b095bb43288"),
+            ("time-vol-change", "ddac0cf0-af8f-11d0-afeb-00c04fd930c9"),
+            ("operating-system-hotfix", "bd951b3c-9c96-11d0-afdd-00c04fd930c9"),
+            ("ms-tpm-ownerinformation", "aa4e1a6d-550d-4e05-8c35-4afcb917a9fe"),
+            ("max-ticket-age", "bf9679be-0de6-11d0-a285-00aa003049e2"),
+            ("content-indexing-allowed", "bf967943-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-ingress-claims-transformation-policy", "86284c08-0c6e-1540-8b15-75147d23d20d"),
+            ("time-refresh", "ddac0cf1-af8f-11d0-afeb-00c04fd930c9"),
+            ("operating-system", "3e978925-8c01-11d0-afda-00c04fd930c9"),
+            ("ms-fve-recoveryguid", "f76909bc-e678-47a0-b0b3-f86a0044c06d"),
+            ("max-storage", "bf9679bd-0de6-11d0-a285-00aa003049e2"),
+            ("company", "f0f8ff88-1191-11d0-a060-00aa006c33ed"),
+            ("ipservice", "2517fadf-fa97-48ad-9de6-79ac5721f864"),
+            ("ms-ds-app-data", "9e67d761-e327-4d55-bc95-682f875e2f8e"),
+            ("ms-ds-transformation-rules", "55872b71-c4b2-3b48-ae51-4095f91ec600"),
+            ("text-encoded-or-address", "a8df7489-c5ea-11d1-bbcb-0080c76670c0"),
+            ("omt-indx-guid", "1f0075fa-7e40-11d0-afd6-00c04fd930c9"),
+            ("ms-fve-keypackage", "1fd55ea8-88a7-47dc-8129-0daa97186a54"),
+            ("max-renew-age", "bf9679bc-0de6-11d0-a285-00aa003049e2"),
+            ("common-name", "bf96793f-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-geocoordinates-longitude", "94c42110-bae4-4cea-8577-af813af5da25"),
+            ("text-country", "f0f8ffa7-1191-11d0-a060-00aa006c33ed"),
+            ("omt-guid", "ddac0cf3-af8f-11d0-afeb-00c04fd930c9"),
+            ("ms-fve-volumeguid", "85e5a5cf-dcee-4075-9cfd-ac9db6a2f245"),
+            ("max-pwd-age", "bf9679bb-0de6-11d0-a285-00aa003049e2"),
+            ("comment", "bf96793e-0de6-11d0-a285-00aa003049e2"),
+            ("posixgroup", "2a9350b8-062c-4ed0-9903-dde10d06deba"),
+            ("ms-ds-app-configuration", "90df3c3e-1854-4455-a5d7-cad40d56657a"),
+            ("ms-ds-geocoordinates-latitude", "dc66d44e-3d43-40f5-85c5-3c12e169927e"),
+            ("terminal-server", "6db69a1c-9422-11d1-aebd-0000f80367c1"),
+            ("om-syntax", "bf9679ed-0de6-11d0-a285-00aa003049e2"),
+            ("ms-fve-recoverypassword", "43061ac1-c8ad-4ccc-b785-2bfac20fc60a"),
+            ("mastered-by", "e48e64e0-12c9-11d3-9102-00c04fd91ab1"),
+            ("com-unique-libid", "281416da-1968-11d0-a28f-00aa003049e2"),
+            ("ms-ds-geocoordinates-altitude", "a11703b7-5641-4d9c-863e-5fb3325e74e0"),
+            ("template-roots", "ed9de9a0-7041-11d2-9905-0000f87a57d4"),
+            ("om-object-class", "bf9679ec-0de6-11d0-a285-00aa003049e2"),
+            ("default-object-category", "26d97367-6070-11d1-a9c6-0000f80367c1"),
+            ("ms-ds-cloudextensionattribute18", "88e73b34-0aa6-4469-9842-6eb01b32a5b5"),
+            ("unstructuredname", "9c8ef177-41cf-45c9-9673-7716c0c8901b"),
+            ("partial-attribute-deletion-list", "28630ec0-41d5-11d1-a9c1-0000f80367c1"),
+            ("ms-pki-oid-cps", "5f49940e-a79f-4a51-bb6f-3d446a54dc6b"),
+            ("meetingstarttime", "11b6cc90-48c4-11d1-a9c3-0000f80367c1"),
+            ("default-local-policy-object", "bf96799f-0de6-11d0-a285-00aa003049e2"),
+            ("mssfu-30-domain-info", "36297dce-656b-4423-ab65-dabb2770819e"),
+            ("ms-ds-managed-service-account", "ce206244-5827-4a86-ba1c-1c0c386c1b64"),
+            ("ms-ds-cloudextensionattribute17", "3d3c6dda-6be8-4229-967e-2ff5bb93b4ce"),
+            ("unstructuredaddress", "50950839-cc4c-4491-863a-fcf942d684b7"),
+            ("parent-guid", "2df90d74-009f-11d2-aa4c-00c04fd7d83a"),
+            ("ms-pki-oid-attribute", "8c9e1288-5028-4f4f-a704-76d026f246ef"),
+            ("meetingscope", "11b6cc8a-48c4-11d1-a9c3-0000f80367c1"),
+            ("default-hiding-value", "b7b13116-b82e-11d0-afee-0000f80367c1"),
+            ("ms-ds-cloudextensionattribute16", "9581215b-5196-4053-a11e-6ffcafc62c4d"),
+            ("uniquemember", "8f888726-f80a-44d7-b1ee-cb9df21392c8"),
+            ("parent-ca-certificate-chain", "963d2733-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-pki-minimal-key-size", "e96a63f5-417f-46d3-be52-db7703c503df"),
+            ("meetingrecurrence", "11b6cc8f-48c4-11d1-a9c3-0000f80367c1"),
+            ("default-group", "720bc4e2-a54a-11d0-afdf-00c04fd930c9"),
+            ("mssfu-30-net-id", "e263192c-2a02-48df-9792-94f2328781a0"),
+            ("ms-ds-quota-control", "de91fc26-bd02-4b52-ae26-795999e96fc7"),
+            ("ms-ds-cloudextensionattribute15", "aae4d537-8af0-4daa-9cc6-62eadb84ff03"),
+            ("uniqueidentifier", "ba0184c7-38c5-4bed-a526-75421470580c"),
+            ("parent-ca", "5245801b-ca6a-11d0-afff-0000f80367c1"),
+            ("ms-pki-enrollment-servers", "f22bd38f-a1d0-4832-8b28-0331438886a6"),
+            ("meetingrating", "11b6cc8d-48c4-11d1-a9c3-0000f80367c1"),
+            ("default-class-store", "bf967948-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-cloudextensionattribute14", "cebcb6ba-6e80-4927-8560-98feca086a9f"),
+            ("unicode-pwd", "bf9679e1-0de6-11d0-a285-00aa003049e2"),
+            ("package-type", "7d6c0e96-7e20-11d0-afd6-00c04fd930c9"),
+            ("ms-pki-enrollment-flag", "d15ef7d8-f226-46db-ae79-b34e560bd12c"),
+            ("meetingprotocol", "11b6cc81-48c4-11d1-a9c3-0000f80367c1"),
+            ("dbcs-pwd", "bf96799c-0de6-11d0-a285-00aa003049e2"),
+            ("mssfu-30-mail-aliases", "d6710785-86ff-44b7-85b5-f1f8689522ce"),
+            ("ms-ds-quota-container", "da83fc4f-076f-4aea-b4dc-8f4dab9b5993"),
+            ("ms-ds-cloudextensionattribute13", "28be464b-ab90-4b79-a6b0-df437431d036"),
+            ("unc-name", "bf967a64-0de6-11d0-a285-00aa003049e2"),
+            ("package-name", "7d6c0e98-7e20-11d0-afd6-00c04fd930c9"),
+            ("ms-pki-credential-roaming-tokens", "b7ff5a38-0818-42b0-8110-d3d154c97f24"),
+            ("meetingowner", "11b6cc88-48c4-11d1-a9c3-0000f80367c1"),
+            ("current-value", "bf967947-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-cloudextensionattribute12", "3c01c43d-e10b-4fca-92b2-4cf615d5b09a"),
+            ("uid", "0bb0fca0-1e89-429f-901a-1413894d9f59"),
+            ("package-flags", "7d6c0e99-7e20-11d0-afd6-00c04fd930c9"),
+            ("ms-pki-certificate-policy", "38942346-cc5b-424b-a7d8-6ffd12029c5f"),
+            ("meetingoriginator", "11b6cc86-48c4-11d1-a9c3-0000f80367c1"),
+            ("current-parent-ca", "963d273f-48be-11d1-a9c3-0000f80367c1"),
+            ("bootabledevice", "4bcb2477-4bb3-4545-a9fc-fb66e136b435"),
+            ("ms-ds-password-settings-container", "5b06b06a-4cf3-44c0-bd16-43bc10a987da"),
+            ("ms-ds-cloudextensionattribute11", "9e9ebbc8-7da5-42a6-8925-244e12a56e24"),
+            ("uas-compat", "bf967a61-0de6-11d0-a285-00aa003049e2"),
+            ("owner", "bf9679f3-0de6-11d0-a285-00aa003049e2"),
+            ("ms-pki-certificate-name-flag", "ea1dddc4-60ff-416e-8cc0-17cee534bce7"),
+            ("meetingname", "11b6cc7d-48c4-11d1-a9c3-0000f80367c1"),
+            ("current-location", "1f0075fc-7e40-11d0-afd6-00c04fd930c9"),
+            ("ms-ds-cloudextensionattribute10", "670afcb3-13bd-47fc-90b3-0a527ed81ab7"),
+            ("trust-type", "bf967a60-0de6-11d0-a285-00aa003049e2"),
+            ("other-well-known-objects", "1ea64e5d-ac0f-11d2-90df-00c04fd91ab1"),
+            ("ms-pki-certificate-application-policy", "dbd90548-aa37-4202-9966-8c537ba5ce32"),
+            ("meetingmaxparticipants", "11b6cc85-48c4-11d1-a9c3-0000f80367c1"),
+            ("curr-machine-id", "1f0075fe-7e40-11d0-afd6-00c04fd930c9"),
+            ("ieee802device", "a699e529-a637-4b7d-a0fb-5dc466a0b8a7"),
+            ("ms-ds-password-settings", "3bcd9db8-f84b-451c-952f-6c52b81f9ec6"),
+            ("ms-ds-cloudextensionattribute9", "0a63e12c-3040-4441-ae26-cd95af0d247e"),
+            ("trust-posix-offset", "bf967a5e-0de6-11d0-a285-00aa003049e2"),
+            ("other-name", "bf9679f2-0de6-11d0-a285-00aa003049e2"),
+            ("ms-pki-cert-template-oid", "3164c36a-ba26-468c-8bda-c1e5cc256728"),
+            ("meetinglocation", "11b6cc80-48c4-11d1-a9c3-0000f80367c1"),
+            ("cross-certificate-pair", "167757b2-47f3-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-cloudextensionattribute8", "3cd1c514-8449-44ca-81c0-021781800d2a"),
+            ("trust-partner", "bf967a5d-0de6-11d0-a285-00aa003049e2"),
+            ("other-mailbox", "0296c123-40da-11d1-a9c0-0000f80367c1"),
+            ("ms-net-ieee-8023-gp-policyreserved", "d3c527c7-2606-4deb-8cfd-18426feec8ce"),
+            ("meetinglanguage", "11b6cc84-48c4-11d1-a9c3-0000f80367c1"),
+            ("crl-partitioned-revocation-list", "963d2731-48be-11d1-a9c3-0000f80367c1"),
+            ("nisobject", "904f8a93-4954-4c5f-b1e1-53c097a31e13"),
+            ("ms-ds-optional-feature", "44f00041-35af-468b-b20a-6ce8737c580b"),
+            ("ms-ds-cloudextensionattribute7", "4a7c1319-e34e-40c2-9d00-60ff7890f207"),
+            ("trust-parent", "b000ea7a-a086-11d0-afdd-00c04fd930c9"),
+            ("other-login-workstations", "bf9679f1-0de6-11d0-a285-00aa003049e2"),
+            ("ms-net-ieee-8023-gp-policydata", "8398948b-7457-4d91-bd4d-8d7ed669c9f7"),
+            ("meetingkeyword", "11b6cc7f-48c4-11d1-a9c3-0000f80367c1"),
+            ("crl-object", "963d2737-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-cloudextensionattribute6", "60452679-28e1-4bec-ace3-712833361456"),
+            ("trust-direction", "bf967a5c-0de6-11d0-a285-00aa003049e2"),
+            ("original-display-table-msdos", "5fd424cf-1262-11d0-a060-00aa006c33ed"),
+            ("ms-net-ieee-8023-gp-policyguid", "94a7b05a-b8b2-4f59-9c25-39e69baa1684"),
+            ("meetingisencrypted", "11b6cc8e-48c4-11d1-a9c3-0000f80367c1"),
+            ("creator", "7bfdcb85-4807-11d1-a9c3-0000f80367c1"),
+            ("nismap", "7672666c-02c1-4f33-9ecf-f649c1dd9b7c"),
+            ("ms-ds-az-task", "1ed3a473-9b1b-418a-bfa0-3a37b95a5306"),
+            ("ms-ds-cloudextensionattribute5", "2915e85b-e347-4852-aabb-22e5a651c864"),
+            ("trust-auth-outgoing", "bf967a5f-0de6-11d0-a285-00aa003049e2"),
+            ("original-display-table", "5fd424ce-1262-11d0-a060-00aa006c33ed"),
+            ("ms-net-ieee-80211-gp-policyreserved", "0f69c62e-088e-4ff5-a53a-e923cec07c0a"),
+            ("meetingip", "11b6cc89-48c4-11d1-a9c3-0000f80367c1"),
+            ("creation-wizard", "4d8601ed-ac85-11d0-afe3-00c04fd930c9"),
+            ("ms-ds-cloudextensionattribute4", "9cbf3437-4e6e-485b-b291-22b02554273f"),
+            ("dhcp-obj-description", "963d2744-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-device-id", "c30181c7-6342-41fb-b279-f7c566cbe0a7"),
+            ("user-workstations", "bf9679d7-0de6-11d0-a285-00aa003049e2"),
+            ("phone-isdn-primary", "0296c11f-40da-11d1-a9c0-0000f80367c1"),
+            ("ms-rras-attribute", "f39b98ad-938d-11d1-aebd-0000f80367c1"),
+            ("ms-com-defaultpartitionlink", "998b10f7-aa1a-4364-b867-753d197fe670"),
+            ("dhcp-maxkey", "963d2754-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-dfs-link-v2", "7769fb7a-1159-4e96-9ccd-68bc487073eb"),
+            ("ms-dfsr-content", "64759b35-d3a1-42e4-b5f1-a3de162109b3"),
+            ("ms-ds-device-physical-ids", "90615414-a2a0-4447-a993-53409599b74e"),
+            ("user-smime-certificate", "e16a9db2-403c-11d1-a9c0-0000f80367c1"),
+            ("phone-ip-primary", "4d146e4a-48d4-11d1-a9c3-0000f80367c1"),
+            ("ms-pki-accountcredentials", "b8dfa744-31dc-4ef1-ac7c-84baf7ef9da7"),
+            ("move-tree-state", "1f2ac2c8-3b71-11d2-90cc-00c04fd91ab1"),
+            ("dhcp-mask", "963d2747-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-device-os-version", "70fb8c63-5fab-4504-ab9d-14b329a8a7f8"),
+            ("user-shared-folder-other", "9a9a0220-4a5b-11d1-a9c3-0000f80367c1"),
+            ("phone-ip-other", "4d146e4b-48d4-11d1-a9c3-0000f80367c1"),
+            ("ms-pki-dpapimasterkeys", "b3f93023-9239-4f7c-b99c-6745d87adbc2"),
+            ("moniker-display-name", "bf9679c8-0de6-11d0-a285-00aa003049e2"),
+            ("dhcp-identification", "963d2742-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-dfs-deleted-link-v2", "25173408-04ca-40e8-865e-3f9ce9bf1bd3"),
+            ("ms-dfsr-replicationgroup", "1c332fe0-0c2a-4f32-afca-23c5e45a9e77"),
+            ("ms-ds-device-os-type", "100e454d-f3bb-4dcb-845f-8d5edc471c59"),
+            ("user-shared-folder", "9a9a021f-4a5b-11d1-a9c3-0000f80367c1"),
+            ("phone-home-primary", "f0f8ffa1-1191-11d0-a060-00aa006c33ed"),
+            ("ms-pki-roamingtimestamp", "6617e4ac-a2f1-43ab-b60c-11fbd1facf05"),
+            ("moniker", "bf9679c7-0de6-11d0-a285-00aa003049e2"),
+            ("dhcp-flags", "963d2741-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-is-enabled", "22a95c0e-1f83-4c82-94ce-bea688cfc871"),
+            ("user-principal-name", "28630ebb-41d5-11d1-a9c1-0000f80367c1"),
+            ("phone-home-other", "f0f8ffa2-1191-11d0-a060-00aa006c33ed"),
+            ("ms-pki-ra-signature", "fe17e04b-937d-4f7e-8e0e-9292c8d5683e"),
+            ("modify-time-stamp", "9a7ad94a-ca53-11d1-bbd0-0080c76670c0"),
+            ("dhcp-classes", "963d2750-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-fve-recoveryinformation", "ea715d30-8f53-40d0-bd1e-6109186d782c"),
+            ("ms-dfsr-globalsettings", "7b35dbad-b3ec-486a-aad4-2fec9d6ea6f6"),
+            ("ms-ds-approximate-last-logon-time-stamp", "a34f983b-84c6-4f0c-9050-a3a14a1d35a4"),
+            ("userpkcs12", "23998ab5-70f8-4007-a4c1-a84a38311f9a"),
+            ("phone-fax-other", "0296c11d-40da-11d1-a9c0-0000f80367c1"),
+            ("ms-pki-ra-policies", "d546ae22-0951-4d47-817e-1c9f96faad46"),
+            ("modified-count-at-last-prom", "bf9679c6-0de6-11d0-a285-00aa003049e2"),
+            ("destination-indicator", "bf967951-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-registered-users", "0449160c-5a8e-4fc8-b052-01c0f6e48f02"),
+            ("userclass", "11732a8a-e14d-4cc5-b92f-d93f51c6d8e4"),
+            ("personal-title", "16775858-47f3-11d1-a9c3-0000f80367c1"),
+            ("ms-pki-ra-application-policies", "3c91fbbf-4773-4ccd-a87b-85d53e7bcf6a"),
+            ("modified-count", "bf9679c5-0de6-11d0-a285-00aa003049e2"),
+            ("desktop-profile", "eea65906-8ac6-11d0-afda-00c04fd930c9"),
+            ("ms-net-ieee-8023-grouppolicy", "99a03a6a-ab19-4446-9350-0cb878ed2d9b"),
+            ("ms-dfsr-subscription", "67212414-7bcc-4609-87e0-088dad8abdee"),
+            ("ms-ds-registered-owner", "617626e9-01eb-42cf-991f-ce617982237e"),
+            ("user-password", "bf967a6e-0de6-11d0-a285-00aa003049e2"),
+            ("per-recip-dialog-display-table", "5fd424d4-1262-11d0-a060-00aa006c33ed"),
+            ("ms-pki-template-schema-version", "0c15e9f5-491d-4594-918f-32813a091da9"),
+            ("min-ticket-age", "bf9679c4-0de6-11d0-a285-00aa003049e2"),
+            ("description", "bf967950-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-device-location", "e3fb56c8-5de8-45f5-b1b1-d2b6cd31e762"),
+            ("user-parameters", "bf967a6d-0de6-11d0-a285-00aa003049e2"),
+            ("per-msg-dialog-display-table", "5fd424d3-1262-11d0-a060-00aa006c33ed"),
+            ("ms-pki-template-minor-revision", "13f5236c-1884-46b1-b5d0-484e38990d58"),
+            ("min-pwd-length", "bf9679c3-0de6-11d0-a285-00aa003049e2"),
+            ("departmentnumber", "be9ef6ee-cbc7-4f22-b27b-96967e7ee585"),
+            ("ms-net-ieee-80211-grouppolicy", "1cb81863-b822-4379-9ea2-5ff7bdc6386d"),
+            ("ms-dfsr-subscriber", "e11505d7-92c4-43e7-bf5c-295832ffc896"),
+            ("ms-ds-maximum-registration-inactivity-period", "0a5caa39-05e6-49ca-b808-025b936610e7"),
+            ("user-comment", "bf967a6a-0de6-11d0-a285-00aa003049e2"),
+            ("pending-parent-ca", "963d273e-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-pki-supersede-templates", "9de8ae7d-7a5b-421d-b5e4-061f79dfd5d7"),
+            ("min-pwd-age", "bf9679c2-0de6-11d0-a285-00aa003049e2"),
+            ("department", "bf96794f-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-registration-quota", "ca3286c2-1f64-4079-96bc-e62b610e730f"),
+            ("user-cert", "bf967a69-0de6-11d0-a285-00aa003049e2"),
+            ("pending-ca-certificates", "963d273c-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-pki-site-name", "0cd8711f-0afc-4926-a4b1-09b08d3d436c"),
+            ("mhs-or-address", "0296c122-40da-11d1-a9c0-0000f80367c1"),
+            ("delta-revocation-list", "167757b5-47f3-11d1-a9c3-0000f80367c1"),
+            ("mssfu-30-nis-map-config", "faf733d0-f8eb-4dcf-8d75-f1753af6a50b"),
+            ("ms-dfsr-localsettings", "fa85c591-197f-477e-83bd-ea5a43df2239"),
+            ("ms-ds-issuer-certificates", "6b3d6fda-0893-43c4-89fb-1fb52a6616a9"),
+            ("user-account-control", "bf967a68-0de6-11d0-a285-00aa003049e2"),
+            ("pek-list", "07383083-91df-11d1-aebc-0000f80367c1"),
+            ("ms-pki-private-key-flag", "bab04ac2-0435-4709-9307-28380e7c7001"),
+            ("member", "bf9679c0-0de6-11d0-a285-00aa003049e2"),
+            ("default-security-descriptor", "807a6d30-1669-11d0-a064-00aa006c33ed"),
+            ("ms-ds-cloudextensionattribute20", "f5446328-8b6e-498d-95a8-211748d5acdc"),
+            ("upn-suffixes", "032160bf-9824-11d1-aec0-0000f80367c1"),
+            ("pek-key-change-interval", "07383084-91df-11d1-aebc-0000f80367c1"),
+            ("ms-pki-oid-user-notice", "04c4da7a-e114-4e69-88de-e293f2d3b395"),
+            ("meetingurl", "11b6cc8c-48c4-11d1-a9c3-0000f80367c1"),
+            ("default-priority", "281416c8-1968-11d0-a28f-00aa003049e2"),
+            ("mssfu-30-network-user", "e15334a3-0bf0-4427-b672-11f5d84acc92"),
+            ("ms-exch-configuration-container", "d03d6858-06f4-11d2-aa53-00c04fd7d83a"),
+            ("ms-ds-cloudextensionattribute19", "0975fe99-9607-468a-8e18-c800d3387395"),
+            ("upgrade-product-code", "d9e18312-8939-11d1-aebc-0000f80367c1"),
+            ("partial-attribute-set", "19405b9e-3cfa-11d1-a9c0-0000f80367c1"),
+            ("ms-pki-oid-localizedname", "7d59a816-bb05-4a72-971f-5c1331f67559"),
+            ("meetingtype", "11b6cc82-48c4-11d1-a9c3-0000f80367c1"),
+            ("display-name-printable", "bf967954-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-claim-type", "81a3857c-5469-4d8f-aae6-c27699762604"),
+            ("ms-ds-user-allowed-to-authenticate-to", "de0caa7f-724e-4286-b179-192671efc664"),
+            ("volume-count", "34aaa217-b699-11d0-afee-0000f80367c1"),
+            ("pki-expiration-period", "041570d2-3b9e-11d2-90cc-00c04fd91ab1"),
+            ("ms-sql-serviceaccount", "64933a3e-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-authenticatedat-dc", "3e1ee99c-6604-4489-89d9-84798a89515a"),
+            ("display-name", "bf967953-0de6-11d0-a285-00aa003049e2"),
+            ("ms-imaging-postscanprocess", "1f7c257c-b8a3-4525-82f8-11ccc7bee36e"),
+            ("ms-ds-syncserverurl", "b7acc3d2-2a74-4fa4-ac25-e63fe8b61218"),
+            ("vol-table-idx-guid", "1f0075fb-7e40-11d0-afd6-00c04fd930c9"),
+            ("pki-enrollment-access", "926be278-56f9-11d2-90d0-00c04fd91ab1"),
+            ("ms-sql-build", "603e94c4-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-approx-immed-subordinates", "e185d243-f6ce-4adb-b496-b0c005d7823c"),
+            ("dhcp-update-time", "963d2755-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-resource-properties", "7a4a4584-b350-478f-acd6-b4b852d82cc0"),
+            ("ms-ds-cloud-isenabled", "89848328-7c4e-4f6f-a013-28ce3ad282dc"),
+            ("vol-table-guid", "1f0075fd-7e40-11d0-afd6-00c04fd930c9"),
+            ("pki-default-key-spec", "426cae6e-3b9d-11d2-90cc-00c04fd91ab1"),
+            ("ms-sql-memory", "5b5d448c-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-auxiliary-classes", "c4af1073-ee50-4be0-b8c0-89a41fe99abe"),
+            ("dhcp-unique-key", "963d273a-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-imaging-psps", "a0ed2ac1-970c-4777-848e-ec63a0ec44fc"),
+            ("ms-ds-cloud-issuer-public-certificates", "a1e8b54f-4bd6-4fd2-98e2-bcee92a55497"),
+            ("version-number-lo", "7d6c0e9b-7e20-11d0-afd6-00c04fd930c9"),
+            ("pki-default-csps", "1ef6336e-3b9e-11d2-90cc-00c04fd91ab1"),
+            ("ms-sql-location", "561c9644-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-allowed-to-delegate-to", "800d94d7-b7a1-42a1-b14d-7cae1423d07f"),
+            ("dhcp-type", "963d273b-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-claim-types", "36093235-c715-4821-ab6a-b56fb2805a58"),
+            ("ms-ds-cloud-anchor", "78565e80-03d4-4fe3-afac-8c3bca2f3653"),
+            ("version-number-hi", "7d6c0e9a-7e20-11d0-afd6-00c04fd930c9"),
+            ("pki-critical-extensions", "fc5a9106-3b9d-11d2-90cc-00c04fd91ab1"),
+            ("ms-sql-contact", "4f6cbdd8-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-allowed-dns-suffixes", "8469441b-9ac4-4e45-8205-bd219dbf672d"),
+            ("dhcp-subnets", "963d2746-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-ieee-80211-policy", "7b9a2d92-b7eb-4382-9772-c3e0f9baaf94"),
+            ("ms-ds-cloud-ismanaged", "5315ba8e-958f-4b52-bd38-1349a304dd63"),
+            ("version-number", "bf967a76-0de6-11d0-a285-00aa003049e2"),
+            ("picture", "8d3bca50-1d7e-11d0-a081-00aa006c33ed"),
+            ("ms-sql-registeredowner", "48fd44ea-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-all-users-trust-quota", "d3aa4a5c-4e03-4810-97aa-2b339e7a434b"),
+            ("dhcp-state", "963d2752-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-claim-type-property-base", "b8442f58-c490-4487-8a9d-d80b883271ad"),
+            ("ms-ds-ismanaged", "60686ace-6c27-43de-a4e5-f00c2f8d3309"),
+            ("vendor", "281416df-1968-11d0-a28f-00aa003049e2"),
+            ("physical-location-object", "b7b13119-b82e-11d0-afee-0000f80367c1"),
+            ("ms-sql-name", "3532dfd8-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-additional-sam-account-name", "975571df-a4d5-429a-9f59-cdc6581d91e6"),
+            ("dhcp-sites", "963d2749-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-dfsr-connection", "e58f972e-64b5-46ef-8d8b-bbc3e1897eab"),
+            ("ms-ds-issuer-public-certificates", "b5f1edfe-b4d2-4076-ab0f-6148342b0bf6"),
+            ("valid-accesses", "4d2fa380-7f54-11d2-992a-0000f87a57d4"),
+            ("physical-delivery-office-name", "bf9679f7-0de6-11d0-a285-00aa003049e2"),
+            ("ms-radius-savedframedipv6route", "9666bb5c-df9d-4d41-b437-2eec7e27c9b3"),
+            ("ms-ds-additional-dns-host-name", "80863791-dbe9-4eb8-837e-7f0ab55d9ac7"),
+            ("dhcp-servers", "963d2745-48be-11d1-a9c3-0000f80367c1"),
+            ("template-roots2", "b1cba91a-0682-4362-a659-153e201ef069"),
+            ("ms-ds-drs-farm-id", "6055f766-202e-49cd-a8be-e52bb159edfb"),
+            ("usn-source", "167758ad-47f3-11d1-a9c3-0000f80367c1"),
+            ("photo", "9c979768-ba1a-4c08-9632-c6a5c1ed649a"),
+            ("ms-radius-framedipv6route", "5a5aa804-3083-4863-94e5-018a79a22ec0"),
+            ("ms-drm-identity-certificate", "e85e1204-3434-41ad-9b56-e2901228fff0"),
+            ("dhcp-reservations", "963d274a-48be-11d1-a9c3-0000f80367c1"),
+            ("global-address-list2", "4898f63d-4112-477c-8826-3ca00bd8277d"),
+            ("ms-dfsr-member", "4229c897-c211-437c-a5ae-dbf705b696e5"),
+            ("ms-ds-repl-value-meta-data-ext", "1e02d2ef-44ad-46b2-a67d-9fd18d780bca"),
+            ("usn-last-obj-rem", "bf967a73-0de6-11d0-a285-00aa003049e2"),
+            ("phone-pager-primary", "f0f8ffa6-1191-11d0-a060-00aa006c33ed"),
+            ("ms-radius-savedframedipv6prefix", "0965a062-b1e1-403b-b48d-5c0eb0e952cc"),
+            ("ms-com-userpartitionsetlink", "8e940c8a-e477-4367-b08d-ff2ff942dcd7"),
+            ("dhcp-ranges", "963d2748-48be-11d1-a9c3-0000f80367c1"),
+            ("address-book-roots2", "508ca374-a511-4e4e-9f4f-856f61a6b7e4"),
+            ("ms-ds-parent-dist-name", "b918fe7d-971a-f404-9e21-9261abec970b"),
+            ("usn-intersite", "a8df7498-c5ea-11d1-bbcb-0080c76670c0"),
+            ("phone-pager-other", "f0f8ffa4-1191-11d0-a060-00aa006c33ed"),
+            ("ms-radius-framedipv6prefix", "f63ed610-d67c-494d-87be-cd1e24359a38"),
+            ("ms-com-userlink", "9e6f3a4d-242c-4f37-b068-36b57f9fc852"),
+            ("dhcp-properties", "963d2753-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-dfs-namespace-v2", "21cb8628-f3c3-4bbf-bff6-060b2d8f299a"),
+            ("ms-dfsr-topology", "04828aa9-6e42-4e80-b962-e2fe00754d17"),
+            ("ms-ds-member-transitive", "e215395b-9104-44d9-b894-399ec9e21dfc"),
+            ("usn-dsa-last-obj-removed", "bf967a71-0de6-11d0-a285-00aa003049e2"),
+            ("phone-office-other", "f0f8ffa5-1191-11d0-a060-00aa006c33ed"),
+            ("ms-radius-savedframedinterfaceid", "a4da7289-92a3-42e5-b6b6-dad16d280ac9"),
+            ("ms-com-partitionsetlink", "67f121dc-7d02-4c7d-82f5-9ad4c950ac34"),
+            ("dhcp-options", "963d274f-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-is-member-of-dl-transitive", "862166b6-c941-4727-9565-48bfff2941de"),
+            ("usn-created", "bf967a70-0de6-11d0-a285-00aa003049e2"),
+            ("phone-mobile-primary", "f0f8ffa3-1191-11d0-a060-00aa006c33ed"),
+            ("ms-radius-framedinterfaceid", "a6f24a23-d65c-4d65-a64f-35fb6873c2b9"),
+            ("ms-com-partitionlink", "09abac62-043f-4702-ac2b-6ca15eee5754"),
+            ("dhcp-obj-name", "963d2743-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-dfs-namespace-anchor", "da73a085-6e64-4d61-b064-015d04164795"),
+            ("ms-dfsr-contentset", "4937f40d-a6dc-4d48-97ca-06e5fbfd3f16"),
+            ("ms-ds-device-object-version", "ef65695a-f179-4e6a-93de-b01e06681cfb"),
+            ("usn-changed", "bf967a6f-0de6-11d0-a285-00aa003049e2"),
+            ("phone-mobile-other", "0296c11e-40da-11d1-a9c0-0000f80367c1"),
+            ("ms-rras-vendor-attribute-entry", "f39b98ac-938d-11d1-aebd-0000f80367c1"),
+            ("ms-com-objectid", "430f678b-889f-41f2-9843-203b5a65572f"),
+            ("ms-sql-publicationurl", "ae0c11b8-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-scope-name", "515a6b06-2617-4173-8099-d5605df043c6"),
+            ("dns-tombstoned", "d5eb2eb7-be4e-463b-a214-634a44d7392e"),
+            ("ms-dns-server-settings", "ef2fc3ed-6e18-415b-99e4-3114a8cb124b"),
+            ("ms-ds-computer-authn-policy", "afb863c9-bea3-440f-a9f3-6153cc668929"),
+            ("gecos", "a3e03f1f-1d55-4253-a0af-30c2a784e46e"),
+            ("preferred-delivery-method", "bf9679fe-0de6-11d0-a285-00aa003049e2"),
+            ("ms-sql-connectionurl", "a92d23da-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-operation-id", "a5f3b553-5d76-4cbe-ba3f-4312152cab18"),
+            ("dns-secure-secondaries", "e0fa1e67-9b45-11d0-afdd-00c04fd930c9"),
+            ("ms-sql-sqlpublication", "17c2f64e-ccef-11d2-9993-0000f87a57d4"),
+            ("ms-ds-user-authn-policy-bl", "2f17faa9-5d47-4b1f-977e-aa52fabe65c8"),
+            ("gidnumber", "c5b95f0c-ec9e-41c4-849c-b46597ed6696"),
+            ("postal-code", "bf9679fd-0de6-11d0-a285-00aa003049e2"),
+            ("ms-sql-informationurl", "a42cd510-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-minor-version", "ee85ed93-b209-4788-8165-e702f51bfbf3"),
+            ("dns-root", "bf967959-0de6-11d0-a285-00aa003049e2"),
+            ("ms-tpm-information-object", "85045b6a-47a6-4243-a7cc-6890701f662c"),
+            ("ms-ds-user-authn-policy", "cd26b9f3-d415-442a-8f78-7c61523ee95b"),
+            ("uidnumber", "850fcc8f-9c6b-47e1-b671-7c654be4d5b3"),
+            ("postal-address", "bf9679fc-0de6-11d0-a285-00aa003049e2"),
+            ("ms-sql-lastupdateddate", "9fcc43d4-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-major-version", "cfb9adb7-c4b7-4059-9568-1ed9db6b7248"),
+            ("dns-record", "e0fa1e69-9b45-11d0-afdd-00c04fd930c9"),
+            ("ms-sql-sqlrepository", "11d43c5c-ccef-11d2-9993-0000f87a57d4"),
+            ("ms-ds-authn-policy-silo-members-bl", "11fccbc7-fbe4-4951-b4b7-addf6f9efd44"),
+            ("unixuserpassword", "612cb747-c0e8-4f92-9221-fdd5f15b550d"),
+            ("post-office-box", "bf9679fb-0de6-11d0-a285-00aa003049e2"),
+            ("ms-sql-status", "9a7d4770-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-ldap-query", "5e53368b-fc94-45c8-9d7d-daf31ee7112d"),
+            ("dns-property", "675a15fe-3b70-11d2-90cc-00c04fd91ab1"),
+            ("ms-tpm-information-objects-container", "e027a8bd-6456-45de-90a3-38593877ee74"),
+            ("ms-ds-authn-policy-silo-members", "164d1e05-48a6-4886-a8e9-77a2006e3c77"),
+            ("x509-cert", "bf967a7f-0de6-11d0-a285-00aa003049e2"),
+            ("possible-inferiors", "9a7ad94c-ca53-11d1-bbd0-0080c76670c0"),
+            ("ms-sql-vines", "94c56394-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-last-imported-biz-rule-path", "665acb5c-bb92-4dbc-8c59-b3638eab09b3"),
+            ("dns-notify-secondaries", "e0fa1e68-9b45-11d0-afdd-00c04fd930c9"),
+            ("ms-sql-olapserver", "0c7e18ea-ccef-11d2-9993-0000f87a57d4"),
+            ("ms-ds-assigned-authn-policy-silo-bl", "33140514-f57a-47d2-8ec4-04c4666600c7"),
+            ("x500uniqueidentifier", "d07da11f-8a3d-42b6-b0aa-76c962be719a"),
+            ("poss-superiors", "bf9679fa-0de6-11d0-a285-00aa003049e2"),
+            ("ms-sql-appletalk", "8fda89f4-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-generate-audits", "f90abab0-186c-4418-bb85-88447c87222a"),
+            ("dns-host-name", "72e39547-7b18-11d1-adef-00c04fd8d5cd"),
+            ("ms-spp-activation-object", "51a0e68c-0dc5-43ca-935d-c1c911bf2ee5"),
+            ("ms-ds-assigned-authn-policy-silo", "b23fc141-0df5-4aea-b33d-6cf493077b3f"),
+            ("x121-address", "bf967a7b-0de6-11d0-a285-00aa003049e2"),
+            ("port-name", "281416c4-1968-11d0-a28f-00aa003049e2"),
+            ("ms-sql-tcpip", "8ac263a6-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-domain-timeout", "6448f56a-ca70-4e2e-b0af-d20e4ce653d0"),
+            ("dns-allow-xfr", "e0fa1e66-9b45-11d0-afdd-00c04fd930c9"),
+            ("ms-sql-sqlserver", "05f6c878-ccef-11d2-9993-0000f87a57d4"),
+            ("ms-ds-service-tgt-lifetime", "5dfe3c20-ca29-407d-9bab-8421e55eb75c"),
+            ("www-page-other", "9a9a0221-4a5b-11d1-a9c3-0000f80367c1"),
+            ("policy-replication-flags", "19405b96-3cfa-11d1-a9c0-0000f80367c1"),
+            ("ms-sql-spx", "86b08004-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-class-id", "013a7277-5c2d-49ef-a7de-b765b36a3f6f"),
+            ("dns-allow-dynamic", "e0fa1e65-9b45-11d0-afdd-00c04fd930c9"),
+            ("ms-spp-activation-objects-container", "b72f862b-bb25-4d5d-aa51-62c59bdf90ae"),
+            ("ms-ds-service-allowed-to-authenticate-from", "97da709a-3716-4966-b1d1-838ba53c3d89"),
+            ("www-home-page", "bf967a7a-0de6-11d0-a285-00aa003049e2"),
+            ("pkt-guid", "8447f9f0-1027-11d0-a05f-00aa006c33ed"),
+            ("ms-sql-multiprotocol", "8157fa38-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-biz-rule-language", "52994b56-0e6c-4e07-aa5c-ef9d7f5a0e25"),
+            ("dn-reference-update", "2df90d86-009f-11d2-aa4c-00c04fd7d83a"),
+            ("ms-pki-key-recovery-agent", "26ccf238-a08e-4b86-9a82-a8c9ac7ee5cb"),
+            ("ms-ds-service-allowed-to-authenticate-to", "f2973131-9b4d-4820-b4de-0474ef3b849f"),
+            ("winsock-addresses", "bf967a79-0de6-11d0-a285-00aa003049e2"),
+            ("pkt", "8447f9f1-1027-11d0-a05f-00aa006c33ed"),
+            ("ms-sql-namedpipe", "7b91c840-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-biz-rule", "33d41ea8-c0c9-4c92-9494-f104878413fd"),
+            ("dmd-name", "167757b9-47f3-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-resource-property-list", "72e3d47a-b342-4d45-8f56-baff803cabf9"),
+            ("ms-ds-computer-tgt-lifetime", "2e937524-dfb9-4cac-a436-a5b7da64fd66"),
+            ("when-created", "bf967a78-0de6-11d0-a285-00aa003049e2"),
+            ("pki-overlap-period", "1219a3ec-3b9e-11d2-90cc-00c04fd91ab1"),
+            ("ms-sql-clustered", "7778bd90-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-application-version", "7184a120-3ac4-47ae-848f-fe0ab20784d4"),
+            ("dmd-location", "f0f8ff8b-1191-11d0-a060-00aa006c33ed"),
+            ("ms-pki-enterprise-oid", "37cfd85c-6719-4ad8-8f9e-8678ba627563"),
+            ("ms-ds-computer-allowed-to-authenticate-to", "105babe9-077e-4793-b974-ef0410b62573"),
+            ("when-changed", "bf967a77-0de6-11d0-a285-00aa003049e2"),
+            ("pki-max-issuing-depth", "f0bfdefa-3b9d-11d2-90cc-00c04fd91ab1"),
+            ("ms-sql-unicodesortorder", "72dc918a-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-application-name", "db5b0728-6208-4876-83b7-95d3e5695275"),
+            ("division", "fe6136a0-2073-11d0-a9c2-00aa006c33ed"),
+            ("ms-ds-resource-property", "5b283d5e-8404-4195-9339-8450188c501a"),
+            ("ms-ds-user-tgt-lifetime", "8521c983-f599-420f-b9ab-b1222bdf95c1"),
+            ("well-known-objects", "05308983-7688-11d1-aded-00c04fd8d5cd"),
+            ("pki-key-usage", "e9b0a87e-3b9d-11d2-90cc-00c04fd91ab1"),
+            ("ms-sql-sortorder", "6ddc42c0-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-application-data", "503fc3e8-1cc6-461a-99a3-9eee04f402a7"),
+            ("dit-content-rules", "9a7ad946-ca53-11d1-bbd0-0080c76670c0"),
+            ("ms-print-connectionpolicy", "a16f33c7-7fd6-4828-9364-435138fda08d"),
+            ("ms-ds-user-allowed-to-authenticate-from", "2c4c9600-b0e1-447d-8dda-74902257bdb5"),
+            ("wbem-path", "244b2970-5abd-11d0-afd2-00c04fd930c9"),
+            ("pki-extended-key-usage", "18976af6-3b9e-11d2-90cc-00c04fd91ab1"),
+            ("ms-sql-characterset", "696177a6-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-authenticatedto-accountlist", "e8b2c971-a6df-47bc-8d6f-62770d527aa5"),
+            ("ipprotocolnumber", "ebf5c6eb-0e2d-4415-9670-1081993b4211"),
+            ("print-form-name", "281416cb-1968-11d0-a28f-00aa003049e2"),
+            ("ms-sql-lastbackupdate", "f2b6abca-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-default-quota", "6818f726-674b-441b-8a3a-f40596374cea"),
+            ("domain-replica", "bf96795e-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-group-managed-service-account", "7b8b558a-93a5-4af7-adca-c017e67f1057"),
+            ("ms-ds-key-principal", "bd61253b-9401-4139-a693-356fc400f3ea"),
+            ("ipserviceprotocol", "cd96ec0b-1ed6-43b4-b26b-f170b645883f"),
+            ("print-end-time", "281416ca-1968-11d0-a28f-00aa003049e2"),
+            ("ms-sql-creationdate", "ede14754-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-date-time", "234fcbd8-fb52-4908-a328-fd9f6e58e403"),
+            ("domain-policy-reference", "80a67e2a-9f22-11d0-afdd-00c04fd930c9"),
+            ("ms-wmi-intsetparam", "292f0d9a-cf76-42b0-841f-b650f331df62"),
+            ("ms-ds-key-usage", "de71b44c-29ba-4597-9eca-c3348ace1917"),
+            ("ipserviceport", "ff2daebf-f463-495a-8405-3e483641eaa2"),
+            ("print-duplex-supported", "281416cc-1968-11d0-a28f-00aa003049e2"),
+            ("ms-sql-size", "e9098084-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-creator-sid", "c5e60132-1480-11d3-91c1-0000f87a57d4"),
+            ("domain-policy-object", "bf96795d-0de6-11d0-a285-00aa003049e2"),
+            ("ms-kds-prov-rootkey", "aa02fd41-17e0-4f18-8687-b2239649736b"),
+            ("ms-ds-key-material", "a12e0e9f-dedb-4f31-8f21-1311b958182f"),
+            ("nisnetgrouptriple", "a8032e74-30ef-4ff5-affc-0fc217783fec"),
+            ("print-color", "281416d3-1968-11d0-a28f-00aa003049e2"),
+            ("ms-sql-alias", "e0c6baae-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-consistency-child-count", "178b7bc2-b63a-11d2-90e1-00c04fd91ab1"),
+            ("domain-identifier", "7f561278-5301-11d1-a9c5-0000f80367c1"),
+            ("ms-wmi-intrangeparam", "50ca5d7d-5c8b-4ef3-b9df-5b66d491e526"),
+            ("ms-ds-key-id", "c294f84b-2fad-4b71-be4c-9fc5701f60ba"),
+            ("membernisnetgroup", "0f6a17dc-53e5-4be8-9442-8f3ce2f9012a"),
+            ("print-collate", "281416d2-1968-11d0-a28f-00aa003049e2"),
+            ("ms-sql-allowanonymoussubscription", "db77be4a-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-consistency-guid", "23773dc2-b63a-11d2-90e1-00c04fd91ab1"),
+            ("domain-id", "963d2734-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-kds-prov-serverconfiguration", "5ef243a8-2a25-45a6-8b73-08a71ae677ce"),
+            ("ms-ds-is-compliant", "59527d0f-b7c0-4ce2-a1dd-71cef6963292"),
+            ("memberuid", "03dab236-672e-4f61-ab64-f77d2dc2ffab"),
+            ("print-bin-names", "281416cd-1968-11d0-a28f-00aa003049e2"),
+            ("ms-sql-database", "d5a0dbdc-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-cached-membership-time-stamp", "3566bf1f-beee-4dcb-8abe-ef89fcfec6c1"),
+            ("domain-cross-ref", "b000ea7b-a086-11d0-afdd-00c04fd930c9"),
+            ("ms-tapi-rt-person", "53ea1cb5-b704-4df9-818f-5cb4ec86cac1"),
+            ("ms-ds-external-directory-object-id", "bd29bf90-66ad-40e1-887b-10df070419a6"),
+            ("shadowflag", "8dfeb70d-c5db-46b6-b15e-a4389e6cee9b"),
+            ("print-attributes", "281416d7-1968-11d0-a28f-00aa003049e2"),
+            ("ms-sql-informationdirectory", "d0aedb2e-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-cached-membership", "69cab008-cdd4-4bc9-bab8-0ff37efe1b20"),
+            ("domain-component", "19195a55-6da0-11d0-afd3-00c04fd930c9"),
+            ("ms-authz-central-access-policy", "a5679cb0-6f9d-432c-8b75-1e3e834f02aa"),
+            ("ms-ds-device-mdmstatus", "f60a8f96-57c4-422c-a3ad-9e2fa09ce6f7"),
+            ("shadowexpire", "75159a00-1fff-4cf4-8bff-4ef2695cf643"),
+            ("primary-group-token", "c0ed8738-7efd-4481-84d9-66d2db8be369"),
+            ("ms-sql-type", "ca48eba8-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-byte-array", "f0d8972e-dd5b-40e5-a51d-044c7c17ece7"),
+            ("domain-certificate-authorities", "7bfdcb7a-4807-11d1-a9c3-0000f80367c1"),
+            ("ms-tapi-rt-conference", "ca7b9735-4b2a-4e49-89c3-99025334dc94"),
+            ("ms-ds-authn-policy-silo-enforced", "f2f51102-6be0-493d-8726-1546cdbc8771"),
+            ("shadowinactive", "86871d1f-3310-4312-8efd-af49dcfb2671"),
+            ("primary-group-id", "bf967a00-0de6-11d0-a285-00aa003049e2"),
+            ("ms-sql-description", "8386603c-ccef-11d2-9993-0000f87a57d4"),
+            ("ms-ds-behavior-version", "d31a8757-2447-4545-8081-3bb610cacbf2"),
+            ("documentversion", "94b3a8a9-d613-4cec-9aad-5fbcc1046b43"),
+            ("ms-authz-central-access-rule", "5b4a06dc-251c-4edb-8813-0bdd71327226"),
+            ("ms-ds-authn-policy-enforced", "7a560cc2-ec45-44ba-b2d7-21236ad59fd5"),
+            ("shadowwarning", "7ae89c9c-2976-4a46-bb8a-340f88560117"),
+            ("previous-parent-ca", "963d273d-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-sql-language", "c57f72f4-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-generic-data", "b5f7e349-7a5b-407c-a334-a31c3f538b98"),
+            ("documenttitle", "de265a9c-ff2c-47b9-91dc-6e6fe2c43062"),
+            ("ms-sql-olapcube", "09f0506a-cd28-11d2-9993-0000f87a57d4"),
+            ("ms-ds-assigned-authn-policy-bl", "2d131b3c-d39f-4aee-815e-8db4bc1ce7ac"),
+            ("shadowmax", "f285c952-50dd-449e-9160-3b880d99988d"),
+            ("previous-ca-certificates", "963d2739-48be-11d1-a9c3-0000f80367c1"),
+            ("ms-sql-version", "c07cc1d0-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-object-guid", "8491e548-6c38-4365-a732-af041569b02c"),
+            ("documentpublisher", "170f09d7-eb69-448a-9a30-f1afecfd32d7"),
+            ("ms-authz-central-access-rules", "99bb1b7a-606d-4f8b-800e-e15be554ca8d"),
+            ("ms-ds-assigned-authn-policy", "b87a0ad8-54f7-49c1-84a0-e64d12853588"),
+            ("shadowmin", "a76b8737-e5a1-4568-b057-dc12e04be4b2"),
+            ("presentation-address", "a8df744b-c5ea-11d1-bbcb-0080c76670c0"),
+            ("ms-sql-gpsheight", "bcdd4f0e-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-task-is-role-definition", "7b078544-6c82-4fe9-872f-ff48ad2b2e26"),
+            ("documentlocation", "b958b14e-ac6d-4ec4-8892-be70b69f7281"),
+            ("ms-sql-olapdatabase", "20af031a-ccef-11d2-9993-0000f87a57d4"),
+            ("ms-ds-service-authn-policy-bl", "2c1128ec-5aa2-42a3-b32d-f0979ca9fcd2"),
+            ("shadowlastchange", "f8f2689c-29e8-4843-8177-e8b98e15eeac"),
+            ("prefix-map", "52458022-ca6a-11d0-afff-0000f80367c1"),
+            ("ms-sql-gpslongitude", "b7577c94-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-script-timeout", "87d0fb41-2c8b-41f6-b972-11fdfd50d6b0"),
+            ("documentidentifier", "0b21ce82-ff63-46d9-90fb-c8b9f24e97b9"),
+            ("ms-authz-central-access-policies", "555c21c3-a136-455a-9397-796bbd358e25"),
+            ("ms-ds-service-authn-policy", "2a6a6d95-28ce-49ee-bb24-6d1fc01e3111"),
+            ("loginshell", "a553d12c-3231-4c5e-8adf-8d189697721e"),
+            ("preferred-ou", "bf9679ff-0de6-11d0-a285-00aa003049e2"),
+            ("ms-sql-gpslatitude", "b222ba0e-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-az-script-engine-cache-max", "2629f66a-1f95-4bf3-a296-8e9d7b9e30c8"),
+            ("documentauthor", "f18a8e19-af5f-4478-b096-6f35c27eb83f"),
+            ("ms-sql-sqldatabase", "1d08694a-ccef-11d2-9993-0000f87a57d4"),
+            ("ms-ds-computer-authn-policy-bl", "2bef6232-30a1-457e-8604-7af6dbf131b8"),
+            ("unixhomedirectory", "bc2dba12-000f-464d-bf1d-0808465d8843"),
+            ("preferredlanguage", "856be0d0-18e7-46e1-8f5f-7ee4d9020e0d"),
+            ("ms-wmi-shadowobject", "f1e44bdf-8dd3-4235-9c86-f91f31f5b569"),
+            ("ms-ds-object-soa", "34f6bdf5-2e79-4c3b-8e14-3d93b75aab89"),
+            ("mssfu-30-search-attributes", "ef9a2df0-2e57-48c8-8950-0cc674004733"),
+            ("print-notify", "ba305f6a-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-wmi-author", "6366c0c1-6972-4e66-b3a5-1d52ad0c0547"),
+            ("ms-ds-host-service-account", "80641043-15a2-40e1-92a2-8ca866f70776"),
+            ("employee-id", "bf967962-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-device-container", "7c9e8c58-901b-4ea8-b6ec-4eb9e9fc0e11"),
+            ("ms-ds-source-anchor", "b002f407-1340-41eb-bca0-bd7d938e25a9"),
+            ("mssfu-30-intra-field-separator", "95b2aef0-27e4-4cb9-880a-a2d9a9ea23b8"),
+            ("print-network-address", "ba305f79-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-tapi-unique-identifier", "70a4e7ea-b3b9-4643-8918-e6dd2471bfd4"),
+            ("ms-ds-has-master-ncs", "ae2de0e2-59d7-4d47-8d47-ed4dfe4357ad"),
+            ("efspolicy", "8e4eb2ec-4712-11d0-a1a0-00c04fd930c9"),
+            ("ms-wmi-rule", "3c7e6f83-dd0e-481b-a0c2-74cd96ef2a66"),
+            ("ms-ds-strong-ntlm-policy", "aacd2170-482a-44c6-b66e-42c2f66a285c"),
+            ("mssfu-30-field-separator", "a2e11a42-e781-4ca1-a7fa-ec307f62b6a1"),
+            ("print-min-y-extent", "ba305f72-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-tapi-protocol-id", "89c1ebcf-7a5f-41fd-99ca-c900b32299ab"),
+            ("ms-ds-has-domain-ncs", "6f17e347-a842-4498-b8b3-15e007da4fed"),
+            ("e-mail-addresses", "bf967961-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-device-registration-service", "96bc3a1a-e3d2-49d3-af11-7b0df79d67f5"),
+            ("ms-ds-service-allowed-ntlm-network-authentication", "278947b9-5222-435e-96b7-1503858c2b48"),
+            ("mssfu-30-key-attributes", "32ecd698-ce9e-4894-a134-7ad76b082e83"),
+            ("print-min-x-extent", "ba305f71-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-tapi-ip-address", "efd7d7f7-178e-4767-87fa-f8a16b840544"),
+            ("ms-ds-has-instantiated-ncs", "11e9a5bc-4517-4049-af9c-51554fb0fc09"),
+            ("dynamic-ldap-server", "52458021-ca6a-11d0-afff-0000f80367c1"),
+            ("ms-wmi-realrangeparam", "6afe8fe2-70bc-4cce-b166-a96f7359c514"),
+            ("ms-ds-user-allowed-ntlm-network-authentication", "7ece040f-9327-4cdc-aad3-037adfe62639"),
+            ("mssfu-30-search-container", "27eebfa2-fbeb-4f8e-aad6-c50247994291"),
+            ("print-memory", "ba305f74-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-tapi-conference-blob", "4cc4601e-7201-4141-abc8-3e529ae88863"),
+            ("ms-ds-filter-containers", "fb00dcdf-ac37-483a-9c12-ac53a6603033"),
+            ("dsa-signature", "167757bc-47f3-11d1-a9c3-0000f80367c1"),
+            ("ms-ds-device-registration-service-container", "310b55ce-3dcd-4392-a96d-c9e35397c24f"),
+            ("ms-ds-expire-passwords-on-smart-card-only-accounts", "3417ab48-df24-4fb1-80b0-0fcb367e25e3"),
+            ("nismapentry", "4a95216e-fcc0-402e-b57f-5971626148a9"),
+            ("print-media-supported", "244b296f-5abd-11d0-afd2-00c04fd930c9"),
+            ("ms-sql-thirdparty", "c4e311fc-d34b-11d2-999a-0000f87a57d4"),
+            ("ms-ds-optional-feature-guid", "9b88bda8-dd82-4998-a91d-5f2d2baf1927"),
+            ("ds-ui-shell-maximum", "fcca766a-6f91-11d2-9905-0000f87a57d4"),
+            ("ms-wmi-rangeparam", "45fb5a57-5018-4d0f-9056-997c8c9122d9"),
+            ("ms-ds-key-credential-link-bl", "938ad788-225f-4eee-93b9-ad24a159e1db"),
+            ("nismapname", "969d3c79-0e9a-4d95-b0ac-bdde7ff8f3a1"),
+            ("print-media-ready", "3bcbfcf5-4d3d-11d0-a1a6-00c04fd930c9"),
+            ("ms-sql-allowsnapshotfilesftpdownloading", "c49b8be8-d34b-11d2-999a-0000f87a57d4"),
+            ("ms-ds-external-store", "604877cd-9cdb-47c7-b03d-3daadb044910"),
+            ("ds-ui-admin-notification", "f6ea0a94-6f91-11d2-9905-0000f87a57d4"),
+            ("ms-ds-cloud-extensions", "641e87a4-8326-4771-ba2d-c706df35e35a"),
+            ("bootfile", "e3f3cb4e-0f20-42eb-9703-d2ff26e52667"),
+            ("print-max-y-extent", "ba305f70-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-sql-allowqueuedupdatingsubscription", "c458ca80-d34b-11d2-999a-0000f87a57d4"),
+            ("ms-ds-external-key", "b92fd528-38ac-40d4-818d-0433380837c1"),
+            ("ds-ui-admin-maximum", "ee8d0ae0-6f91-11d2-9905-0000f87a57d4"),
+            ("ms-wmi-policytype", "595b2613-4109-4e77-9013-a3bb4ef277c7"),
+            ("ms-ds-shadow-principal-sid", "1dcc0722-aab0-4fef-956f-276fe19de107"),
+            ("bootparameter", "d72a0750-8c7c-416e-8714-e65f11e908be"),
+            ("print-max-x-extent", "ba305f6f-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-sql-allowimmediateupdatingsubscription", "c4186b6e-d34b-11d2-999a-0000f87a57d4"),
+            ("ms-ds-executescriptpassword", "9d054a5a-d187-46c1-9d85-42dfc44a56dd"),
+            ("ds-heuristics", "f0f8ff86-1191-11d0-a060-00aa006c33ed"),
+            ("ms-ds-claims-transformation-policies", "c8fca9b1-7d88-bb4f-827a-448927710762"),
+            ("ms-ds-device-trust-type", "c4a46807-6adc-4bbb-97de-6bed181a1bfe"),
+            ("macaddress", "e6a522dd-9770-43e1-89de-1de5044328f7"),
+            ("print-max-resolution-supported", "281416cf-1968-11d0-a28f-00aa003049e2"),
+            ("ms-sql-allowknownpullsubscription", "c3bb7054-d34b-11d2-999a-0000f87a57d4"),
+            ("ms-ds-entry-time-to-die", "e1e9bad7-c6dd-4101-a843-794cec85b038"),
+            ("ds-core-propagation-data", "d167aa4b-8b08-11d2-9939-0000f87a57d4"),
+            ("ms-wmi-policytemplate", "e2bc80f1-244a-4d59-acc6-ca5c4f82e6e1"),
+            ("ms-ds-key-approximate-last-logon-time-stamp", "649ac98d-9b9a-4d41-af6b-f616f2a62e4a"),
+            ("ipnetmasknumber", "6ff64fcd-462e-4f62-b44a-9a5347659eb9"),
+            ("print-max-copies", "281416d1-1968-11d0-a28f-00aa003049e2"),
+            ("ms-sql-publisher", "c1676858-d34b-11d2-999a-0000f87a57d4"),
+            ("ms-ds-enabled-feature-bl", "ce5b01bc-17c6-44b8-9dc1-a9668b00901b"),
+            ("driver-version", "ba305f6e-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-ds-claims-transformation-policy-type", "2eeb62b3-1373-fe45-8101-387f1676edc7"),
+            ("ms-ds-custom-key-information", "b6e5e988-e5e4-4c86-a2ae-0dacb970a0e1"),
+            ("ipnetworknumber", "4e3854f4-3087-42a4-a813-bb0c528958d3"),
+            ("print-mac-address", "ba305f7a-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-sql-keywords", "01e9a98a-ccef-11d2-9993-0000f87a57d4"),
+            ("ms-ds-enabled-feature", "5706aeaf-b940-4fb2-bcfc-5268683ad9fe"),
+            ("driver-name", "281416c5-1968-11d0-a28f-00aa003049e2"),
+            ("ms-wmi-objectencoding", "55dd81c9-c312-41f9-a84d-c6adbdf1e8e1"),
+            ("ms-ds-computer-sid", "dffbd720-0872-402e-9940-fcd78db049ba"),
+            ("iphostnumber", "de8bb721-85dc-4fde-b687-9657688e667e"),
+            ("print-language", "281416d6-1968-11d0-a28f-00aa003049e2"),
+            ("ms-sql-applications", "fbcda2ea-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-dnsrootalias", "2143acca-eead-4d29-b591-85fa49ce9173"),
+            ("drink", "1a1aa5b5-262e-4df6-af04-2cf6b0d80048"),
+            ("ms-ds-value-type", "e3c27fdf-b01d-4f4e-87e7-056eef0eb922"),
+            ("ms-ds-device-dn", "642c1129-3899-4721-8e21-4839e3988ce5"),
+            ("oncrpcnumber", "966825f5-01d9-4a5c-a011-d15ae84efa55"),
+            ("print-keep-printed-jobs", "ba305f6d-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-sql-lastdiagnosticdate", "f6d6dd88-ccee-11d2-9993-0000f87a57d4"),
+            ("ms-ds-deleted-object-lifetime", "a9b38cb6-189a-4def-8a70-0fcfa158148e"),
+            ("domain-wide-policy", "80a67e29-9f22-11d0-afdd-00c04fd930c9"),
+            ("ms-wmi-mergeablepolicytemplate", "07502414-fdca-4851-b04a-13645b11d226"),
+            ("ms-ds-key-principal-bl", "d1328fbc-8574-4150-881d-0b1088827878"),
+            ("ms-ds-password-history-length", "fed81bb7-768c-4c2f-9641-2245de34794d"),
+            ("force-logoff", "bf967977-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-shadow-principal", "770f4cb3-1643-469c-b766-edd77aa75e14"),
+            ("application-entity", "3fdfee4f-47f4-11d1-a9c3-0000f80367c1"),
+            ("mssfu-30-posix-member-of", "7bd76b92-3244-438a-ada6-24f5ea34381e"),
+            ("prior-value", "bf967a02-0de6-11d0-a285-00aa003049e2"),
+            ("ms-wmi-int8default", "f4d8085a-8c5b-4785-959b-dc585566e445"),
+            ("ms-ds-oidtogroup-link-bl", "1a3d0d20-5844-4199-ad25-0f5039a76ada"),
+            ("flat-name", "b7b13117-b82e-11d0-afee-0000f80367c1"),
+            ("ms-wmi-wmigpo", "05630000-3927-4ede-bf27-ca91f275c26f"),
+            ("mssfu-30-posix-member", "c875d82d-2848-4cec-bb50-3c5486d09d57"),
+            ("prior-set-time", "bf967a01-0de6-11d0-a285-00aa003049e2"),
+            ("ms-wmi-intvalidvalues", "6af565f6-a749-4b72-9634-3c5d47e6b4e0"),
+            ("ms-ds-oidtogroup-link", "f9c9a57c-3941-438d-bebf-0edaf2aca187"),
+            ("flags", "bf967976-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-shadow-principal-container", "11f95545-d712-4c50-b847-d2781537c633"),
+            ("address-template", "5fd4250a-1262-11d0-a060-00aa006c33ed"),
+            ("mssfu-30-nsmap-field-position", "585c9d5e-f599-4f07-9cf9-4373af4b89d3"),
+            ("printer-name", "244b296e-5abd-11d0-afd2-00c04fd930c9"),
+            ("ms-wmi-intmin", "68c2e3ba-9837-4c70-98e0-f0c33695d023"),
+            ("ms-ds-minimum-password-length", "b21b3439-4c3a-441c-bb5f-08f20e9b315e"),
+            ("file-ext-priority", "d9e18315-8939-11d1-aebc-0000f80367c1"),
+            ("ms-wmi-unknownrangeparam", "b82ac26b-c6db-4098-92c6-49c18a3336e1"),
+            ("mssfu-30-max-uid-number", "ec998437-d944-4a28-8500-217588adfc75"),
+            ("print-status", "ba305f6b-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-wmi-intmax", "fb920c2c-f294-4426-8ac1-d24b42aa2bce"),
+            ("ms-ds-minimum-password-age", "2a74f878-4d9c-49f9-97b3-6767d1cbd9a3"),
+            ("facsimile-telephone-number", "bf967974-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-key-credential", "ee1f5543-7c2e-476a-8b3f-e11f4af6c498"),
+            ("address-book-container", "3e74f60f-3e73-11d1-a9c0-0000f80367c1"),
+            ("mssfu-30-max-gid-number", "04ee6aa6-f83b-469a-bf5a-3c00d3634669"),
+            ("print-start-time", "281416c9-1968-11d0-a28f-00aa003049e2"),
+            ("ms-wmi-intflags4", "bd74a7ac-c493-4c9c-bdfa-5c7b119ca6b2"),
+            ("ms-ds-maximum-password-age", "fdd337f5-4999-4fce-b252-8ff9c9b43875"),
+            ("extra-columns", "d24e2846-1dd9-4bcf-99d7-a6227cc86da7"),
+            ("ms-wmi-uintsetparam", "8f4beb31-4e19-46f5-932e-5fa03c339b1d"),
+            ("mssfu-30-yp-servers", "084a944b-e150-4bfe-9345-40e1aedaebba"),
+            ("print-stapling-supported", "ba305f73-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-wmi-intflags3", "f29fa736-de09-4be4-b23a-e734c124bacc"),
+            ("ms-ds-mastered-by", "60234769-4819-4615-a1b2-49d2f119acb5"),
+            ("extension-name", "bf967972-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-authn-policy", "ab6a1156-4dc7-40f5-9180-8e4ce42fe5cd"),
+            ("acs-subnet", "7f561289-5301-11d1-a9c5-0000f80367c1"),
+            ("mssfu-30-domains", "93095ed3-6f30-4bdd-b734-65d569f5f7c9"),
+            ("print-spooling", "ba305f6c-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-wmi-intflags2", "075a42c9-c55a-45b1-ac93-eb086b31f610"),
+            ("ms-ds-logon-time-sync-interval", "ad7940f8-e43a-4a42-83bc-d688e59ea605"),
+            ("extended-class-info", "9a7ad948-ca53-11d1-bbd0-0080c76670c0"),
+            ("ms-wmi-uintrangeparam", "d9a799b2-cef3-48b3-b5ad-fb85f8dd3214"),
+            ("mssfu-30-nis-domain", "9ee3b2e3-c7f3-45f8-8c9f-1382be4984d2"),
+            ("print-share-name", "ba305f68-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-wmi-intflags1", "18e006b9-6445-48e3-9dcf-b5ecfbc4df8e"),
+            ("ms-ds-keyversionnumber", "c523e9c0-33b5-4ac8-8923-b57b927f42f6"),
+            ("extended-chars-allowed", "bf967966-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-authn-policy-silo", "f9f0461e-697d-4689-9299-37e61d617b0d"),
+            ("acs-resource-limits", "2e899b04-2834-11d3-91d4-0000f87a57d4"),
+            ("mssfu-30-key-values", "37830235-e5e9-46f2-922b-d8d44f03e7ae"),
+            ("print-separator-file", "281416c6-1968-11d0-a28f-00aa003049e2"),
+            ("ms-wmi-intdefault", "1b0c07f8-76dd-4060-a1e1-70084619dc90"),
+            ("ms-ds-last-known-rdn", "8ab15858-683e-466d-877f-d640e1f9a611"),
+            ("extended-attribute-info", "9a7ad947-ca53-11d1-bbd0-0080c76670c0"),
+            ("ms-wmi-stringsetparam", "0bc579a2-1da7-4cea-b699-807f3b9d63a4"),
+            ("mssfu-30-aliases", "20ebf171-c69a-4c31-b29d-dcb837d8912d"),
+            ("print-rate-unit", "ba305f78-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-wmi-id", "9339a803-94b8-47f7-9123-a853b9ff7e45"),
+            ("ms-ds-isrodc", "a8e8aa23-3e67-4af1-9d7a-2f1a1d633ac9"),
+            ("entry-ttl", "d213decc-d81a-4384-aac2-dcfcfd631cf8"),
+            ("ms-ds-authn-policies", "3a9adf5d-7b97-4f7e-abb4-e5b55c1c06b4"),
+            ("acs-policy", "7f561288-5301-11d1-a9c5-0000f80367c1"),
+            ("mssfu-30-name", "16c5d1d3-35c2-4061-a870-a5cefda804f0"),
+            ("print-rate", "ba305f77-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-wmi-genus", "50c8673a-8f56-4614-9308-9e1340fb9af3"),
+            ("ms-ds-isgc", "1df5cf33-0fe5-499e-90e1-e94b42718a46"),
+            ("enrollment-providers", "2a39c5b3-8960-11d1-aebc-0000f80367c1"),
+            ("ms-wmi-som", "ab857078-0142-4406-945b-34c9b6b13372"),
+            ("mssfu-30-order-number", "02625f05-d1ee-4f9f-b366-55266becb95c"),
+            ("print-pages-per-minute", "19405b97-3cfa-11d1-a9c0-0000f80367c1"),
+            ("ms-wmi-creationdate", "748b0a2e-3351-4b3f-b171-2f17414ea779"),
+            ("ms-ds-is-possible-values-present", "6fabdcda-8c53-204f-b1a4-9df0c67c1eb4"),
+            ("enabled-connection", "bf967963-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ds-authn-policy-silos", "d2b1470a-8f84-491e-a752-b401ee00fe5c"),
+            ("class-schema", "bf967a83-0de6-11d0-a285-00aa003049e2"),
+            ("mssfu-30-master-server-name", "4cc908a2-9e18-410e-8459-f17cc422020a"),
+            ("print-owner", "ba305f69-47e3-11d0-a1a6-00c04fd930c9"),
+            ("ms-wmi-classdefinition", "2b9c0ebc-c272-45cb-99d2-4d0e691632e0"),
+            ("ms-ds-intid", "bc60096a-1b47-4b30-8877-602c93f56532"),
+            ("enabled", "a8df73f2-c5ea-11d1-bbcb-0080c76670c0"),
+            ("ms-wmi-simplepolicytemplate", "6cc8b2b5-12df-44f6-8307-e74f5cdee369"),
+            ("account", "2628a46a-a6ad-4ae0-b854-2b12d9fe6f9e"),
+            ("mssfu-30-map-filter", "b7b16e01-024f-4e23-ad0d-71f1a406b684"),
+            ("print-orientations-supported", "281416d0-1968-11d0-a28f-00aa003049e2"),
+            ("ms-wmi-class", "90c1925f-4a24-4b07-b202-be32eb3c8b74"),
+            ("ms-ds-integer", "7bc64cea-c04e-4318-b102-3e0729371a65"),
+            ("employee-type", "a8df73f0-c5ea-11d1-bbcb-0080c76670c0"),
+            ("ms-ds-device", "5df2b673-6d41-4774-b3e8-d52e8ee9ff99"),
+            ("mssfu-30-result-attributes", "e167b0b6-4045-4433-ac35-53f972d45cba"),
+            ("print-number-up", "3bcbfcf4-4d3d-11d0-a1a6-00c04fd930c9"),
+            ("ms-wmi-changedate", "f9cdf7a0-ec44-4937-a79b-cd91522b3aa8"),
+            ("ms-ds-host-service-account-bl", "79abe4eb-88f3-48e7-89d6-f4bc7e98c331"),
+            ("employee-number", "a8df73ef-c5ea-11d1-bbcb-0080c76670c0"),
+            ("ms-ts-max-idle-time", "ff739e9c-6bb7-460e-b221-e250f3de0f95"),
+            ("proxy-lifetime", "bf967a07-0de6-11d0-a285-00aa003049e2"),
+            ("ms-wmi-query", "65fff93e-35e3-45a3-85ae-876c6718297f"),
+            ("ms-ds-required-forest-behavior-version", "4beca2e8-a653-41b2-8fee-721575474bec"),
+            ("frs-ds-poll", "1be8f177-a9ff-11d0-afe2-00c04fd930c9"),
+            ("msmq-queue", "9a0dc343-c100-11d1-bbc5-0080c76670c0"),
+            ("builtin-domain", "bf967a81-0de6-11d0-a285-00aa003049e2"),
+            ("ms-ts-max-connection-time", "1d960ee2-6464-4e95-a781-e3b5cd5f9588"),
+            ("proxy-generation-enabled", "5fd424d6-1262-11d0-a060-00aa006c33ed"),
+            ("ms-wmi-propertyname", "ab920883-e7f8-4d72-b4a0-c0449897509d"),
+            ("ms-ds-required-domain-behavior-version", "eadd3dfe-ae0e-4cc2-b9b9-5fe5b6ed2dd2"),
+            ("frs-directory-filter", "1be8f171-a9ff-11d0-afe2-00c04fd930c9"),
+            ("ms-ts-max-disconnection-time", "326f7089-53d8-4784-b814-46d8535110d2"),
+            ("proxy-addresses", "bf967a06-0de6-11d0-a285-00aa003049e2"),
+            ("ms-wmi-parm4", "3800d5a3-f1ce-4b82-a59a-1528ea795f59"),
+            ("ms-ds-pso-applied", "5e6cf031-bda8-43c8-aca4-8fee4127005b"),
+            ("frs-control-outbound-backlog", "2a13257c-9373-11d1-aebc-0000f80367c1"),
+            ("msmq-migrated-user", "50776997-3c3d-11d2-90cc-00c04fd91ab1"),
+            ("ms-ts-remote-control", "15177226-8642-468b-8c48-03ddfd004982"),
+            ("proxied-object-name", "e1aea402-cd5b-11d0-afff-0000f80367c1"),
+            ("ms-wmi-parm3", "45958fb6-52bd-48ce-9f9f-c2712d9f2bfc"),
+            ("ms-ds-pso-applies-to", "64c80f48-cdd2-4881-a86d-4e97b6f561fc"),
+            ("frs-control-inbound-backlog", "2a13257b-9373-11d1-aebc-0000f80367c1"),
+            ("application-version", "ddc790ac-af4d-442a-8f0f-a1d4caa7dd92"),
+            ("ms-ts-allow-logon", "3a0cd464-bc54-40e7-93ae-a646a6ecc4b4"),
+            ("profile-path", "bf967a05-0de6-11d0-a285-00aa003049e2"),
+            ("ms-wmi-parm2", "0003508e-9c42-4a76-a8f4-38bf64bab0de"),
+            ("ms-ds-lockout-threshold", "b8c8c35e-4a19-4a95-99d0-69fe4446286f"),
+            ("frs-control-data-creation", "2a13257a-9373-11d1-aebc-0000f80367c1"),
+            ("msmq-group", "46b27aac-aafa-4ffb-b773-e5bf621ee87b"),
+            ("ms-ts-home-drive", "5f0a24d9-dffa-4cd9-acbf-a0680c03731e"),
+            ("product-code", "d9e18317-8939-11d1-aebc-0000f80367c1"),
+            ("ms-wmi-parm1", "27e81485-b1b0-4a8b-bedd-ce19a837e26e"),
+            ("ms-ds-lockout-duration", "421f889a-472e-4fe4-8eb9-e1d0bc6071b2"),
+            ("frs-computer-reference-bl", "2a132579-9373-11d1-aebc-0000f80367c1"),
+            ("application-site-settings", "19195a5c-6da0-11d0-afd3-00c04fd930c9"),
+            ("ms-ts-home-directory", "5d3510f0-c4e7-4122-b91f-a20add90e246"),
+            ("privilege-value", "19405b99-3cfa-11d1-a9c0-0000f80367c1"),
+            ("ms-wmi-normalizedclass", "eaba628f-eb8e-4fe9-83fc-693be695559b"),
+            ("ms-ds-lockout-observation-window", "b05bda89-76af-468a-b892-1be55558ecc8"),
+            ("frs-computer-reference", "2a132578-9373-11d1-aebc-0000f80367c1"),
+            ("msmq-enterprise-settings", "9a0dc345-c100-11d1-bbc5-0080c76670c0"),
+            ("ms-ts-profile-path", "e65c30db-316c-4060-a3a0-387b083f09cd"),
+            ("privilege-holder", "19405b9b-3cfa-11d1-a9c0-0000f80367c1"),
+            ("ms-wmi-name", "c6c8ace5-7e81-42af-ad72-77412c5941c4"),
+            ("ms-ds-local-effective-recycle-time", "4ad6016b-b0d2-4c9b-93b6-5964b17b968c"),
+            ("from-server", "bf967979-0de6-11d0-a285-00aa003049e2"),
+            ("dns-zone-scope", "696f8a61-2d3f-40ce-a4b3-e275dfcc49c5"),
+            ("application-settings", "f780acc1-56f0-11d1-a9c6-0000f80367c1"),
+            ("mssfu-30-crypt-method", "4503d2a3-3d70-41b8-b077-dff123c15865"),
+            ("privilege-display-name", "19405b98-3cfa-11d1-a9c0-0000f80367c1"),
+            ("ms-wmi-mof", "6736809f-2064-443e-a145-81262b1f1366"),
+            ("ms-ds-local-effective-deletion-time", "94f2800c-531f-4aeb-975d-48ac39fd8ca4"),
+            ("from-entry", "9a7ad949-ca53-11d1-bbd0-0080c76670c0"),
+            ("msmq-custom-recipient", "876d6817-35cc-436c-acea-5ef7174dd9be"),
+            ("mssfu-30-is-valid-container", "0dea42f5-278d-4157-b4a7-49b59664915b"),
+            ("privilege-attributes", "19405b9a-3cfa-11d1-a9c0-0000f80367c1"),
+            ("ms-wmi-int8validvalues", "103519a9-c002-441b-981a-b0b3e012c803"),
+            ("ms-ds-password-reversible-encryption-enabled", "75ccdd8f-af6c-4487-bb4b-69e4d38a959c"),
+            ("friendly-names", "7bfdcb88-4807-11d1-a9c3-0000f80367c1"),
+            ("dns-zone-scope-container", "f2699093-f25a-4220-9deb-03df4cc4a9c5"),
+            ("application-process", "5fd4250b-1262-11d0-a060-00aa006c33ed"),
+            ("mssfu-30-netgroup-user-at-domain", "a9e84eed-e630-4b67-b4b3-cad2a82d345e"),
+            ("private-key", "bf967a03-0de6-11d0-a285-00aa003049e2"),
+            ("ms-wmi-int8min", "ed1489d1-54cc-4066-b368-a00daa2664f1"),
+            ("ms-ds-password-complexity-enabled", "db68054b-c9c3-4bf0-b15b-0fb52552a610"),
+            ("foreign-identifier", "3e97891e-8c01-11d0-afda-00c04fd930c9"),
+            ("msmq-configuration", "9a0dc344-c100-11d1-bbc5-0080c76670c0"),
+            ("mssfu-30-netgroup-host-at-domain", "97d2bf65-0466-4852-a25a-ec20f57ee36c"),
+            ("priority", "281416c7-1968-11d0-a28f-00aa003049e2"),
+            ("ms-wmi-int8max", "e3d8b547-003d-4946-a32b-dc7cedc96b74"),
+        ];
+
+        values.iter().map(|&(k, v)| (k.to_string(), v.to_string())).collect::<HashMap<String, String>>()
     };
 }

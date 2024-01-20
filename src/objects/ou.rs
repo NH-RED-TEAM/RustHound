@@ -71,14 +71,9 @@ impl Ou {
         sid_type: &mut HashMap<String, String>,
         domain_sid: &String
     ) {
-        let result_dn: String;
-        result_dn = result.dn.to_uppercase();
-        
-        let result_attrs: HashMap<String, Vec<String>>;
-        result_attrs = result.attrs;
-        
-        let result_bin: HashMap<String, Vec<Vec<u8>>>;
-        result_bin = result.bin_attrs;
+        let result_dn: String = result.dn.to_uppercase();
+        let result_attrs: HashMap<String, Vec<String>> = result.attrs;
+        let result_bin: HashMap<String, Vec<Vec<u8>>> = result.bin_attrs;
         
         // Debug for current object
         debug!("Parse OU: {}", result_dn);
@@ -101,11 +96,11 @@ impl Ou {
             match key.as_str() {
                 "name" => {
                     let name = &value[0];
-                    let email = format!("{}@{}",name.to_owned(),domain);
+                    let email = format!("{}@{}", name.to_owned(), domain);
                     self.properties.name = email.to_uppercase();
                 }
                 "description" => {
-                    self.properties.description = Some(value[0].to_owned());
+                    self.properties.description = value.get(0).map(|s| s.clone());
                 }
                 "whenCreated" => {
                     let epoch = string_to_epoch(&value[0]);
@@ -117,11 +112,7 @@ impl Ou {
                     self.links = parse_gplink(value[0].to_string());
                 }
                 "gPOtions" => {
-                    if value[0].parse::<i64>().unwrap_or(0) == 1 {
-                        self.properties.blocksinheritance = true;
-                    } else {
-                        self.properties.blocksinheritance = false;
-                    }
+                    self.properties.blocksinheritance = value[0].parse::<i64>().unwrap_or(0) == 1;
                 }
                 "IsDeleted" => {
                     self.is_deleted = true;
@@ -130,15 +121,12 @@ impl Ou {
             }
         }
         
-        // For all, bins attributs
-        #[allow(unused_assignments)]
-        let mut guid: String = "".to_owned();
+        // For all, bins attributes
         for (key, value) in &result_bin {
             match key.as_str() {
                 "objectGUID" => {
                     // objectGUID raw to string
-                    guid = decode_guid(&value[0]);
-                    self.object_identifier = guid.to_owned();
+                    self.object_identifier = decode_guid(&value[0]).to_owned();
                 }
                 "nTSecurityDescriptor" => {
                     // trace!("nTSecurityDescriptor ACES ACLS ?");

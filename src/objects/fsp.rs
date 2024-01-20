@@ -49,14 +49,9 @@ impl Fsp {
         dn_sid: &mut HashMap<String, String>,
         sid_type: &mut HashMap<String, String>,
     ) {
-        let result_dn: String;
-        result_dn = result.dn.to_uppercase();
-        
-        let result_attrs: HashMap<String, Vec<String>>;
-        result_attrs = result.attrs;
-        
-        let result_bin: HashMap<String, Vec<Vec<u8>>>;
-        result_bin = result.bin_attrs;
+        let result_dn: String = result.dn.to_uppercase();
+        let result_attrs: HashMap<String, Vec<String>> = result.attrs;
+        let result_bin: HashMap<String, Vec<Vec<u8>>> = result.bin_attrs;
         
         // Debug for current object
         debug!("Parse ForeignSecurityPrincipal: {}", result_dn);
@@ -75,24 +70,24 @@ impl Fsp {
         
         #[allow(unused_assignments)]
         let mut sid: String = "".to_owned();
-        let mut ftype: String = "Base".to_string();
+        let mut ftype: &str = "Base";
         // With a check
         for (key, value) in &result_attrs {
             match key.as_str() {
                 "name" => {
-                    let name = format!("{}-{}",domain,&value[0]);
+                    let name = format!("{}-{}", domain, &value.get(0).unwrap_or(&"".to_owned()));
                     self.properties.name = name.to_uppercase();
         
                     // Type for group Member maker
                     // based on https://docs.microsoft.com/fr-fr/troubleshoot/windows-server/identity/security-identifiers-in-windows
-                    let split = value[0].split("-");
-                    let vec = split.collect::<Vec<&str>>();
-                    let len = vec.len();
-                    let last = vec[len - 1].parse::<i32>().unwrap_or(0);
-                    if last >= 17 {
-                        ftype = "User".to_string();
+                    let split = value[0].split("-").collect::<Vec<&str>>();
+
+                    // Not currently used:
+                    //let last = split.iter().last().unwrap_or(&"0").parse::<i32>().unwrap_or(0);
+                    if split.len() >= 17 {
+                        ftype = "User";
                     } else {
-                        ftype = "Group".to_string();
+                        ftype = "Group";
                     }
                 }
                 "whenCreated" => {
@@ -129,7 +124,7 @@ impl Fsp {
             // Push DN and Type
             sid_type.insert(
                 self.object_identifier.to_string(),
-                ftype
+                ftype.to_string()
             );
         }
         

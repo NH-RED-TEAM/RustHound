@@ -347,10 +347,7 @@ impl User {
       if let id = group_id {
          let re = Regex::new(r"S-.*-").unwrap();
          let part1 = re.find(&sid).unwrap();
-         let mut primary_group_id: String = "".to_owned();
-         primary_group_id.push_str(&part1.as_str());
-         primary_group_id.push_str(&id.as_str());
-         self.primary_group_sid = primary_group_id;
+         self.primary_group_sid = format!("{}{}", part1.as_str(), id); 
       }
 
       // Push DN and SID in HashMap

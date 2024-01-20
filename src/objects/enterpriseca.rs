@@ -68,14 +68,9 @@ impl EnterpriseCA {
         sid_type: &mut HashMap<String, String>,
         domain_sid: &String
     ) {
-        let result_dn: String;
-        result_dn = result.dn.to_uppercase();
-
-        let result_attrs: HashMap<String, Vec<String>>;
-        result_attrs = result.attrs;
-
-        let result_bin: HashMap<String, Vec<Vec<u8>>>;
-        result_bin = result.bin_attrs;
+        let result_dn: String = result.dn.to_uppercase();
+        let result_attrs: HashMap<String, Vec<String>> = result.attrs;
+        let result_bin: HashMap<String, Vec<Vec<u8>>> = result.bin_attrs;
 
         // Debug for current object
         debug!("Parse EnterpriseCA: {}", result_dn);
@@ -99,7 +94,7 @@ impl EnterpriseCA {
         for (key, value) in &result_attrs {
             match key.as_str() {
                 "name" => {
-                    let name = format!("{}@{}",&value[0],domain);
+                    let name = format!("{}@{}", &value[0], domain);
                     self.properties.name = name.to_uppercase();
                 }
                 "description" => {
@@ -110,19 +105,20 @@ impl EnterpriseCA {
                 }
                 "certificateTemplates" => {
                     if value.len() <= 0 {
-                        error!("No certificate templates enabled for {}",self.properties.caname);
+                        error!("No certificate templates enabled for {}", self.properties.caname);
                     } else {
                         //ca.enabled_templates = value.to_vec();
-                        info!("Found {} enabled certificate templates",value.len().to_string().bold());
-                        trace!("Enabled certificate templates: {:?}",value);
-                        let mut enabled_templates: Vec<Member> = Vec::new();
-                        for template_name in value {
+                        info!("Found {} enabled certificate templates", value.len().to_string().bold());
+                        trace!("Enabled certificate templates: {:?}", value);
+                        let enabled_templates: Vec<Member> = value.iter().map(|template_name| {
                             let mut member = Member::new();
                             *member.object_identifier_mut() = template_name.to_owned();
                             *member.object_type_mut() = String::from("CertTemplate");
-                            enabled_templates.push(member);
-                        }
-                        self.enabled_cert_templates = enabled_templates.to_owned();
+
+                            member
+                        }).collect();
+
+                        self.enabled_cert_templates = enabled_templates;
                     }
                 }
                 "whenCreated" => {
@@ -179,11 +175,9 @@ impl EnterpriseCA {
                 "cACertificate" => {
                     //info!("{:?}:{:?}", key,value[0].to_owned());
                     let certsha1: String = calculate_sha1(&value[0]);
-                    self.properties.certthumbprint = certsha1.to_string();
-                    self.properties.certname = certsha1.to_string();
-                    let mut vec_certsha1: Vec<String> = Vec::new();
-                    vec_certsha1.push(certsha1);
-                    self.properties.certchain = vec_certsha1;
+                    self.properties.certthumbprint = certsha1.to_owned();
+                    self.properties.certname = certsha1.to_owned();
+                    self.properties.certchain = vec![certsha1.to_owned()];
 
                     // Parsing certificate.
                     let res = X509Certificate::from_der(&value[0]);
@@ -207,12 +201,12 @@ impl EnterpriseCA {
 
                                                 } else {
                                                     self.properties.hasbasicconstraints = false;
-                                                    self.properties.basicconstraintpathlength = 0 as u32;
+                                                    self.properties.basicconstraintpathlength = 0;
                                                 }
                                             },
                                             None => {
                                                 self.properties.hasbasicconstraints = false;
-                                                self.properties.basicconstraintpathlength = 0 as u32;
+                                                self.properties.basicconstraintpathlength = 0;
                                             }
                                         }
                                     }

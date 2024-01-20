@@ -130,11 +130,9 @@ impl AIACA {
                 "cACertificate" => {
                     //info!("{:?}:{:?}", key,value[0].to_owned());
                     let certsha1: String = calculate_sha1(&value[0]);
-                    self.properties.certthumbprint = certsha1.to_string();
-                    self.properties.certname = certsha1.to_string();
-                    let mut vec_certsha1: Vec<String> = Vec::new();
-                    vec_certsha1.push(certsha1);
-                    self.properties.certchain = vec_certsha1;
+                    self.properties.certthumbprint = certsha1.to_owned();
+                    self.properties.certname = certsha1.to_owned();
+                    self.properties.certchain = vec![certsha1.to_owned()];
 
                     // Parsing certificate.
                     let res = X509Certificate::from_der(&value[0]);
@@ -158,12 +156,12 @@ impl AIACA {
 
                                                 } else {
                                                     self.properties.hasbasicconstraints = false;
-                                                    self.properties.basicconstraintpathlength = 0 as u32;
+                                                    self.properties.basicconstraintpathlength = 0;
                                                 }
                                             },
                                             None => {
                                                 self.properties.hasbasicconstraints = false;
-                                                self.properties.basicconstraintpathlength = 0 as u32;
+                                                self.properties.basicconstraintpathlength = 0;
                                             }
                                         }
                                     }
@@ -180,12 +178,12 @@ impl AIACA {
         // Push DN and SID in HashMap
         if self.object_identifier.to_string() != "SID" {
             dn_sid.insert(
-                self.properties.distinguishedname.to_string(),
-                self.object_identifier.to_string()
+                self.properties.distinguishedname.to_owned(),
+                self.object_identifier.to_owned()
             );
             // Push DN and Type
             sid_type.insert(
-                self.object_identifier.to_string(),
+                self.object_identifier.to_owned(),
                 "AIACA".to_string()
             );
         }

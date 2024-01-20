@@ -50,14 +50,11 @@ impl NtAuthStore {
         sid_type: &mut HashMap<String, String>,
         domain_sid: &String
     ) {
-        let result_dn: String;
-        result_dn = result.dn.to_uppercase();
+        let result_dn: String = result.dn.to_uppercase();
   
-        let result_attrs: HashMap<String, Vec<String>>;
-        result_attrs = result.attrs;
+        let result_attrs: HashMap<String, Vec<String>> = result.attrs;
   
-        let result_bin: HashMap<String, Vec<Vec<u8>>>;
-        result_bin = result.bin_attrs;
+        let result_bin: HashMap<String, Vec<Vec<u8>>> = result.bin_attrs;
   
         // Debug for current object
         debug!("Parse NtAuthStore: {}", result_dn);
@@ -80,11 +77,11 @@ impl NtAuthStore {
         for (key, value) in &result_attrs {
             match key.as_str() {
                 "name" => {
-                    let name = format!("{}@{}",&value[0],domain);
+                    let name = format!("{}@{}", &value[0], domain);
                     self.properties.name = name.to_uppercase();
                 }
                 "description" => {
-                    self.properties.description = Some(value[0].to_owned());
+                    self.properties.description = value.get(0).map(|s| s.to_owned());
                 }
                 "whenCreated" => {
                     let epoch = string_to_epoch(&value[0]);
@@ -104,8 +101,7 @@ impl NtAuthStore {
             match key.as_str() {
                 "objectGUID" => {
                     // objectGUID raw to string
-                    let guid = decode_guid(&value[0]);
-                    self.object_identifier = guid.to_owned().into();
+                    self.object_identifier = decode_guid(&value[0]).to_owned().into();
                 }
                 "nTSecurityDescriptor" => {
                     // Needed with acl
@@ -123,9 +119,7 @@ impl NtAuthStore {
                 }
                 "cACertificate" => {
                     //info!("{:?}:{:?}", key,value[0].to_owned());
-                    let mut certthumbprints: Vec<String> = Vec::new();
-                    certthumbprints.push(calculate_sha1(&value[0]));
-                    self.properties.certthumbprints = certthumbprints;
+                    self.properties.certthumbprints = vec![calculate_sha1(&value[0])];
                 }
                 _ => {}
             }

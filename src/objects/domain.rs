@@ -111,16 +111,13 @@ impl Domain {
                 "distinguishedName" => {
                     // name & domain & distinguishedname
                     self.properties.distinguishedname = value[0].to_owned().to_uppercase();
-                    let split = value[0].split(",");
-                    let vec = split.collect::<Vec<&str>>();
-                    let first = vec[0].split("DC=");
-                    let vec1 = first.collect::<Vec<&str>>();
-                    let last = vec[1].split("DC=");
-                    let vec2 = last.collect::<Vec<&str>>();
-                    let mut name = String::from("");
-                    name.push_str(vec1[1]);
-                    name.push_str(".");
-                    name.push_str(vec2[1]);
+                    let name = value[0]
+                        .split(",")
+                        .filter(|x| x.starts_with("DC="))
+                        .map(|x| x.strip_prefix("DC=").unwrap_or(""))
+                        .collect::<Vec<&str>>()
+                        .join(".");
+
                     self.properties.name = name.to_uppercase();
                     self.properties.domain = name.to_uppercase();
                 }
@@ -138,17 +135,13 @@ impl Domain {
                     self.links = parse_gplink(value[0].to_string());
                 }
                 "isCriticalSystemObject" => {
-                    let mut iscriticalsystemobject = false;
-                    if value[0].contains("TRUE") {
-                        iscriticalsystemobject = true;
-                    }
-                    self.properties.highvalue = iscriticalsystemobject;
+                    self.properties.highvalue = value[0].contains("TRUE");
                 }
                 // The number of computer accounts that a user is allowed to create in a domain.
                 "ms-DS-MachineAccountQuota" => {
                     let machine_account_quota = value[0].parse::<i32>().unwrap_or(0);
                     if machine_account_quota > 0 {
-                        info!("MachineAccountQuota: {}",machine_account_quota.to_string().yellow().bold());
+                        info!("MachineAccountQuota: {}", machine_account_quota.to_string().yellow().bold());
                     }
                 }
                 "IsDeleted" => {
