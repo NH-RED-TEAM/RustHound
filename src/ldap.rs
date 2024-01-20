@@ -5,10 +5,30 @@
 //! rusthound sends only one request to the LDAP server, if the result of this one is higher than the limit of the LDAP server limit it will be split in several requests to avoid having an error 4 (LDAP_SIZELIMIT_EXCEED).
 //!
 //! Example in rust
-//!
 //! ```
-//! let search = ldap_search(...)
+//! # use rusthound::ldap::ldap_search;
+//! # let ldaps = true;
+//! # let ip = Some("127.0.0.1".to_owned());
+//! # let port = Some(676);
+//! # let domain = "DOMAIN".to_owned();
+//! # let ldapfqdn = "domain.com".to_owned();
+//! # let username = "user".to_owned();
+//! # let password = "pwd".to_owned();
+//! # let adcs = false;
+//! # let kerberos = false;
+//! let result = ldap_search(
+//!     ldaps,
+//!     &ip,
+//!     &port,
+//!     &domain,
+//!     &ldapfqdn,
+//!     &username,
+//!     &password,
+//!     adcs,
+//!     kerberos,
+//! );
 //! ```
+
 use crate::errors::{Result};
 use colored::Colorize;
 use ldap3::adapters::{Adapter, EntriesOnly};

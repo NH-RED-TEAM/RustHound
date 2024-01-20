@@ -6,7 +6,7 @@
 //!  RustHound generate users,groups,computers,ous,gpos,containers,domains json files to analyze it with BloodHound application.
 //!  
 //!  You can either run the binary:
-//! ```
+//! ```ignore
 //! ---------------------------------------------------
 //! Initializing RustHound at 13:37:00 UTC on 10/04/22
 //! Powered by g0h4n from OpenCyber
@@ -50,14 +50,26 @@
 //! ```
 //!  Or build your own using the ldap_search() function:
 //!  ```
+//! # use rusthound::ldap::ldap_search;
+//! # let ldaps = true;
+//! # let ip = Some("127.0.0.1".to_owned());
+//! # let port = Some(676);
+//! # let domain = "DOMAIN".to_owned();
+//! # let ldapfqdn = "domain.com".to_owned();
+//! # let username = "user".to_owned();
+//! # let password = "pwd".to_owned();
+//! # let adcs = false;
+//! # let kerberos = false;
 //! let result = ldap_search(
-//!     &ldaps,
+//!     ldaps,
 //!     &ip,
 //!     &port,
 //!     &domain,
 //!     &ldapfqdn,
 //!     &username,
 //!     &password,
+//!     adcs,
+//!     kerberos
 //! );
 //! ```
 //!  Here is an example of how to use rusthound:
