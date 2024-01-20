@@ -249,11 +249,18 @@ pub fn auto_args() -> Options {
     let re = Regex::new(r"port.*= (?<ldap_port>[0-9]{3,})").unwrap();
     let mut values =  re.captures_iter(&_fqdn);
     let caps = values.next().unwrap();
-    let port = caps["ldap_port"].to_string();
-    let mut ldaps: bool = false;
-    if port == "636" {
-        ldaps = true;
-    }
+    let port = match caps["ldap_port"].to_string().parse::<u16>() {
+        Ok(x) => Some(x),
+        Err(_) => None
+    };
+
+    let ldaps: bool = {
+        if let Some(p) = port {
+            p == 636
+        } else {
+            false
+        }
+    };
 
     // Return all
     Options {
@@ -261,8 +268,8 @@ pub fn auto_args() -> Options {
         username: "not set".to_string(),
         password: "not set".to_string(),
         ldapfqdn: fqdn.to_string(),
-        ip: "not set".to_string(),
-        port: port.to_string(),
+        ip: None,
+        port: port,
         name_server: "127.0.0.1".to_string(),
         path: "./output".to_string(),
         ldaps: ldaps,
