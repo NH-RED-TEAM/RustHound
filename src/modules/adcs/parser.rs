@@ -388,7 +388,7 @@ pub fn parse_adcs_template(
         template_json["Properties"]["Any purpose"] = template.any_purpose.to_owned().into();
     }
     
-    // Client Authentification
+    // Client Authentication
     let mut isineku = false;
     for eku in &template.extended_key_usage {
         if vec!["Client Authentication","Smart Card Logon","PKINIT Client Authentication"].contains(&eku.as_str()) {
@@ -438,7 +438,7 @@ lazy_static! {
             ("1.3.6.1.4.1.311.10.3.25", "Windows Third Party Application Component"),
             ("1.3.6.1.4.1.311.21.6", "Key Recovery Agent"),
             ("1.3.6.1.4.1.311.10.3.6", "Windows System Component Verification"),
-            ("1.3.6.1.4.1.311.61.4.1", "Early Launch Antimalware Drive"),
+            ("1.3.6.1.4.1.311.61.4.1", "Early Launch Antimalware Driver"),
             ("1.3.6.1.4.1.311.10.3.23", "Windows TCB Component"),
             ("1.3.6.1.4.1.311.61.1.1", "Kernel Mode Code Signing"),
             ("1.3.6.1.4.1.311.10.3.26", "Windows Software Extension Verification"),
@@ -456,7 +456,7 @@ lazy_static! {
             ("1.3.6.1.4.1.311.10.3.39", "Windows Hardware Driver Extended Verification"),
             ("1.3.6.1.4.1.311.10.6.2", "License Server Verification"),
             ("1.3.6.1.4.1.311.10.3.5.1", "Windows Hardware Driver Attested Verification"),
-            ("1.3.6.1.4.1.311.76.5.1", "Dynamic Code Generato"),
+            ("1.3.6.1.4.1.311.76.5.1", "Dynamic Code Generator"),
             ("1.3.6.1.5.5.7.3.8", "Time Stamping"),
             ("1.3.6.1.4.1.311.10.3.4.1", "File Recovery"),
             ("1.3.6.1.4.1.311.2.6.1", "SpcRelaxedPEMarkerCheck"),
@@ -467,9 +467,9 @@ lazy_static! {
             ("1.3.6.1.4.1.311.61.5.1", "HAL Extension"),
             ("1.3.6.1.5.5.7.3.4", "Secure Email"),
             ("1.3.6.1.5.5.7.3.5", "IP security end system"),
-            ("1.3.6.1.4.1.311.10.3.9", "Root List Signe"),
+            ("1.3.6.1.4.1.311.10.3.9", "Root List Signer"),
             ("1.3.6.1.4.1.311.10.3.30", "Disallowed List"),
-            ("1.3.6.1.4.1.311.10.3.19", "Revoked List Signe"),
+            ("1.3.6.1.4.1.311.10.3.19", "Revoked List Signer"),
             ("1.3.6.1.4.1.311.10.3.21", "Windows RT Verification"),
             ("1.3.6.1.4.1.311.10.3.10", "Qualified Subordination"),
             ("1.3.6.1.4.1.311.10.3.12", "Document Signing"),
@@ -487,7 +487,7 @@ lazy_static! {
             ("1.3.6.1.5.5.7.3.3", "Code Signing"),
             ("1.3.6.1.4.1.311.10.3.1", "Microsoft Trust List Signing"),
             ("1.3.6.1.4.1.311.10.3.2", "Microsoft Time Stamping"),
-            ("1.3.6.1.4.1.311.76.8.1", "Microsoft Publishe"),
+            ("1.3.6.1.4.1.311.76.8.1", "Microsoft Publisher"),
             ("1.3.6.1.5.5.7.3.2", "Client Authentication"),
             ("1.3.6.1.5.2.3.4", "PKIINIT Client Authentication"),
             ("1.3.6.1.4.1.311.10.3.13", "Lifetime Signing"),

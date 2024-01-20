@@ -93,8 +93,8 @@ pub fn add_type_for_ace(vec_replaced: &mut Vec<JsonValue>, sid_type: &HashMap<St
     {
         // Manage progress bar
 		count += 1;
-        let pourcentage = 100 * count / total;
-        progress_bar(pb.to_owned(),"Adding Type for ACE objects".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
+        let percentage = 100 * count / total;
+        progress_bar(pb.to_owned(),"Adding Type for ACE objects".to_string(),percentage.try_into().unwrap(),"%".to_string());
 
         // ACE by ACE
         if vec_replaced[i]["Aces"].as_array().unwrap().len() != 0 {
@@ -121,8 +121,8 @@ pub fn add_type_for_allowtedtoact(vec_replaced: &mut Vec<JsonValue>, sid_type: &
     {
         // Manage progress bar
 		count += 1;
-        let pourcentage = 100 * count / total;
-        progress_bar(pb.to_owned(),"Adding Type for AllowedToAct objects".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
+        let percentage = 100 * count / total;
+        progress_bar(pb.to_owned(),"Adding Type for AllowedToAct objects".to_string(),percentage.try_into().unwrap(),"%".to_string());
 
         if vec_replaced[i]["AllowedToAct"].as_array().unwrap().len() != 0 {
             for j in 0..vec_replaced[i]["AllowedToAct"].as_array().unwrap().len()

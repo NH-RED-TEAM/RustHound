@@ -85,7 +85,7 @@ pub async fn ldap_search(
                 process::exit(0x0100);
             }
         } else {
-            error!("Need Domain Controler FQDN to bind GSSAPI connection. Please use '{}'\n", "-f DC01.DOMAIN.LAB".bold());
+            error!("Need Domain Controller FQDN to bind GSSAPI connection. Please use '{}'\n", "-f DC01.DOMAIN.LAB".bold());
             process::exit(0x0100);
         }
     }

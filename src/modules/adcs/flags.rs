@@ -176,7 +176,7 @@ pub fn get_pki_enrollment_flags(
     }
     if (PkiEnrollmentFlag::CT_FLAG_DOMAIN_AUTHENTICATION_NOT_REQUIRED.bits() | value) == value
     {
-        flags.push("CtFlagDomainAuthentificationNotRequired");
+        flags.push("CtFlagDomainAuthenticationNotRequired");
     }
     if (PkiEnrollmentFlag::PREVIOUS_APPROVAL_VALIDATE_REENROLLMENT.bits() | value) == value
     {
@@ -208,7 +208,7 @@ pub fn get_pki_enrollment_flags(
     }
     if (PkiEnrollmentFlag::NOREVOCATIONINFOINISSUEDCERTS.bits() | value) == value
     {
-        flags.push("NorevocationInforInIssuedCerts");
+        flags.push("NorevocationInfoInIssuedCerts");
     }
     if (PkiEnrollmentFlag::INCLUDE_BASIC_CONSTRAINTS_FOR_EE_CERTS.bits() | value) == value
     {
@@ -300,7 +300,7 @@ pub fn get_pki_private_flags(
     }
     if (PkiPrivateKeyFlag::ATTEST_PREFERRED.bits() | value) == value
     {
-        flags.push("AttestPrefeered");
+        flags.push("AttestPreferred");
     }
     if (PkiPrivateKeyFlag::ATTESTATION_WITHOUT_POLICY.bits() | value) == value
     {

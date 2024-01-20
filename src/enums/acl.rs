@@ -408,14 +408,14 @@ fn build_relation(
     acetype: String,
     inherited: bool,
 ) -> serde_json::value::Value {
-    let mut relation_builded = bh_41::prepare_acl_relation_template();
+    let mut acl_relation = bh_41::prepare_acl_relation_template();
 
-    relation_builded["RightName"] = relation.to_owned().into();
-    relation_builded["IsInherited"] = inherited.to_owned().into();
-    relation_builded["PrincipalType"] = acetype.to_owned().into();
-    relation_builded["PrincipalSID"] = sid.to_owned().into();
+    acl_relation["RightName"] = relation.to_owned().into();
+    acl_relation["IsInherited"] = inherited.to_owned().into();
+    acl_relation["PrincipalType"] = acetype.to_owned().into();
+    acl_relation["PrincipalSID"] = sid.to_owned().into();
 
-    return relation_builded;
+    return acl_relation;
 }
 
 /// Checks if the access is sufficient to write to a specific property.

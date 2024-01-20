@@ -66,7 +66,7 @@ fn cli() -> Command {
         .arg(Arg::new("ldapfqdn")
             .short('f')
             .long("ldapfqdn")
-            .help("Domain Controler FQDN like: DC01.DOMAIN.LOCAL or just DC01")
+            .help("Domain Controller FQDN like: DC01.DOMAIN.LOCAL or just DC01")
             .required(false)
             .value_parser(value_parser!(String))
         )

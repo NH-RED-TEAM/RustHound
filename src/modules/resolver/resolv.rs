@@ -37,7 +37,7 @@ pub async fn resolving_all_fqdn(
    info!("Resolving FQDN to IP address finished!");
 }
 
-/// Asynchron function to resolve IP address from the ldap FQDN
+/// Asynchronous function to resolve IP address from the ldap FQDN
 pub async fn resolver(
    fqdn: String,
    dns_tcp: bool, 
