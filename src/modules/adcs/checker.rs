@@ -78,11 +78,19 @@ async fn web_enrollment(
 ) -> Result<String, String> {
 
     debug!("Checking web enrollment on {}",&target);
+
     let ip = resolv::resolver(
         target.to_owned(),
         dns_tcp,
         name_server).await;
+
+    let ip = match ip {
+        Some(x) => x,
+        None => {return Err("Could not resolve ADCS host".to_owned())}
+    };
+
     let url = format!("http://{}/certsrv/",target);
+
     trace!("Resolved {} to {}",&target,&ip);
 
     if let Ok(mut stream) = TcpStream::connect(format!("{}:80",&ip)) 
