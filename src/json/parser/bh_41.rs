@@ -316,9 +316,8 @@ pub fn parse_user(
     if let id = group_id {
         let re = Regex::new(r"S-.*-").unwrap();
         let part1 = re.find(&sid).unwrap();
-        let mut primary_group_id: String = "".to_owned();
-        primary_group_id.push_str(&part1.as_str());
-        primary_group_id.push_str(&id.as_str());
+
+        let primary_group_id = format!("{}{}", part1.as_str(), id);
         user_json["PrimaryGroupSID"] = primary_group_id.to_owned().into();
     }
 
@@ -779,9 +778,9 @@ pub fn parse_computer(
     if let id = group_id {
         let re = Regex::new(r"S-.*-").unwrap();
         let part1 = re.find(&sid).unwrap();
-        let mut primary_group_id: String = "".to_owned();
-        primary_group_id.push_str(&part1.as_str());
-        primary_group_id.push_str(&id.as_str());
+
+        let primary_group_id = format!("{}{}", part1.as_str(), id);
+
         computer_json["PrimaryGroupSID"] = primary_group_id.to_owned().into();
     }
 
@@ -981,16 +980,14 @@ pub fn parse_domain(
             "distinguishedName" => {
                 // name & domain & distinguishedname
                 domain_json["Properties"]["distinguishedname"] = value[0].to_owned().to_uppercase().into();
-                let split = value[0].split(",");
-                let vec = split.collect::<Vec<&str>>();
-                let first = vec[0].split("DC=");
-                let vec1 = first.collect::<Vec<&str>>();
-                let last = vec[1].split("DC=");
-                let vec2 = last.collect::<Vec<&str>>();
-                let mut name = "".to_string();
-                name.push_str(vec1[1]);
-                name.push_str(".");
-                name.push_str(vec2[1]);
+
+                let name = value[0]
+                    .split(",")
+                    .filter(|x| x.starts_with("DC="))
+                    .map(|x| x.strip_prefix("DC=").unwrap_or(""))
+                    .collect::<Vec<&str>>()
+                    .join(".");
+
                 domain_json["Properties"]["name"] = name.to_uppercase().into();
                 domain_json["Properties"]["domain"] = name.to_uppercase().into();
             }
@@ -1008,15 +1005,14 @@ pub fn parse_domain(
                 domain_json["Links"] = parse_gplink(value[0].to_string()).into();
             }
             "isCriticalSystemObject" => {
-                let mut iscriticalsystemobject = false;
-                if value[0].contains("TRUE") {
-                    iscriticalsystemobject = true;
-                }
+                let iscriticalsystemobject = value[0].contains("TRUE");
+
                 domain_json["Properties"]["highvalue"] = iscriticalsystemobject.into();
             }
             // The number of computer accounts that a user is allowed to create in a domain.
             "ms-DS-MachineAccountQuota" => {
                 let machine_account_quota = value[0].parse::<i32>().unwrap_or(0);
+
                 if machine_account_quota > 0 {
                     info!("MachineAccountQuota: {}",machine_account_quota.to_string().yellow().bold());
                 }

@@ -6,7 +6,8 @@ pub fn convert_timestamp(timestamp: i64) -> i64
 {
     let offset: i64 = 134774*24*60*60;
     let epoch: i64 = timestamp/10000000-offset;
-    return epoch
+
+    epoch
 }
 
 pub fn string_to_epoch(date: &String) -> i64 {
@@ -15,26 +16,24 @@ pub fn string_to_epoch(date: &String) -> i64 {
     let vec = split.collect::<Vec<&str>>();
     let date = NaiveDateTime::parse_from_str(&vec[0],"%Y%m%d%H%M%S").unwrap();
     //trace!("whencreated timestamp: {:?}", date.timestamp());
-    return date.timestamp()
+
+    date.timestamp()
 }
 
 /// Function to return current hours.
 pub fn return_current_time() -> String
 {
-    let now = Local::now();
-    return now.format("%T").to_string()
+    Local::now().format("%T").to_string()
 }
 
 /// Function to return current date.
 pub fn return_current_date() -> String
 {
-    let now = Local::now();
-    return now.format("%D").to_string()
+    Local::now().format("%D").to_string()
 }
 
 /// Function to return current date.
 pub fn return_current_fulldate() -> String
 {
-    let now = Local::now();
-    return now.format("%Y%m%d%H%M%S").to_string()
+    Local::now().format("%Y%m%d%H%M%S").to_string()
 }

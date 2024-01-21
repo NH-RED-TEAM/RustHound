@@ -10,25 +10,22 @@ pub fn parse_gplink(all_link: String) -> Vec<serde_json::value::Value>
    let mut cpaths: Vec<String> = Vec::new();
    for cpath in re.captures_iter(&all_link)
    {
-      cpaths.push(cpath[0].to_owned().to_string());
+      cpaths.push(cpath[0].to_owned());
    }
 
    let re2 = Regex::new(r"[;][0-4]{1}").unwrap();
    let mut status: Vec<String> = Vec::new();
    for enforced in re2.captures_iter(&all_link){
-      status.push(enforced[0].to_owned().to_string());
+      status.push(enforced[0].to_owned());
    }
-
+   
    for i in 0..cpaths.len()
    {
       let mut gplink = prepare_gplink_json_template();
-      gplink["GUID"] = cpaths[i].to_string().into();
+      gplink["GUID"] = cpaths[i].to_owned().into();
       
       // Thanks to: https://techibee.com/group-policies/find-link-status-and-enforcement-status-of-group-policies-using-powershell/2424
-      if status[i].to_string().contains(";2"){
-         gplink["IsEnforced"] = true.into();
-      }
-      if status[i].to_string().contains(";3"){
+      if status[i].contains(";2") || status[i].contains(";3") {
          gplink["IsEnforced"] = true.into();
       }
 

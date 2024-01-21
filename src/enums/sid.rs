@@ -3,27 +3,20 @@ use log::{trace,error};
 
 /// Function to make SID String from ldap_sid struct
 pub fn sid_maker(sid: LdapSid, domain: &String) -> String {
-    let mut sub: String = "".to_owned();
     trace!("sid_maker before: {:?}",&sid);
-    for v in &sid.sub_authority {
-        sub.push_str(&"-".to_owned());
-        sub.push_str(&v.to_string());
-    }
 
-    let mut result: String = "S-".to_owned();
-    result.push_str(&sid.revision.to_string());
-    result.push_str(&"-");
-    result.push_str(&sid.identifier_authority.value[5].to_string());
-    result.push_str(&sub);
+    let sub = sid.sub_authority.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("-");
 
-    let mut final_sid: String = "".to_owned();
-    if result.len() <= 16 {
-        final_sid.push_str(&domain.to_uppercase());
-        final_sid.push_str(&"-".to_owned());
-        final_sid.push_str(&result.to_owned());
-    } else {
-        final_sid = result;
-    }
+    let result = format!("S-{}-{}-{}", sid.revision, sid.identifier_authority.value[5], sub);
+
+    let final_sid = {
+        if result.len() <= 16 {
+            format!("{}-{}", domain.to_uppercase(), result.to_owned())
+        } else {
+            result
+        }
+    };
+
     trace!("sid_maker value: {}",final_sid);
     if final_sid.contains("S-0-0"){
         error!("SID contains null bytes!\n[INPUT: {:?}]\n[OUTPUT: {}]", &sid, final_sid);
@@ -34,12 +27,7 @@ pub fn sid_maker(sid: LdapSid, domain: &String) -> String {
 /// Change SID value to correct format.
 pub fn objectsid_to_vec8(sid: &String) -> Vec<u8>
 {
-    // \u{1} to vec parsable 
-    let mut vec_sid: Vec<u8> = Vec::new();
-    for value in sid.as_bytes() {
-        vec_sid.push(*value);
-    }
-    return vec_sid
+    sid.as_bytes().iter().map(|x| *x).collect::<Vec<u8>>()
 }
 
 /// Function to decode objectGUID binary to string value. 
@@ -49,66 +37,27 @@ pub fn decode_guid(raw_guid: &Vec<u8>) -> String
 {
     // A byte-based String representation in the form of \[0]\[1]\[2]\[3]\[4]\[5]\[6]\[7]\[8]\[9]\[10]\[11]\[12]\[13]\[14]\[15]
     // A string representing the decoded value in the form of [3][2][1][0]-[5][4]-[7][6]-[8][9]-[10][11][12][13][14][15].
-    let mut str_guid: String = "".to_owned();
 
-    let mut part1 = vec![];
-    part1.push(raw_guid[3] & 0xFF);
-    part1.push(raw_guid[2] & 0xFF);
-    part1.push(raw_guid[1] & 0xFF);
-    part1.push(raw_guid[0] & 0xFF);
-    str_guid.push_str(&hex_push(&part1));
+    let raw_guid = raw_guid.iter().map(|x| x & 0xFF).collect::<Vec<u8>>();
+    let rev = | x: &[u8] | -> Vec<u8> { x.iter().map(|i| *i).rev().collect::<Vec<u8>>()};
 
-    str_guid.push_str("-");
+    // Note slice syntax means up to the second number, but not including, so [0..4] is [0, 1, 2, 3] for example.
+    let str_guid = format!(
+        "{}-{}-{}-{}-{}",
+        &hex_push(&rev(&raw_guid[0..4])),
+        &hex_push(&rev(&raw_guid[4..6])),
+        &hex_push(&rev(&raw_guid[6..8])),
+        &hex_push(&raw_guid[8..10]),
+        &hex_push(&raw_guid[10..16]),
+    );
 
-    let mut part2 = vec![];
-    part2.push(raw_guid[5] & 0xFF);
-    part2.push(raw_guid[4] & 0xFF);
-    str_guid.push_str(&hex_push(&part2));
-
-    str_guid.push_str("-");
-
-    let mut part3 = vec![];
-    part3.push(raw_guid[7] & 0xFF);
-    part3.push(raw_guid[6] & 0xFF);
-    str_guid.push_str(&hex_push(&part3));
-
-    str_guid.push_str("-");
-
-    let mut part4 = vec![];
-    part4.push(raw_guid[8] & 0xFF);
-    part4.push(raw_guid[9] & 0xFF);
-    str_guid.push_str(&hex_push(&part4));
-
-    str_guid.push_str("-");
-
-    let mut part5 = vec![];
-    part5.push(raw_guid[10] & 0xFF);
-    part5.push(raw_guid[11] & 0xFF);
-    part5.push(raw_guid[12] & 0xFF);
-    part5.push(raw_guid[13] & 0xFF);
-    part5.push(raw_guid[14] & 0xFF);
-    part5.push(raw_guid[15] & 0xFF);
-    str_guid.push_str(&hex_push(&part5));
-
-    return str_guid  
+    str_guid
 }
 
 /// Function to get a hexadecimal representation from bytes
-/// Thanks to: <https://newbedev.com/how-do-i-convert-a-string-to-hex-in-rust>
 pub fn hex_push(blob: &[u8]) -> String {
-    let mut buf: String = "".to_owned();
-    for ch in blob {
-        fn hex_from_digit(num: u8) -> char {
-            if num < 10 {
-                (b'0' + num) as char
-            } else {
-                (b'A' + num - 10) as char
-            }
-        }
-        buf.push(hex_from_digit(ch / 16));
-        buf.push(hex_from_digit(ch % 16));
-    }
-    return buf;
+    // For each char in blob, get the capitalised hexadecimal representation (:X) and collect that into a String
+    blob.iter().map(|x| format!("{:X}", x)).collect::<String>()
 }
 
 
@@ -120,48 +69,19 @@ pub fn bin_to_string(raw_guid: &Vec<u8>) -> String
     // after: bf 96 7a ba - 0d e6 - 11 d0 - a2 85 - 00 aa 00 30 49 e2
     //        12 13 14 15   10 11   8  9    7  6    5  4  3  2  1  0 
 
-    let mut str_guid: String = "".to_owned();
+    let raw_guid = raw_guid.iter().map(|x| x & 0xFF).collect::<Vec<u8>>();
+    let rev = | x: &[u8] | -> Vec<u8> { x.iter().map(|i| *i).collect::<Vec<u8>>()};
 
-    let mut part1 = vec![];
-    part1.push(raw_guid[12] & 0xFF);
-    part1.push(raw_guid[13] & 0xFF);
-    part1.push(raw_guid[14] & 0xFF);
-    part1.push(raw_guid[15] & 0xFF);
-    str_guid.push_str(&hex_push(&part1));
+    let str_guid = format!(
+        "{}-{}-{}-{}-{}",
+        &hex_push(&raw_guid[12..16]),
+        &hex_push(&raw_guid[10..12]),
+        &hex_push(&raw_guid[8..10]),
+        &hex_push(&rev(&raw_guid[6..8])),
+        &hex_push(&rev(&raw_guid[0..6]))
+    );
 
-    str_guid.push_str("-");
-
-    let mut part2 = vec![];
-    part2.push(raw_guid[10] & 0xFF);
-    part2.push(raw_guid[11] & 0xFF);
-    str_guid.push_str(&hex_push(&part2));
-
-    str_guid.push_str("-");
-
-    let mut part3 = vec![];
-    part3.push(raw_guid[8] & 0xFF);
-    part3.push(raw_guid[9] & 0xFF);
-    str_guid.push_str(&hex_push(&part3));
-
-    str_guid.push_str("-");
-
-    let mut part4 = vec![];
-    part4.push(raw_guid[7] & 0xFF);
-    part4.push(raw_guid[6] & 0xFF);
-    str_guid.push_str(&hex_push(&part4));
-
-    str_guid.push_str("-");
-
-    let mut part5 = vec![];
-    part5.push(raw_guid[5] & 0xFF);
-    part5.push(raw_guid[4] & 0xFF);
-    part5.push(raw_guid[3] & 0xFF);
-    part5.push(raw_guid[2] & 0xFF);
-    part5.push(raw_guid[1] & 0xFF);
-    part5.push(raw_guid[0] & 0xFF);
-    str_guid.push_str(&hex_push(&part5));
-
-    return str_guid  
+   return str_guid  
 }
 
 /* Another way to decode objectSID binary to string value. 

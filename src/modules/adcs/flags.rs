@@ -23,7 +23,7 @@ bitflags! {
     }
 }
 
-/// Get the PKI flags from "msPKI-Certificate-Name-Flag" LDAP attribut.
+/// Get the PKI flags from "msPKI-Certificate-Name-Flag" LDAP attribute.
 /// MS: <https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-crtd/1192823c-d839-4bc3-9b6b-fa8c53507ae1>
 pub fn get_pki_cert_name_flags(
     template: &mut Template,
@@ -31,7 +31,7 @@ pub fn get_pki_cert_name_flags(
     value: u64,
 ) -> Vec<String>
 {
-    let mut flags: Vec<String> = Vec::new();
+    let mut flags: Vec<&str> = Vec::new();
 
     if (PkiCertificateNameFlag::NONE.bits() | value) == value
     {
@@ -39,71 +39,72 @@ pub fn get_pki_cert_name_flags(
     }
     if (PkiCertificateNameFlag::ENROLLEE_SUPPLIES_SUBJECT.bits() | value) == value
     {
-        flags.push("EnrolleeSuppliesSubject".to_string());
+        flags.push("EnrolleeSuppliesSubject");
         template.enrollee_supplies_subject = true;
         template_json["Properties"]["Enrollee Supplies Subject"] = template.enrollee_supplies_subject.to_owned().into();
     }
     if (PkiCertificateNameFlag::ADD_EMAIL.bits() | value) == value
     {
-        flags.push("AddEmail".to_string());
+        flags.push("AddEmail");
     }
     if (PkiCertificateNameFlag::ADD_OBJ_GUID.bits() | value) == value
     {
-        flags.push("AddObjGuid".to_string());
+        flags.push("AddObjGuid");
     }
     if (PkiCertificateNameFlag::OLD_CERT_SUPPLIES_SUBJECT_AND_ALT_NAME.bits() | value) == value
     {
-        flags.push("OldCertSuppliesSubjectAndAltName".to_string());
+        flags.push("OldCertSuppliesSubjectAndAltName");
     }
     if (PkiCertificateNameFlag::ADD_DIRECTORY_PATH.bits() | value) == value
     {
-        flags.push("AddDirectoryPath".to_string());
+        flags.push("AddDirectoryPath");
     }
     if (PkiCertificateNameFlag::ENROLLEE_SUPPLIES_SUBJECT_ALT_NAME.bits() | value) == value
     {
-        flags.push("EnrolleeSuppliesSubjectAltName".to_string());
+        flags.push("EnrolleeSuppliesSubjectAltName");
     }
     if (PkiCertificateNameFlag::SUBJECT_ALT_REQUIRE_DOMAIN_DNS.bits() | value) == value
     {
-        flags.push("SubjectAltRequireDomainDns".to_string());
+        flags.push("SubjectAltRequireDomainDns");
     }
     if (PkiCertificateNameFlag::SUBJECT_ALT_REQUIRE_SPN.bits() | value) == value
     {
-        flags.push("SubjectAltRequireSpn".to_string());
+        flags.push("SubjectAltRequireSpn");
     }
     if (PkiCertificateNameFlag::SUBJECT_ALT_REQUIRE_DIRECTORY_GUID.bits() | value) == value
     {
-        flags.push("SubjectAltRequireGuid".to_string());
+        flags.push("SubjectAltRequireGuid");
     }
     if (PkiCertificateNameFlag::SUBJECT_ALT_REQUIRE_UPN.bits() | value) == value
     {
-        flags.push("SubjectAltRequireUpn".to_string());
+        flags.push("SubjectAltRequireUpn");
     }
     if (PkiCertificateNameFlag::SUBJECT_ALT_REQUIRE_EMAIL.bits() | value) == value
     {
-        flags.push("SubjectAltRequireEmail".to_string());
+        flags.push("SubjectAltRequireEmail");
     }
     if (PkiCertificateNameFlag::SUBJECT_ALT_REQUIRE_DNS.bits() | value) == value
     {
-        flags.push("SubjectAltRequireDns".to_string());
+        flags.push("SubjectAltRequireDns");
     }
     if (PkiCertificateNameFlag::SUBJECT_REQUIRE_DNS_AS_CN.bits() | value) == value
     {
-        flags.push("SubjectRequireDnsAsCn".to_string());
+        flags.push("SubjectRequireDnsAsCn");
     }
     if (PkiCertificateNameFlag::SUBJECT_REQUIRE_EMAIL.bits() | value) == value
     {
-        flags.push("SubjectRequireEmail".to_string());
+        flags.push("SubjectRequireEmail");
     }
     if (PkiCertificateNameFlag::SUBJECT_REQUIRE_COMMON_NAME.bits() | value) == value
     {
-        flags.push("SubjectRequireCommonName".to_string());
+        flags.push("SubjectRequireCommonName");
     }
     if (PkiCertificateNameFlag::SUBJECT_REQUIRE_DIRECTORY_PATH.bits() | value) == value
     {
-        flags.push("SubjectRequireDirectoryPath".to_string());
+        flags.push("SubjectRequireDirectoryPath");
     }
-    return flags
+
+    return flags.iter().map(|x| x.to_string()).collect::<Vec<String>>();
 }
 
 
@@ -133,7 +134,7 @@ bitflags! {
     }
 }
 
-/// Get the PKI flags from "msPKI-Enrollment-Flag" LDAP attribut.
+/// Get the PKI flags from "msPKI-Enrollment-Flag" LDAP attribute.
 /// MS: <https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-crtd/ec71fd43-61c2-407b-83c9-b52272dec8a1>
 pub fn get_pki_enrollment_flags(
     template: &mut Template,
@@ -141,7 +142,7 @@ pub fn get_pki_enrollment_flags(
     value: u64,
 ) -> Vec<String>
 {
-    let mut flags: Vec<String> = Vec::new();
+    let mut flags: Vec<&str> = Vec::new();
 
     if (PkiEnrollmentFlag::NONE.bits() | value) == value
     {
@@ -149,88 +150,89 @@ pub fn get_pki_enrollment_flags(
     }
     if (PkiEnrollmentFlag::INCLUDE_SYMMETRIC_ALGORITHMS.bits() | value) == value
     {
-        flags.push("IncludeSymmetricAlgorithms".to_string());
+        flags.push("IncludeSymmetricAlgorithms");
     }
     if (PkiEnrollmentFlag::PEND_ALL_REQUESTS.bits() | value) == value
     {
-        flags.push("PendAllRequests".to_string());
+        flags.push("PendAllRequests");
         template.requires_manager_approval = true;
         template_json["Properties"]["Requires Manager Approval"] = template.requires_manager_approval.to_owned().into();
     }
     if (PkiEnrollmentFlag::PUBLISH_TO_KRA_CONTAINER.bits() | value) == value
     {
-        flags.push("PublishToKraContainer".to_string());
+        flags.push("PublishToKraContainer");
     }
     if (PkiEnrollmentFlag::PUBLISH_TO_DS.bits() | value) == value
     {
-        flags.push("PublishToDs".to_string());
+        flags.push("PublishToDs");
     }
     if (PkiEnrollmentFlag::AUTO_ENROLLMENT_CHECK_USER_DS_CERTIFICATE.bits() | value) == value
     {
-        flags.push("AutoEnrollmentCheckUserDsCertificate".to_string());
+        flags.push("AutoEnrollmentCheckUserDsCertificate");
     }
     if (PkiEnrollmentFlag::AUTO_ENROLLMENT.bits() | value) == value
     {
-        flags.push("AutoEnrollment".to_string());
+        flags.push("AutoEnrollment");
     }
     if (PkiEnrollmentFlag::CT_FLAG_DOMAIN_AUTHENTICATION_NOT_REQUIRED.bits() | value) == value
     {
-        flags.push("CtFlagDomainAuthentificationNotRequired".to_string());
+        flags.push("CtFlagDomainAuthenticationNotRequired");
     }
     if (PkiEnrollmentFlag::PREVIOUS_APPROVAL_VALIDATE_REENROLLMENT.bits() | value) == value
     {
-        flags.push("PreviousApprovalValidateReenrollment".to_string());
+        flags.push("PreviousApprovalValidateReenrollment");
     }
     if (PkiEnrollmentFlag::USER_INTERACTION_REQUIRED.bits() | value) == value
     {
-        flags.push("UserInteractionRequired".to_string());
+        flags.push("UserInteractionRequired");
     }
     if (PkiEnrollmentFlag::ADD_TEMPLATE_NAME.bits() | value) == value
     {
-        flags.push("AddTemplateName".to_string());
+        flags.push("AddTemplateName");
     }
     if (PkiEnrollmentFlag::REMOVE_INVALID_CERTIFICATE_FROM_PERSONAL_STORE.bits() | value) == value
     {
-        flags.push("RemoveInvalidCertificateFromPersonalStore".to_string());
+        flags.push("RemoveInvalidCertificateFromPersonalStore");
     }
     if (PkiEnrollmentFlag::ALLOW_ENROLL_ON_BEHALF_OF.bits() | value) == value
     {
-        flags.push("AllowEnrollOnBehalfOf".to_string());
+        flags.push("AllowEnrollOnBehalfOf");
     }
     if (PkiEnrollmentFlag::ADD_OCSP_NOCHECK.bits() | value) == value
     {
-        flags.push("AddOcspNocheck".to_string());
+        flags.push("AddOcspNocheck");
     }
     if (PkiEnrollmentFlag::ENABLE_KEY_REUSE_ON_NT_TOKEN_KEYSET_STORAGE_FULL.bits() | value) == value
     {
-        flags.push("EnbaleKeyReuseOnNtTokenKeysetStorageFull".to_string());
+        flags.push("EnableKeyReuseOnNtTokenKeysetStorageFull");
     }
     if (PkiEnrollmentFlag::NOREVOCATIONINFOINISSUEDCERTS.bits() | value) == value
     {
-        flags.push("NorevocationInforInIssuedCerts".to_string());
+        flags.push("NorevocationInfoInIssuedCerts");
     }
     if (PkiEnrollmentFlag::INCLUDE_BASIC_CONSTRAINTS_FOR_EE_CERTS.bits() | value) == value
     {
-        flags.push("IncludeBasicConstraintsForEeCerts".to_string());
+        flags.push("IncludeBasicConstraintsForEeCerts");
     }
     if (PkiEnrollmentFlag::ALLOW_PREVIOUS_APPROVAL_KEYBASEDRENEWAL_VALIDATE_REENROLLMENT.bits() | value) == value
     {
-        flags.push("AllowPreviousApprovalKeybasedrenewalValidateReenrollment".to_string());
+        flags.push("AllowPreviousApprovalKeybasedrenewalValidateReenrollment");
     }
     if (PkiEnrollmentFlag::ISSUANCE_POLICIES_FROM_REQUEST.bits() | value) == value
     {
-        flags.push("IssuancePoliciesFromRequest".to_string());
+        flags.push("IssuancePoliciesFromRequest");
     }
     if (PkiEnrollmentFlag::SKIP_AUTO_RENEWAL.bits() | value) == value
     {
-        flags.push("SkipAutoRenewal".to_string());
+        flags.push("SkipAutoRenewal");
     }
     if (PkiEnrollmentFlag::NO_SECURITY_EXTENSION.bits() | value) == value
     {
-        flags.push("NoSecurityExtension".to_string());
+        flags.push("NoSecurityExtension");
         template.no_security_extension = true;
     }
-    return flags
+
+    return flags.iter().map(|x| x.to_string()).collect::<Vec<String>>();
 }
 
 bitflags! {
@@ -252,7 +254,7 @@ bitflags! {
     }
 }
 
-/// Get the PKI flags from "msPKI-Private-Key-Flag" LDAP attribut.
+/// Get the PKI flags from "msPKI-Private-Key-Flag" LDAP attribute.
 /// MS: <https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-crtd/f6122d87-b999-4b92-bff8-f465e8949667>
 pub fn get_pki_private_flags(
     template: &mut Template,
@@ -260,65 +262,65 @@ pub fn get_pki_private_flags(
     value: u64,
 ) -> Vec<String>
 {
-    let mut flags: Vec<String> = Vec::new();
+    let mut flags: Vec<&str> = Vec::new();
 
     if (PkiPrivateKeyFlag::REQUIRE_PRIVATE_KEY_ARCHIVAL.bits() | value) == value
     {
-        flags.push("RequirePrivateKeyArchival".to_string());
+        flags.push("RequirePrivateKeyArchival");
         template.requires_key_archival = true;
         template_json["Properties"]["Requires Key Archival"] = template.requires_key_archival.to_owned().into();
     }
     if (PkiPrivateKeyFlag::EXPORTABLE_KEY.bits() | value) == value
     {
-        flags.push("ExportableKey".to_string());
+        flags.push("ExportableKey");
     }
     if (PkiPrivateKeyFlag::STRONG_KEY_PROTECTION_REQUIRED.bits() | value) == value
     {
-        flags.push("StringKeyProtectionRequired".to_string());
+        flags.push("StringKeyProtectionRequired");
     }
     if (PkiPrivateKeyFlag::REQUIRE_ALTERNATE_SIGNATURE_ALGORITHM.bits() | value) == value
     {
-        flags.push("RequireAlternateSignatureAlgorithm".to_string());
+        flags.push("RequireAlternateSignatureAlgorithm");
     }
     if (PkiPrivateKeyFlag::REQUIRE_SAME_KEY_RENEWAL.bits() | value) == value
     {
-        flags.push("RequireSameKeyRenewal".to_string());
+        flags.push("RequireSameKeyRenewal");
     }
     if (PkiPrivateKeyFlag::USE_LEGACY_PROVIDER.bits() | value) == value
     {
-        flags.push("UseLegacyProvider".to_string());
+        flags.push("UseLegacyProvider");
     }
     if (PkiPrivateKeyFlag::ATTEST_NONE.bits() | value) == value
     {
-        flags.push("AttestNone".to_string());
+        flags.push("AttestNone");
     }
     if (PkiPrivateKeyFlag::ATTEST_REQUIRED.bits() | value) == value
     {
-        flags.push("AttestRequired".to_string());
+        flags.push("AttestRequired");
     }
     if (PkiPrivateKeyFlag::ATTEST_PREFERRED.bits() | value) == value
     {
-        flags.push("AttestPrefeered".to_string());
+        flags.push("AttestPreferred");
     }
     if (PkiPrivateKeyFlag::ATTESTATION_WITHOUT_POLICY.bits() | value) == value
     {
-        flags.push("AttestationWithoutPolicy".to_string());
+        flags.push("AttestationWithoutPolicy");
     }
     if (PkiPrivateKeyFlag::EK_TRUST_ON_USE.bits() | value) == value
     {
-        flags.push("EkTrustOnUse".to_string());
+        flags.push("EkTrustOnUse");
     }
     if (PkiPrivateKeyFlag::EK_VALIDATE_CERT.bits() | value) == value
     {
-        flags.push("EkValidateCert".to_string());
+        flags.push("EkValidateCert");
     }
     if (PkiPrivateKeyFlag::EK_VALIDATE_KEY.bits() | value) == value
     {
-        flags.push("EkValidateKey".to_string());
+        flags.push("EkValidateKey");
     }
     if (PkiPrivateKeyFlag::HELLO_LOGON_KEY.bits() | value) == value
     {
-        flags.push("HelloLogonKey".to_string());
+        flags.push("HelloLogonKey");
     }
-    return flags
+    return flags.iter().map(|x| x.to_string()).collect::<Vec<String>>();
 }

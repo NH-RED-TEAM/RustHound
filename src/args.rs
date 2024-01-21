@@ -15,8 +15,8 @@ pub struct Options {
     pub username: String,
     pub password: String,
     pub ldapfqdn: String,
-    pub ip: String,
-    pub port: String,
+    pub ip: Option<String>,
+    pub port: Option<u16>,
     pub name_server: String,
     pub path: String,
     pub ldaps: bool,
@@ -66,7 +66,7 @@ fn cli() -> Command {
         .arg(Arg::new("ldapfqdn")
             .short('f')
             .long("ldapfqdn")
-            .help("Domain Controler FQDN like: DC01.DOMAIN.LOCAL or just DC01")
+            .help("Domain Controller FQDN like: DC01.DOMAIN.LOCAL or just DC01")
             .required(false)
             .value_parser(value_parser!(String))
         )
@@ -172,8 +172,19 @@ pub fn extract_args() -> Options {
     let u = matches.get_one::<String>("ldapusername").map(|s| s.as_str()).unwrap_or("not set");
     let p = matches.get_one::<String>("ldappassword").map(|s| s.as_str()).unwrap_or("not set");
     let f = matches.get_one::<String>("ldapfqdn").map(|s| s.as_str()).unwrap_or("not set");
-    let ip = matches.get_one::<String>("ldapip").map(|s| s.as_str()).unwrap_or("not set");
-    let port = matches.get_one::<String>("ldapport").map(|s| s.as_str()).unwrap_or("not set");
+
+    let ip = matches.get_one::<String>("ldapip").map(|s| s.clone());
+
+    let port = match matches.get_one::<String>("ldapport") {
+        Some(val) => {
+            match val.parse::<u16>() {
+                Ok(x) => Some(x),
+                Err(_) => None,
+            }
+        },
+        None => None
+    };
+
     let n = matches.get_one::<String>("name-server").map(|s| s.as_str()).unwrap_or("not set");
     let path = matches.get_one::<String>("output").map(|s| s.as_str()).unwrap_or("./");
     let ldaps = matches.get_one::<bool>("ldaps").map(|s| s.to_owned()).unwrap_or(false);
@@ -196,8 +207,8 @@ pub fn extract_args() -> Options {
         username: u.to_string(),
         password: p.to_string(),
         ldapfqdn: f.to_string(),
-        ip: ip.to_string(),
-        port: port.to_string(),
+        ip: ip,
+        port: port,
         name_server: n.to_string(),
         path: path.to_string(),
         ldaps: ldaps,
@@ -238,11 +249,18 @@ pub fn auto_args() -> Options {
     let re = Regex::new(r"port.*= (?<ldap_port>[0-9]{3,})").unwrap();
     let mut values =  re.captures_iter(&_fqdn);
     let caps = values.next().unwrap();
-    let port = caps["ldap_port"].to_string();
-    let mut ldaps: bool = false;
-    if port == "636" {
-        ldaps = true;
-    }
+    let port = match caps["ldap_port"].to_string().parse::<u16>() {
+        Ok(x) => Some(x),
+        Err(_) => None
+    };
+
+    let ldaps: bool = {
+        if let Some(p) = port {
+            p == 636
+        } else {
+            false
+        }
+    };
 
     // Return all
     Options {
@@ -250,8 +268,8 @@ pub fn auto_args() -> Options {
         username: "not set".to_string(),
         password: "not set".to_string(),
         ldapfqdn: fqdn.to_string(),
-        ip: "not set".to_string(),
-        port: port.to_string(),
+        ip: None,
+        port: port,
         name_server: "127.0.0.1".to_string(),
         path: "./output".to_string(),
         ldaps: ldaps,
