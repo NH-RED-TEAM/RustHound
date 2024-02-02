@@ -333,7 +333,7 @@ impl User {
                   let res = X509Certificate::from_der(&value[0]);
                   match res {
                      Ok((_rem, cert)) => {
-                        info!("ADCS found {}, use {} args to collect the certificate templates and certificate authority.",cert.issuer().to_string().replace(" ","").bold().green(),&"--adcs".bold().yellow());
+                        // info!("ADCS found {}, use {} args to collect the certificate templates and certificate authority.",cert.issuer().to_string().replace(" ","").bold().green(),&"--adcs".bold().yellow());
                      },
                      _ => error!("CA x509 certificate parsing failed: {:?}", res),
                   }
