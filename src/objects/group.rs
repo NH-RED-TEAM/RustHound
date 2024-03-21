@@ -70,14 +70,11 @@ impl Group {
         sid_type: &mut HashMap<String, String>,
         domain_sid: &String,
     ) {
-        let result_dn: String;
-        result_dn = result.dn.to_uppercase();
+        let result_dn: String = result.dn.to_uppercase();
         
-        let result_attrs: HashMap<String, Vec<String>>;
-        result_attrs = result.attrs;
+        let result_attrs: HashMap<String, Vec<String>> = result.attrs;
         
-        let result_bin: HashMap<String, Vec<Vec<u8>>>;
-        result_bin = result.bin_attrs;
+        let result_bin: HashMap<String, Vec<Vec<u8>>> = result.bin_attrs;
         
         debug!("Parse group: {}", result_dn);
         // Trace all result attributes
@@ -99,7 +96,6 @@ impl Group {
         self.properties.domainsid = domain_sid.to_string();
         
         #[allow(unused_assignments)]
-        let mut sid: String = "".to_owned();
         // With a check
         for (key, value) in &result_attrs {
             match key.as_str() {
@@ -136,7 +132,7 @@ impl Group {
                 "objectSid" => {
                     // objectSid to vec and raw to string
                     let vec_sid = objectsid_to_vec8(&value[0]);
-                    sid = sid_maker(LdapSid::parse(&vec_sid).unwrap().1, domain);
+                    let sid = sid_maker(LdapSid::parse(&vec_sid).unwrap().1, domain);
                     self.object_identifier = sid.to_owned();
         
                     /*let re = Regex::new(r"^S-[0-9]{1}-[0-9]{1}-[0-9]{1,}-[0-9]{1,}-[0-9]{1,}-[0-9]{1,}").unwrap();
@@ -183,7 +179,7 @@ impl Group {
             match key.as_str() {
                 "objectSid" => {
                     // objectSid raw to string
-                    sid = sid_maker(LdapSid::parse(&value[0]).unwrap().1, domain);
+                    let sid = sid_maker(LdapSid::parse(&value[0]).unwrap().1, domain);
                     self.object_identifier = sid.to_owned();
         
                     let re = Regex::new(r"^S-[0-9]{1}-[0-9]{1}-[0-9]{1,}-[0-9]{1,}-[0-9]{1,}-[0-9]{1,}").unwrap();

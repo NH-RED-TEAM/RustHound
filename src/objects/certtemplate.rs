@@ -97,32 +97,19 @@ impl CertTemplate {
                 "msPKI-Certificate-Name-Flag" => {
                     if value.len() != 0 {
                         self.properties.certificatenameflag = get_pki_cert_name_flags(value[0].parse::<i64>().unwrap_or(0) as u64);
-                        if self.properties.certificatenameflag.contains("ENROLLEE_SUPPLIES_SUBJECT") {
-                            self.properties.enrolleesuppliessubject = true;
-                        } else {
-                            self.properties.enrolleesuppliessubject = false;
-                        }
-                        if self.properties.certificatenameflag.contains("SUBJECT_ALT_REQUIRE_UPN") {
-                            self.properties.subjectaltrequireupn = true;
-                        } else {
-                            self.properties.subjectaltrequireupn = false;
-                        }
-                        
+
+                        self.properties.enrolleesuppliessubject = self.properties.certificatenameflag.contains("ENROLLEE_SUPPLIES_SUBJECT");
+
+                        self.properties.subjectaltrequireupn = self.properties.certificatenameflag.contains("SUBJECT_ALT_REQUIRE_UPN");
                     }
                 }
                 "msPKI-Enrollment-Flag" => {
                     if value.len() != 0 {
                         self.properties.enrollmentflag = get_pki_enrollment_flags(value[0].parse::<i64>().unwrap_or(0) as u64);
-                        if self.properties.enrollmentflag.contains("PEND_ALL_REQUESTS") {
-                            self.properties.requiresmanagerapproval = true;
-                        } else {
-                            self.properties.requiresmanagerapproval = false;
-                        }
-                        if self.properties.enrollmentflag.contains("NO_SECURITY_EXTENSION") {
-                            self.properties.nosecurityextension = true;
-                        } else {
-                            self.properties.nosecurityextension = false;
-                        }
+
+                        self.properties.requiresmanagerapproval = self.properties.enrollmentflag.contains("PEND_ALL_REQUESTS");
+
+                        self.properties.nosecurityextension = self.properties.enrollmentflag.contains("NO_SECURITY_EXTENSION");
                     }
                 }
                 "msPKI-Private-Key-Flag" => {
@@ -131,11 +118,7 @@ impl CertTemplate {
                     // }
                 }
                 "msPKI-RA-Signature" => {
-                    if value.len() != 0 {
-                        self.properties.authorizedsignatures = value[0].parse::<i64>().unwrap_or(0);
-                    } else {
-                        self.properties.authorizedsignatures = 0;
-                    }
+                    self.properties.authorizedsignatures = value.get(0).unwrap_or(&"0".to_string()).parse::<i64>().unwrap_or(0);
                 }
                 "msPKI-RA-Application-Policies" => {
                     if value.len() != 0 {

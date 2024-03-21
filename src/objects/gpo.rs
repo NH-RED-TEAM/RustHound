@@ -52,14 +52,9 @@ impl Gpo {
         sid_type: &mut HashMap<String, String>,
         domain_sid: &String
     ) {
-        let result_dn: String;
-        result_dn = result.dn.to_uppercase();
-        
-        let result_attrs: HashMap<String, Vec<String>>;
-        result_attrs = result.attrs;
-        
-        let result_bin: HashMap<String, Vec<Vec<u8>>>;
-        result_bin = result.bin_attrs;
+        let result_dn: String = result.dn.to_uppercase();
+        let result_attrs: HashMap<String, Vec<String>> = result.attrs;
+        let result_bin: HashMap<String, Vec<Vec<u8>>> = result.bin_attrs;
         
         // Debug for current object
         debug!("Parse gpo: {}", result_dn);
@@ -82,11 +77,11 @@ impl Gpo {
             match key.as_str() {
                 "displayName" => {
                     let name = &value[0];
-                    let email = format!("{}@{}",name.to_owned(),domain);
+                    let email = format!("{}@{}", name.to_owned(), domain);
                     self.properties.name = email.to_uppercase();
                 }
                 "description" => {
-                    self.properties.description = Some(value[0].to_owned());
+                    self.properties.description = value.get(0).map(|s| s.clone());
                 }
                 "whenCreated" => {
                     let epoch = string_to_epoch(&value[0]);
@@ -104,13 +99,12 @@ impl Gpo {
             }
         }
         
-        // For all, bins attributs
+        // For all, bins attributes
         for (key, value) in &result_bin {
             match key.as_str() {
                 "objectGUID" => {
                     // objectGUID raw to string
-                    let guid = decode_guid(&value[0]);
-                    self.object_identifier = guid.to_owned().into();
+                    self.object_identifier = decode_guid(&value[0]).to_owned().into();
                 }
                 "nTSecurityDescriptor" => {
                     // Needed with acl

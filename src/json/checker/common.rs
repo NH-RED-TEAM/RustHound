@@ -260,7 +260,7 @@ pub fn add_childobjects_members<T: LdapObject>(
             let vec = split.collect::<Vec<&str>>();
             //trace!("{:?}", &first);
             if vec.len() >= 2 {
-                let mut first = vec[1].to_owned();
+                let mut first = vec.get(1).unwrap_or(&"").to_string();
                 let split = first.split("=");
                 let vec = split.collect::<Vec<&str>>();
                 if vec.len() >= 2 {

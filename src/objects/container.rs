@@ -51,14 +51,9 @@ impl Container {
         sid_type: &mut HashMap<String, String>,
         domain_sid: &String
     ) {
-        let result_dn: String;
-        result_dn = result.dn.to_uppercase();
-
-        let result_attrs: HashMap<String, Vec<String>>;
-        result_attrs = result.attrs;
-
-        let result_bin: HashMap<String, Vec<Vec<u8>>>;
-        result_bin = result.bin_attrs;
+        let result_dn: String = result.dn.to_uppercase();
+        let result_attrs: HashMap<String, Vec<String>> = result.attrs;
+        let result_bin: HashMap<String, Vec<Vec<u8>>> = result.bin_attrs;
 
         // Debug for current object
         debug!("Parse Container: {}", result_dn);

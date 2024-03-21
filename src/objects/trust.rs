@@ -57,14 +57,9 @@ impl Trust {
       result: SearchEntry,
       domain: &String
    )  {
-      let result_dn: String;
-      result_dn = result.dn.to_uppercase();
-
-      let result_attrs: HashMap<String, Vec<String>>;
-      result_attrs = result.attrs;
-
-      let result_bin: HashMap<String, Vec<Vec<u8>>>;
-      result_bin = result.bin_attrs;
+      let result_dn: String = result.dn.to_uppercase();
+      let result_attrs: HashMap<String, Vec<String>> = result.attrs;
+      let result_bin: HashMap<String, Vec<Vec<u8>>> = result.bin_attrs;
 
       // Debug for current object
       debug!("Parse TrustDomain: {}", result_dn);
@@ -86,12 +81,12 @@ impl Trust {
             "trustDirection" => {
                   let trustdirection: u8 = value[0].parse::<u8>().unwrap_or(0);
                   // <https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-adts/5026a939-44ba-47b2-99cf-386a9e674b04>
-                  match trustdirection { 
-                     1 => { self.trust_direction = "Inbound".to_string(); }
-                     2 => { self.trust_direction = "Outbound".to_string(); }
-                     3 => { self.trust_direction = "Bidirectional".to_string(); } 
-                     _ => { self.trust_direction = "Disable".to_string(); }
-                  }
+                  self.trust_direction = match trustdirection { 
+                     1 => "Inbound",
+                     2 => "Outbound",
+                     3 => "Bidirectional",
+                     _ => "Disabled"
+                  }.to_string()
             }
             "trustAttributes" => {
                   let trustflag: u32 = value[0].parse::<u32>().unwrap_or(0);
