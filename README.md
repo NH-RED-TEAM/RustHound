@@ -105,10 +105,10 @@ Use RustHound with Docker to make sure to have all dependencies.
 docker build --rm -t rusthound .
 
 # Then
-docker run --rm -v ./:/usr/src/rusthound rusthound help
-docker run --rm -v ./:/usr/src/rusthound rusthound windows
-docker run --rm -v ./:/usr/src/rusthound rusthound linux
-docker run --rm -v ./:/usr/src/rusthound rusthound macos
+docker run --rm -v $PWD:/usr/src/rusthound rusthound help
+docker run --rm -v $PWD:/usr/src/rusthound rusthound windows
+docker run --rm -v $PWD:/usr/src/rusthound rusthound linux
+docker run --rm -v $PWD:/usr/src/rusthound rusthound macos
 ```
 
 <details><summary><b>SHOW MORE COMPILATION METHODS</b></summary>
