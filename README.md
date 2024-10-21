@@ -1,6 +1,8 @@
-> :warning: *This version is only compatible with [BloodHound Legacy 4.x](https://github.com/BloodHoundAD/BloodHound)*
+> *This version is only compatible with [BloodHound Legacy 4.x](https://github.com/BloodHoundAD/BloodHound)*
+> 
+> *Version compatible with [BloodHound Community Edition (CE)](https://github.com/SpecterOps/BloodHound) can be found here [RustHound-CE](https://github.com/g0h4n/RustHound-CE).*
 
-> [BloodHound Community Edition (CE)](https://github.com/SpecterOps/BloodHound) version will be publish in [v2](https://github.com/NH-RED-TEAM/RustHound/tree/v2) branch.
+<hr />
 
 <p align="center">
 <img width="30%" src="img/rusthound_logo_v3.png">
