@@ -16,18 +16,20 @@ use crate::enums::date::return_current_fulldate;
 /// Current Bloodhound version 4.2+
 pub const BLOODHOUND_VERSION_4: i8 = 5;
 
+type JsonValue = serde_json::value::Value;
+
 /// This function will create json output and zip output
 pub fn make_result(
    common_args: &Options,
-   vec_users: Vec<serde_json::value::Value>,
-   vec_groups: Vec<serde_json::value::Value>,
-   vec_computers: Vec<serde_json::value::Value>,
-   vec_ous: Vec<serde_json::value::Value>,
-   vec_domains: Vec<serde_json::value::Value>,
-   vec_gpos: Vec<serde_json::value::Value>,
-   vec_containers: Vec<serde_json::value::Value>,
-   vec_cas: &mut Vec<serde_json::value::Value>,
-   vec_templates: &mut Vec<serde_json::value::Value>,
+   vec_users: Vec<JsonValue>,
+   vec_groups: Vec<JsonValue>,
+   vec_computers: Vec<JsonValue>,
+   vec_ous: Vec<JsonValue>,
+   vec_domains: Vec<JsonValue>,
+   vec_gpos: Vec<JsonValue>,
+   vec_containers: Vec<JsonValue>,
+   vec_cas: &mut Vec<JsonValue>,
+   vec_templates: &mut Vec<JsonValue>,
 ) -> std::io::Result<()>
 {
    // Format domain name
@@ -152,7 +154,7 @@ fn add_file(
    datetime: &String,
    name: String,
 	domain_format: &String,
-   vec_json: Vec<serde_json::value::Value>,
+   vec_json: Vec<JsonValue>,
    json_result: &mut HashMap<String, String>,
    common_args: &Options, 
 ) -> std::io::Result<()>

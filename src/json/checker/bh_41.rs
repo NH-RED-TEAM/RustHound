@@ -260,7 +260,10 @@ pub fn add_childobjects_members(vec_replaced: &mut Vec<serde_json::value::Value>
             //trace!("{:?}", &dn_object);
             let split = dn_object.split(",");
             let vec = split.collect::<Vec<&str>>();
-            let mut first = vec[1].to_owned();
+            let mut first = match vec.get(1) {
+                Some(val) => val.to_string(),
+                None => "".to_owned()
+            };
             //trace!("{:?}", &first);
             let split = first.split("=");
             let vec = split.collect::<Vec<&str>>();
