@@ -26,9 +26,9 @@ pub async fn resolving_all_fqdn(
             debug!("Trying to resolve FQDN: {}",value.0.to_string());
             // Resolve FQDN to IP address
             let address = resolver(value.0.to_string(),dns_tcp,name_server).await;
-            if !address.contains("Not found"){
-               fqdn_ip.insert(value.0.to_owned().to_string(),address.to_owned().to_string());
-               info!("IP address for {}: {}",&value.0.to_string().yellow().bold(),&address.yellow().bold());
+            if let Some(addr) = address {
+               fqdn_ip.insert(value.0.to_owned().to_string(),addr.to_owned().to_string());
+               info!("IP address for {}: {}",&value.0.to_string().yellow().bold(),&addr.yellow().bold());
             }
           }
          continue
@@ -37,12 +37,12 @@ pub async fn resolving_all_fqdn(
    info!("Resolving FQDN to IP address finished!");
 }
 
-/// Asynchron function to resolve IP address from the ldap FQDN
+/// Asynchronous function to resolve IP address from the ldap FQDN
 pub async fn resolver(
    fqdn: String,
    dns_tcp: bool, 
    name_server: &String,
-) -> String
+) -> Option<String>
 {
    // Get configuration and options for resolver
    let (c,o) = make_resolver_conf(dns_tcp,name_server);
@@ -57,12 +57,12 @@ pub async fn resolver(
       Ok(response) => {
          let address = response.iter().next().expect("no addresses returned!");
          if address.is_ipv4() {
-            return address.to_string()
+            return Some(address.to_string())
          }
       }
       Err(_err) => {},
    };
-   return "Not found".to_string()
+   return None
 }
 
 /// Function to prepare resolver configuration

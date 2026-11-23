@@ -61,7 +61,7 @@ pub async fn get_conf(
                 vec_cas[i]["Properties"]["DNS Name"].as_str().unwrap().to_string(),
                 dns_tcp,
                 name_server,
-            ).await;
+            ).await.unwrap_or("Unknown".to_string());
             vec_cas[i]["Properties"]["Web Enrollment"] = web_enrollment.to_owned().into(); 
             vec_cas[i]["Properties"]["User Specified SAN"] = String::from("Unknown").into();
             vec_cas[i]["Properties"]["Request Disposition"] = String::from("Unknown").into();
@@ -75,14 +75,22 @@ async fn web_enrollment(
     target: String,
     dns_tcp: bool,
     name_server: &String,
-) -> String {
+) -> Result<String, String> {
 
     debug!("Checking web enrollment on {}",&target);
+
     let ip = resolv::resolver(
         target.to_owned(),
         dns_tcp,
         name_server).await;
+
+    let ip = match ip {
+        Some(x) => x,
+        None => {return Err("Could not resolve ADCS host".to_owned())}
+    };
+
     let url = format!("http://{}/certsrv/",target);
+
     trace!("Resolved {} to {}",&target,&ip);
 
     if let Ok(mut stream) = TcpStream::connect(format!("{}:80",&ip)) 
@@ -101,13 +109,12 @@ async fn web_enrollment(
         if !str::from_utf8(&buffer[..result][..]).unwrap_or("Error").contains(&"404".to_string()) 
         {
             info!("Web enrollment {} on {}","enabled".bold().green(),&url.bold());
-            return "Enabled".to_string()
+            return Ok("Enabled".to_string())
         } else {
-            return "Disabled".to_string()
+            return Ok("Disabled".to_string())
         }
-    } else 
-    {
-        error!("Couldn't connect to server {}, please try manually and check for https access if EPA is enable.",format!("http://{}/certsrv/",target).bold().red());
     }
-    return "Unknown".to_string()
+
+    error!("Couldn't connect to server {}, please try manually and check for https access if EPA is enable.",format!("http://{}/certsrv/",target).bold().red());
+    return Err("Unknown".to_string());
 }

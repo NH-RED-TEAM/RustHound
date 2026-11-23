@@ -147,19 +147,19 @@ impl Ace {
         let (i, ace_flags) = le_u8(i)?;
         let (i, ace_size) = le_u16(i)?;
         let (i, data) = take(ace_size as usize - 4)(i)?;
-        let (_j,ace_data_formated) = AceFormat::parse(data, ace_type)?;
+        let (_j,ace_data_formatted) = AceFormat::parse(data, ace_type)?;
 
         let ace = Ace {
             ace_type: ace_type,
             ace_flags: ace_flags,
             ace_size: ace_size,
-            data: ace_data_formated,
+            data: ace_data_formatted,
         };
         Ok((i, ace))
     }
 }
 
-/// Enum to get the same ouput for data switch in Ace structure.
+/// Enum to get the same output for data switch in Ace structure.
 #[derive(Clone, Debug)]
 pub enum AceFormat {
     AceAllowed(AccessAllowedAce),
@@ -313,7 +313,7 @@ impl ObjectAceFlags {
 pub fn test_security_descriptor() {
 
     let original = vec![
-        // SECURITY_DECRIPTOR [0..15]
+        // SECURITY_DESCRIPTOR [0..15]
             // revision
             1,
             // Internal

@@ -56,18 +56,20 @@ async fn main() -> Result<()> {
         common_args.kerberos,
     ).await?;
 
+    type JsonValue = serde_json::value::Value;
+
     // Vector for content all
-    let mut vec_users: Vec<serde_json::value::Value> = Vec::new();
-    let mut vec_groups: Vec<serde_json::value::Value> = Vec::new();
-    let mut vec_computers: Vec<serde_json::value::Value> = Vec::new();
-    let mut vec_ous: Vec<serde_json::value::Value> = Vec::new();
-    let mut vec_domains: Vec<serde_json::value::Value> = Vec::new();
-    let mut vec_gpos: Vec<serde_json::value::Value> = Vec::new();
-    let mut vec_fsps: Vec<serde_json::value::Value> = Vec::new();
-    let mut vec_containers: Vec<serde_json::value::Value> = Vec::new();
-    let mut vec_trusts: Vec<serde_json::value::Value> = Vec::new();
-    let mut vec_cas: Vec<serde_json::value::Value> = Vec::new();
-    let mut vec_templates: Vec<serde_json::value::Value> = Vec::new();
+    let mut vec_users: Vec<JsonValue> = Vec::new();
+    let mut vec_groups: Vec<JsonValue> = Vec::new();
+    let mut vec_computers: Vec<JsonValue> = Vec::new();
+    let mut vec_ous: Vec<JsonValue> = Vec::new();
+    let mut vec_domains: Vec<JsonValue> = Vec::new();
+    let mut vec_gpos: Vec<JsonValue> = Vec::new();
+    let mut vec_fsps: Vec<JsonValue> = Vec::new();
+    let mut vec_containers: Vec<JsonValue> = Vec::new();
+    let mut vec_trusts: Vec<JsonValue> = Vec::new();
+    let mut vec_cas: Vec<JsonValue> = Vec::new();
+    let mut vec_templates: Vec<JsonValue> = Vec::new();
 
     // Hashmap to link DN to SID
     let mut dn_sid = HashMap::new();

@@ -4,21 +4,23 @@ use indicatif::ProgressBar;
 use crate::banner::progress_bar;
 use std::convert::TryInto;
 
+type JsonValue = serde_json::value::Value;
+
 pub mod bh_41;
 
 /// Functions to replace and add missing values
 pub fn check_all_result(
    domain: &String,
    
-   vec_users: &mut Vec<serde_json::value::Value>,
-   vec_groups: &mut Vec<serde_json::value::Value>,
-   vec_computers: &mut Vec<serde_json::value::Value>,
-   vec_ous: &mut Vec<serde_json::value::Value>,
-   vec_domains: &mut Vec<serde_json::value::Value>,
-   vec_gpos: &mut Vec<serde_json::value::Value>,
-   _vec_fsps: &mut Vec<serde_json::value::Value>,
-   vec_containers: &mut Vec<serde_json::value::Value>,
-   vec_trusts: &mut Vec<serde_json::value::Value>,
+   vec_users: &mut Vec<JsonValue>,
+   vec_groups: &mut Vec<JsonValue>,
+   vec_computers: &mut Vec<JsonValue>,
+   vec_ous: &mut Vec<JsonValue>,
+   vec_domains: &mut Vec<JsonValue>,
+   vec_gpos: &mut Vec<JsonValue>,
+   _vec_fsps: &mut Vec<JsonValue>,
+   vec_containers: &mut Vec<JsonValue>,
+   vec_trusts: &mut Vec<JsonValue>,
 
    dn_sid: &mut HashMap<String, String>,
    sid_type: &mut HashMap<String, String>,
@@ -80,7 +82,7 @@ pub fn check_all_result(
 }
 
 /// This function check PrincipalSID for all Ace and add the PrincipalType "Group","User","Computer"
-pub fn add_type_for_ace(vec_replaced: &mut Vec<serde_json::value::Value>, sid_type: &HashMap<String, String>)
+pub fn add_type_for_ace(vec_replaced: &mut Vec<JsonValue>, sid_type: &HashMap<String, String>)
 {
     // Needed for progress bar stats
     let pb = ProgressBar::new(1);
@@ -91,8 +93,8 @@ pub fn add_type_for_ace(vec_replaced: &mut Vec<serde_json::value::Value>, sid_ty
     {
         // Manage progress bar
 		count += 1;
-        let pourcentage = 100 * count / total;
-        progress_bar(pb.to_owned(),"Adding Type for ACE objects".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
+        let percentage = 100 * count / total;
+        progress_bar(pb.to_owned(),"Adding Type for ACE objects".to_string(),percentage.try_into().unwrap(),"%".to_string());
 
         // ACE by ACE
         if vec_replaced[i]["Aces"].as_array().unwrap().len() != 0 {
@@ -108,7 +110,7 @@ pub fn add_type_for_ace(vec_replaced: &mut Vec<serde_json::value::Value>, sid_ty
 }
 
 /// This function check PrincipalSID for all AllowedToAct object and add the PrincipalType "Group","User","Computer"
-pub fn add_type_for_allowtedtoact(vec_replaced: &mut Vec<serde_json::value::Value>, sid_type: &HashMap<String, String>)
+pub fn add_type_for_allowtedtoact(vec_replaced: &mut Vec<JsonValue>, sid_type: &HashMap<String, String>)
 {
     // Needed for progress bar stats
     let pb = ProgressBar::new(1);
@@ -119,8 +121,8 @@ pub fn add_type_for_allowtedtoact(vec_replaced: &mut Vec<serde_json::value::Valu
     {
         // Manage progress bar
 		count += 1;
-        let pourcentage = 100 * count / total;
-        progress_bar(pb.to_owned(),"Adding Type for AllowedToAct objects".to_string(),pourcentage.try_into().unwrap(),"%".to_string());
+        let percentage = 100 * count / total;
+        progress_bar(pb.to_owned(),"Adding Type for AllowedToAct objects".to_string(),percentage.try_into().unwrap(),"%".to_string());
 
         if vec_replaced[i]["AllowedToAct"].as_array().unwrap().len() != 0 {
             for j in 0..vec_replaced[i]["AllowedToAct"].as_array().unwrap().len()

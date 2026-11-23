@@ -38,7 +38,7 @@ pub enum Connection {
 impl Error {
     /// Construct an error from scratch
     /// You can chain this method to `with`, as shown below.
-    /// ```
+    /// ```ignore
     /// Error::new(Kind::Other).with()
     /// ```
     pub fn new(kind: Kind) -> Error {

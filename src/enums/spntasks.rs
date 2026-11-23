@@ -7,10 +7,11 @@ use crate::json::templates::bh_41::prepare_mssqlsvc_spn_json_template;
 pub fn check_spn(serviceprincipalname: &String) -> serde_json::value::Value
 {
    let mut mssqlsvc_spn = prepare_mssqlsvc_spn_json_template();
+
    if serviceprincipalname.to_lowercase().contains("mssqlsvc")
    {
       //trace!("{:?}",serviceprincipalname);
-      if serviceprincipalname.to_lowercase().contains(":")
+      if serviceprincipalname.contains(":")
       {
          let split = serviceprincipalname.split(":");
          let vec = split.collect::<Vec<&str>>();
@@ -43,10 +44,9 @@ pub fn check_spn(serviceprincipalname: &String) -> serde_json::value::Value
          mssqlsvc_spn["ComputerSID"] = fqdn.into();
          mssqlsvc_spn["Port"] = port.into();
       }
+
+      return mssqlsvc_spn;
    }
-   else
-   {
-      mssqlsvc_spn = json!({});
-   }
-   return mssqlsvc_spn
+
+   return json!({});
 }
