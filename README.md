@@ -125,15 +125,18 @@ RustHound supports Kerberos and GSSAPI. Therefore, it requires Clang and its dev
 For example:
 ```bash
 # Debian/Ubuntu
-sudo apt-get -y update && sudo apt-get -y install gcc clang libclang-dev libgssapi-krb5-2 libkrb5-dev libsasl2-modules-gssapi-mit musl-tools gcc-mingw-w64-x86-64
+sudo apt-get -y update && sudo apt-get -y install gcc clang libclang-dev libgssapi-krb5-2 libkrb5-dev libsasl2-modules-gssapi-mit musl-tools gcc-mingw-w64-x86-64 rustup
 ```
 
 Here is how to compile the "release" and "debug" versions using the **cargo** command.
 
 ```bash
+rustup install 1.74.0
+rustup default 1.74.0
 git clone https://github.com/OPENCYBER-FR/RustHound
 cd RustHound
 cargo build --release
+target/release/rusthound -h
 # or debug version
 cargo b
 ```
